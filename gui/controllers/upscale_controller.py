@@ -461,7 +461,7 @@ class UpscaleController:
         else:
             filename = f"{basename}.{ext}"
 
-        return os.path.join(job.output_path, filename)
+        return os.path.abspath(os.path.join(job.output_path, filename))
 
     def _post(self, msg_type: MsgType, data: Any = None) -> None:
         """Post a message to the UI queue."""

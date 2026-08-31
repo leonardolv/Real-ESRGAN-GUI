@@ -94,6 +94,10 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         # ---- Start polling worker messages ---- #
         self._poll_worker()
 
+        # ---- Ensure window is visible and focused ---- #
+        self.lift()
+        self.focus_force()
+
     # ================================================================== #
     #  UI construction                                                    #
     # ================================================================== #
@@ -477,13 +481,20 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     # ================================================================== #
 
     def _bind_shortcuts(self) -> None:
-        self.bind_all("<Control-o>", lambda e: self._open_files())
-        self.bind_all("<Control-s>", lambda e: self._save_output())
-        self.bind_all("<Return>", lambda e: self._start_upscale())
-        self.bind_all("<Escape>", lambda e: self.upscale_ctrl.cancel())
-        self.bind_all("<Delete>", lambda e: self._delete_selected())
-        self.bind_all("<Control-q>", lambda e: self._on_close())
-        self.bind_all("<F11>", lambda e: self._toggle_fullscreen())
+        self.bind("<Control-o>", lambda e: self._open_files())
+        self.bind("<Control-s>", lambda e: self._save_output())
+        self.bind("<Return>", self._on_return_key)
+        self.bind("<Escape>", lambda e: self.upscale_ctrl.cancel())
+        self.bind("<Delete>", lambda e: self._delete_selected())
+        self.bind("<Control-q>", lambda e: self._on_close())
+        self.bind("<F11>", lambda e: self._toggle_fullscreen())
+
+    def _on_return_key(self, event) -> None:
+        """Handle Return key — ignore if focus is in a text entry."""
+        widget = self.focus_get()
+        if widget and widget.winfo_class() in ("Entry", "TEntry", "Text"):
+            return  # Don't trigger upscale when typing in an entry
+        self._start_upscale()
 
     def _delete_selected(self) -> None:
         idx = self.queue_panel.get_selected_index()
@@ -506,13 +517,52 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         h = self.config_store.get("window_height", 850)
         x = self.config_store.get("window_x")
         y = self.config_store.get("window_y")
+
         if x is not None and y is not None:
-            self.geometry(f"{w}x{h}+{x}+{y}")
+            # Validate that the saved position is on a visible screen
+            if self._is_position_on_screen(x, y, w, h):
+                self.geometry(f"{w}x{h}+{x}+{y}")
+            else:
+                # Position is off-screen — center on primary monitor
+                self.geometry(f"{w}x{h}")
+                self.update_idletasks()
+                screen_w = self.winfo_screenwidth()
+                screen_h = self.winfo_screenheight()
+                cx = max(0, (screen_w - w) // 2)
+                cy = max(0, (screen_h - h) // 2)
+                self.geometry(f"{w}x{h}+{cx}+{cy}")
         else:
             self.geometry(f"{w}x{h}")
 
         if self.config_store.get("window_maximized"):
             self.state("zoomed")
+
+    @staticmethod
+    def _is_position_on_screen(x: int, y: int, w: int, h: int) -> bool:
+        """Check if at least part of the window is visible on any screen.
+
+        Uses a simple heuristic: the top-left corner should be within
+        reasonable bounds.  On Windows with multiple monitors the
+        virtual screen can have negative coordinates, but a single-monitor
+        setup always starts at (0, 0).
+        """
+        try:
+            import ctypes
+            user32 = ctypes.windll.user32
+            screen_w = user32.GetSystemMetrics(78)  # SM_CXVIRTUALSCREEN
+            screen_h = user32.GetSystemMetrics(79)  # SM_CYVIRTUALSCREEN
+            screen_x = user32.GetSystemMetrics(76)  # SM_XVIRTUALSCREEN
+            screen_y = user32.GetSystemMetrics(77)  # SM_YVIRTUALSCREEN
+            # At least 100px of the window must be on the virtual screen
+            return (
+                x + 100 > screen_x
+                and y + 100 > screen_y
+                and x < screen_x + screen_w
+                and y < screen_y + screen_h
+            )
+        except Exception:
+            # Not on Windows or ctypes unavailable — trust the saved position
+            return True
 
     def _save_geometry(self) -> None:
         try:

@@ -77,6 +77,7 @@ class ProgressPanel(ctk.CTkFrame):
         self._last_percent = 0
         self._cancel_callback = cancel_callback
         self._bar.set(0)
+        self._bar.configure(progress_color=("#3a7ebf", "#1f538d"))  # restore default
         self._pct_label.configure(text="0%")
         self._eta_label.configure(text="")
         self._status_label.configure(text="Starting…")
@@ -126,6 +127,7 @@ class ProgressPanel(ctk.CTkFrame):
     def reset(self) -> None:
         """Reset to idle state."""
         self._bar.set(0)
+        self._bar.configure(progress_color=("#3a7ebf", "#1f538d"))  # restore default
         self._pct_label.configure(text="")
         self._eta_label.configure(text="")
         self._status_label.configure(text="Ready")
