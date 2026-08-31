@@ -205,7 +205,9 @@ class UpscaleController:
                     img, has_aligned=False, only_center_face=False, paste_back=True
                 )
             else:
+                print("[Worker Debug] Entering upsampler.enhance...")
                 output, _ = upsampler.enhance(img, outscale=job.outscale, progress_callback=progress_callback)
+                print("[Worker Debug] Exited upsampler.enhance!")
 
             if self._cancelled():
                 return
