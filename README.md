@@ -59,6 +59,8 @@ Other recommended projects:<br>
 <!---------------------------------- Updates --------------------------->
 ## 🚩 Updates
 
+- ✅ **Graphical User Interface (GUI)**: A fully native, modern desktop application powered by CustomTkinter for drag-and-drop image and video upscaling! Run `python run_gui.py` to start.
+
 - ✅ Add the **realesr-general-x4v3** model - a tiny small model for general scenes. It also supports the **-dn** option to balance the noise (avoiding over-smooth results). **-dn** is short for denoising strength.
 - ✅ Update the **RealESRGAN AnimeVideo-v3** model. Please see [anime video models](docs/anime_video_model.md) and [comparisons](docs/anime_comparisons.md) for more details.
 - ✅ Add small models for anime videos. More details are in [anime video models](docs/anime_video_model.md).
@@ -113,7 +115,23 @@ Other recommended projects:<br>
 
 ---
 
-## ⚡ Quick Inference
+### 🖼️ Graphical User Interface (GUI)
+
+We now provide a native, modern desktop GUI for Real-ESRGAN! You can easily upscale images and videos using a drag-and-drop interface with live before/after previews.
+
+To launch the GUI:
+```bash
+python run_gui.py
+```
+
+Features:
+- Drag-and-drop batch processing queue
+- Live before/after split-screen comparison slider
+- Auto-download for all 6 official models
+- Background threaded processing (no freezing UI)
+- Hardware-accelerated video processing via FFmpeg
+
+### ⚡ Quick Inference
 
 There are usually three ways to inference Real-ESRGAN.
 

@@ -114,7 +114,7 @@ class RealESRGANer():
         # model inference
         self.output = self.model(self.img)
 
-    def tile_process(self):
+    def tile_process(self, progress_callback=None):
         """It will first crop input images to tiles, and then process each tile.
         Finally, all the processed tiles are merged into one images.
 
@@ -131,6 +131,7 @@ class RealESRGANer():
         tiles_y = math.ceil(height / self.tile_size)
 
         # loop over all tiles
+        total_tiles = tiles_y * tiles_x
         for y in range(tiles_y):
             for x in range(tiles_x):
                 # extract tile from input image
@@ -160,6 +161,9 @@ class RealESRGANer():
                         output_tile = self.model(input_tile)
                 except RuntimeError as error:
                     print('Error', error)
+                
+                if progress_callback:
+                    progress_callback(tile_idx / total_tiles)
                 print(f'\tTile {tile_idx}/{tiles_x * tiles_y}')
 
                 # output tile area on total image
@@ -191,7 +195,7 @@ class RealESRGANer():
         return self.output
 
     @torch.no_grad()
-    def enhance(self, img, outscale=None, alpha_upsampler='realesrgan'):
+    def enhance(self, img, outscale=None, alpha_upsampler='realesrgan', progress_callback=None):
         h_input, w_input = img.shape[0:2]
         # img: numpy
         img = img.astype(np.float32)
@@ -218,7 +222,7 @@ class RealESRGANer():
         # ------------------- process image (without the alpha channel) ------------------- #
         self.pre_process(img)
         if self.tile_size > 0:
-            self.tile_process()
+            self.tile_process(progress_callback)
         else:
             self.process()
         output_img = self.post_process()
@@ -232,7 +236,7 @@ class RealESRGANer():
             if alpha_upsampler == 'realesrgan':
                 self.pre_process(alpha)
                 if self.tile_size > 0:
-                    self.tile_process()
+                    self.tile_process(progress_callback)
                 else:
                     self.process()
                 output_alpha = self.post_process()
