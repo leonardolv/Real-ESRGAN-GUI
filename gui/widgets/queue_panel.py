@@ -71,16 +71,19 @@ class QueuePanel(ctk.CTkFrame):
         on_item_selected: Optional[Callable] = None,
         on_add_files: Optional[Callable] = None,
         on_queue_cleared: Optional[Callable] = None,
+        on_files_dropped: Optional[Callable] = None,
         **kwargs,
     ):
         super().__init__(master, width=220, **kwargs)
-        self.configure(fg_color="#1e1e1e")
+        self.configure(fg_color="#1e1e1e", border_width=1, border_color="#2b2b2b")
 
         self._items: List[QueueItem] = []
         self._selected_idx: int = -1
         self._on_item_selected = on_item_selected
         self._on_add_files = on_add_files
         self._on_queue_cleared = on_queue_cleared
+        self._on_files_dropped = on_files_dropped
+        self._is_drag_active: bool = False
 
         # Header
         header = ctk.CTkFrame(self, fg_color="transparent", height=36)
@@ -99,12 +102,35 @@ class QueuePanel(ctk.CTkFrame):
         )
         self._count_label.pack(side="right")
 
+        # Drop indicator banner container (positioned between header and list)
+        self._banner_container = ctk.CTkFrame(self, fg_color="transparent")
+        self._banner_container.pack(fill="x", padx=6, pady=0)
+
+        self._drop_banner = ctk.CTkFrame(
+            self._banner_container,
+            fg_color="#1e3a5f",
+            border_width=1,
+            border_color="#3b82f6",
+            height=28,
+            corner_radius=4,
+        )
+        self._drop_banner_label = ctk.CTkLabel(
+            self._drop_banner,
+            text="⬇ Drop files here to add",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color="#93c5fd",
+        )
+        self._drop_banner_label.pack(expand=True, fill="both")
+
         # Scrollable list
         self._list_frame = ctk.CTkScrollableFrame(
             self,
             fg_color="transparent",
         )
         self._list_frame.pack(fill="both", expand=True, padx=4, pady=4)
+
+        # Drag-and-drop setup
+        self._setup_dnd()
 
         # Bottom buttons
         btn_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -365,3 +391,69 @@ class QueuePanel(ctk.CTkFrame):
     def _on_add_click(self) -> None:
         if self._on_add_files:
             self._on_add_files()
+
+    # ------------------------------------------------------------------ #
+    #  Drag-and-Drop Visual Indicator & Handling                          #
+    # ------------------------------------------------------------------ #
+
+    def set_drag_highlight(self, active: bool) -> None:
+        """Update visual indicator border and banner when dragging files over queue."""
+        if self._is_drag_active == active:
+            return
+        self._is_drag_active = active
+        if active:
+            self.configure(border_color="#3b82f6", border_width=2)
+            self._drop_banner.pack(fill="x", pady=(0, 4))
+        else:
+            self.configure(border_color="#2b2b2b", border_width=1)
+            self._drop_banner.pack_forget()
+
+    def _setup_dnd(self) -> None:
+        """Register drag-and-drop handlers if tkinterdnd2 is available."""
+        try:
+            if hasattr(self, "drop_target_register"):
+                self.drop_target_register("DND_Files")
+                self.dnd_bind("<<Drop>>", self._on_dnd_drop)
+                self.dnd_bind("<<DragEnter>>", self._on_drag_enter)
+                self.dnd_bind("<<DragLeave>>", self._on_drag_leave)
+        except Exception:
+            pass
+
+    def _on_drag_enter(self, event=None) -> None:
+        self.set_drag_highlight(True)
+
+    def _on_drag_leave(self, event=None) -> None:
+        self.set_drag_highlight(False)
+
+    def _on_dnd_drop(self, event) -> None:
+        self.set_drag_highlight(False)
+        raw = getattr(event, "data", "")
+        paths = self._parse_dnd_data(raw)
+        valid = [p for p in paths if is_image_file(p) or is_video_file(p)]
+        if valid:
+            self.add_files(valid)
+            if self._on_files_dropped:
+                self._on_files_dropped(valid)
+
+    def _parse_dnd_data(self, data: str) -> List[str]:
+        """Parse tkdnd drop data which may contain brace-wrapped paths."""
+        paths = []
+        in_brace = False
+        current = []
+        for char in data:
+            if char == "{" and not in_brace:
+                in_brace = True
+            elif char == "}" and in_brace:
+                in_brace = False
+                paths.append("".join(current).strip())
+                current = []
+            elif char == " " and not in_brace:
+                if current:
+                    paths.append("".join(current).strip())
+                    current = []
+            else:
+                current.append(char)
+        if current:
+            paths.append("".join(current).strip())
+        return [p for p in paths if p]
+

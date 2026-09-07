@@ -126,6 +126,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             on_item_selected=self._on_queue_item_selected,
             on_add_files=self._open_files,
             on_queue_cleared=self._on_queue_cleared,
+            on_files_dropped=self._on_files_received,
         )
         self.queue_panel.pack(side="left", fill="y")
         self.queue_panel.set_process_all_command(self._process_all)

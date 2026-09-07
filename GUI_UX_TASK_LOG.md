@@ -25,5 +25,14 @@
   - Added test coverage for batch execution cancellation (`test_batch_progress_and_cancellation`) and queue context menu status reset (`test_queue_panel_context_menu_and_status_reset`).
   - Verified with full test suite: 20 passed, 1 skipped, 0 failures.
 
+- [x] **Drag-and-Drop Visual Indicator & Direct Queue Drop** (2026-09-07)
+  - Added visual drag indicator border (`#3b82f6`) and drop banner (`⬇ Drop files here to add`) to `QueuePanel` when files are dragged over the queue.
+  - Implemented `set_drag_highlight()`, `_on_drag_enter()`, `_on_drag_leave()`, and `_on_dnd_drop()` with safe OS path parsing and image/video format validation.
+  - Connected `on_files_dropped` callback to `app._on_files_received` so dropping onto `QueuePanel` adds files to the queue and updates application state.
+  - Added `pythonpath=.` to `setup.cfg` for seamless test module resolution.
+  - Added automated test `test_queue_panel_drag_and_drop_visual_indicator` verifying drag enter, highlight activation, banner packing, drag leave, and drop event parsing.
+  - Verified with full test suite: 21 passed, 1 skipped, 0 failures.
+
 ## Backlog
-- [ ] Add drag-and-drop visual indicator when dragging files over QueuePanel.
+- [ ] Add thumbnail preview tooltip on hover over completed queue items.
+

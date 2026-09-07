@@ -235,5 +235,42 @@ class TestGUIWidgetsHeadless:
         toolbar.set_save_enabled(True)
         assert toolbar._save_btn.cget("state") == "normal"
 
+    def test_queue_panel_drag_and_drop_visual_indicator(self, ctk_root, tmp_path):
+        dropped_files = []
+        queue = QueuePanel(ctk_root, on_files_dropped=lambda files: dropped_files.extend(files))
+        queue.pack()
+
+        # Initially inactive
+        assert not queue._is_drag_active
+        assert queue.cget("border_color") == "#2b2b2b"
+
+        # Drag enter activates indicator
+        queue._on_drag_enter()
+        assert queue._is_drag_active
+        assert queue.cget("border_color") == "#3b82f6"
+        assert queue._drop_banner.winfo_manager() == "pack"
+
+        # Drag leave clears indicator
+        queue._on_drag_leave()
+        assert not queue._is_drag_active
+        assert queue.cget("border_color") == "#2b2b2b"
+        assert queue._drop_banner.winfo_manager() == ""
+
+        # Drop files event
+        img = tmp_path / "drop_test.png"
+        Image.new('RGB', (10, 10)).save(img)
+
+        class MockDndEvent:
+            data = str(img)
+
+        queue.set_drag_highlight(True)
+        assert queue._is_drag_active
+        queue._on_dnd_drop(MockDndEvent())
+        assert not queue._is_drag_active
+        assert queue.count == 1
+        assert len(dropped_files) == 1
+        assert dropped_files[0] == str(img)
+
+
 
 
