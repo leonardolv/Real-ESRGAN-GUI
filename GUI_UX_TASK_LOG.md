@@ -32,7 +32,16 @@
   - Added `pythonpath=.` to `setup.cfg` for seamless test module resolution.
   - Added automated test `test_queue_panel_drag_and_drop_visual_indicator` verifying drag enter, highlight activation, banner packing, drag leave, and drop event parsing.
   - Verified with full test suite: 21 passed, 1 skipped, 0 failures.
+- [x] Add thumbnail preview tooltip on hover over completed queue items (2026-09-07)
+  - Created reusable `ToolTip` and `ThumbnailToolTip` in `gui/widgets/tooltip.py` with 350ms ergonomic hover delay filter, automatic cancel on leave/click, and screen edge bound checking.
+  - Added thumbnail rendering and lazy caching for completed upscaled results (capped at 150px) and source items via `PIL` and `ImageTk.PhotoImage`.
+  - Added upscale metadata (dimensions and file size) to completed preview tooltips, and diagnostics formatting for error items.
+  - Unified `Toolbar` tooltip usage by importing `ToolTip` from `gui.widgets.tooltip`.
+  - Added robust tooltip lifecycle management (`_cleanup_tooltips()`, `destroy()`) in `QueuePanel` to cleanly destroy popup windows and cancel pending timers during item clearing, rebuilding, or window destruction.
+  - Added automated unit test coverage in `tests/test_gui.py` (`test_tooltip_lifecycle`, `test_thumbnail_tooltip_completed_and_error`, `test_queue_panel_item_tooltip_integration`).
+  - Verified with headless test suite: 19 passed, 0 failures in 5.02s.
 
 ## Backlog
-- [ ] Add thumbnail preview tooltip on hover over completed queue items.
+- [ ] Add keyboard navigation (Up/Down arrow keys to select, Delete key to remove) in QueuePanel.
+- [ ] Add estimated time remaining (ETA) calculation in ProgressPanel based on average item processing speed.
 

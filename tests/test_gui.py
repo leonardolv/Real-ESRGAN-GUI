@@ -19,6 +19,7 @@ from gui.controllers.upscale_controller import UpscaleJob, UpscaleController, Ms
 from gui.widgets.queue_panel import QueuePanel, ItemStatus
 from gui.widgets.settings_panel import SettingsPanel
 from gui.widgets.progress_bar import ProgressPanel
+from gui.widgets.tooltip import ToolTip, ThumbnailToolTip
 
 
 class TestImageUtils:
@@ -270,6 +271,102 @@ class TestGUIWidgetsHeadless:
         assert queue.count == 1
         assert len(dropped_files) == 1
         assert dropped_files[0] == str(img)
+
+    def test_tooltip_lifecycle(self, ctk_root):
+        btn = ctk.CTkButton(ctk_root, text="Hover me")
+        btn.pack()
+        tip = ToolTip(btn, text="Helpful tip", delay_ms=50)
+        assert tip.tip_window is None
+        assert tip._after_id is None
+
+        # Simulate enter
+        tip._on_enter()
+        assert tip._after_id is not None
+
+        # Cancel timer on leave
+        tip._on_leave()
+        assert tip._after_id is None
+        assert tip.tip_window is None
+
+        # Show tip directly
+        tip.show_tip()
+        assert tip.tip_window is not None
+        assert tip.tip_window.winfo_exists()
+
+        # Hide tip
+        tip.hide_tip()
+        assert tip.tip_window is None
+        tip.destroy()
+
+    def test_thumbnail_tooltip_completed_and_error(self, ctk_root, tmp_path):
+        out_img = tmp_path / "upscaled.png"
+        Image.new("RGB", (64, 64), color="green").save(out_img)
+
+        btn = ctk.CTkButton(ctk_root, text="Card")
+        btn.pack()
+
+        # Completed item thumbnail tooltip
+        tip = ThumbnailToolTip(
+            widget=btn,
+            image_path=str(out_img),
+            title="✓ Done: upscaled.png",
+            details="Upscaled: 64 × 64 · 1 KB",
+            delay_ms=50,
+        )
+        tip.show_tip()
+        assert tip.tip_window is not None
+        assert tip._cached_photo is not None
+        tip.hide_tip()
+        assert tip.tip_window is None
+        tip.destroy()
+
+        # Error diagnostic tooltip
+        err_tip = ThumbnailToolTip(
+            widget=btn,
+            image_path="",
+            title="✗ Failed: bad.png",
+            error="Out of CUDA memory",
+            delay_ms=50,
+        )
+        err_tip.show_tip()
+        assert err_tip.tip_window is not None
+        err_tip.hide_tip()
+        assert err_tip.tip_window is None
+        err_tip.destroy()
+
+    def test_queue_panel_item_tooltip_integration(self, ctk_root, tmp_path):
+        in_img = tmp_path / "input.png"
+        Image.new("RGB", (32, 32), color="red").save(in_img)
+
+        out_img = tmp_path / "output_upscaled.png"
+        Image.new("RGB", (128, 128), color="green").save(out_img)
+
+        queue = QueuePanel(ctk_root)
+        queue.pack()
+        queue.add_files([str(in_img)])
+
+        # Queued item has tooltip
+        assert len(queue._active_tooltips) == 1
+        card_tip = queue._active_tooltips[0]
+        assert isinstance(card_tip, ThumbnailToolTip)
+        assert card_tip.title == f"Original: {in_img.name}"
+
+        # Update to completed with output_path
+        queue.update_item_status(0, ItemStatus.COMPLETED, 100.0, output_path=str(out_img))
+        assert len(queue._active_tooltips) == 1
+        completed_tip = queue._active_tooltips[0]
+        assert isinstance(completed_tip, ThumbnailToolTip)
+        assert "Done" in completed_tip.title
+        assert "128" in completed_tip.details
+
+        # Trigger show_tip
+        completed_tip.show_tip()
+        assert completed_tip.tip_window is not None
+
+        # Clearing queue dismisses all tooltips
+        queue.clear()
+        assert len(queue._active_tooltips) == 0
+        assert completed_tip.tip_window is None
 
 
 

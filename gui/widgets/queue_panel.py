@@ -23,6 +23,7 @@ from gui.utils.image_utils import (
     is_video_file,
 )
 from gui.utils.video_utils import format_duration, get_video_info
+from gui.widgets.tooltip import ThumbnailToolTip, ToolTip
 
 
 class ItemStatus(Enum):
@@ -84,6 +85,7 @@ class QueuePanel(ctk.CTkFrame):
         self._on_queue_cleared = on_queue_cleared
         self._on_files_dropped = on_files_dropped
         self._is_drag_active: bool = False
+        self._active_tooltips: List[ToolTip] = []
 
         # Header
         header = ctk.CTkFrame(self, fg_color="transparent", height=36)
@@ -271,8 +273,23 @@ class QueuePanel(ctk.CTkFrame):
     #  Internal                                                           #
     # ------------------------------------------------------------------ #
 
+    def _cleanup_tooltips(self) -> None:
+        """Dismiss and clean up any active queue item tooltips."""
+        for tip in getattr(self, "_active_tooltips", []):
+            try:
+                tip.destroy()
+            except Exception:
+                pass
+        self._active_tooltips = []
+
+    def destroy(self) -> None:
+        """Clean up tooltips and destroy widget."""
+        self._cleanup_tooltips()
+        super().destroy()
+
     def _rebuild_list(self) -> None:
         """Rebuild the visual list of queue items."""
+        self._cleanup_tooltips()
         # Clear existing widgets
         for w in self._list_frame.winfo_children():
             w.destroy()
@@ -332,6 +349,60 @@ class QueuePanel(ctk.CTkFrame):
         info_label.pack(anchor="w", padx=8, pady=(0, 4))
         info_label.bind("<Button-1>", lambda e, i=idx: self.select(i))
         info_label.bind("<Button-3>", lambda e, i=idx: self._show_context_menu(e, i))
+
+        # Attach hover preview tooltip (thumbnail for completed/queued images, diagnostics for error)
+        if item.status == ItemStatus.COMPLETED and (item.output_path or item.path):
+            preview_file = item.output_path if (item.output_path and os.path.exists(item.output_path)) else item.path
+            out_name = os.path.basename(preview_file)
+            if is_image_file(preview_file):
+                info = get_image_info(preview_file)
+                dim_str = format_dimensions(info.get("width", 0), info.get("height", 0))
+                size_str = format_file_size(info.get("size_bytes", 0))
+                details = f"Upscaled: {dim_str} · {size_str}"
+            else:
+                details = f"Output: {out_name}"
+
+            tip = ThumbnailToolTip(
+                widget=card,
+                image_path=preview_file,
+                title=f"✓ Done: {out_name}",
+                details=details,
+                max_size=150,
+                delay_ms=350,
+            )
+            tip.bind_widget(name_label)
+            tip.bind_widget(info_label)
+            self._active_tooltips.append(tip)
+            card._tooltip = tip
+
+        elif item.status == ItemStatus.ERROR:
+            err_msg = item.error or "Upscale failed. Right-click to retry or reset status."
+            tip = ThumbnailToolTip(
+                widget=card,
+                image_path="",
+                title=f"✗ Failed: {item.filename}",
+                error=err_msg,
+                delay_ms=350,
+            )
+            tip.bind_widget(name_label)
+            tip.bind_widget(info_label)
+            self._active_tooltips.append(tip)
+            card._tooltip = tip
+
+        elif item.status == ItemStatus.QUEUED and is_image_file(item.path):
+            details = f"Source: {format_dimensions(item.width, item.height)} · {format_file_size(item.size_bytes)}"
+            tip = ThumbnailToolTip(
+                widget=card,
+                image_path=item.path,
+                title=f"Original: {item.filename}",
+                details=details,
+                max_size=150,
+                delay_ms=350,
+            )
+            tip.bind_widget(name_label)
+            tip.bind_widget(info_label)
+            self._active_tooltips.append(tip)
+            card._tooltip = tip
 
     def _show_context_menu(self, event, idx: int) -> None:
         """Display right-click context menu for a queue item."""

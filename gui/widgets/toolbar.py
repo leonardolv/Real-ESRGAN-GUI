@@ -10,49 +10,7 @@ from typing import Callable, Optional
 import customtkinter as ctk
 
 
-class ToolTip:
-    """Lightweight hover tooltip for widgets."""
-
-    def __init__(self, widget, text: str):
-        self.widget = widget
-        self.text = text
-        self.tip_window = None
-        self.widget.bind("<Enter>", self._show_tip)
-        self.widget.bind("<Leave>", self._hide_tip)
-
-    def _show_tip(self, event=None) -> None:
-        if self.tip_window or not self.text:
-            return
-        try:
-            x = self.widget.winfo_rootx() + 10
-            y = self.widget.winfo_rooty() + self.widget.winfo_height() + 5
-            self.tip_window = tw = tk.Toplevel(self.widget)
-            tw.wm_overrideredirect(True)
-            tw.wm_geometry(f"+{x}+{y}")
-            tw.attributes("-topmost", True)
-            label = tk.Label(
-                tw,
-                text=self.text,
-                justify=tk.LEFT,
-                background="#2a2d35",
-                foreground="#ffffff",
-                relief=tk.SOLID,
-                borderwidth=1,
-                font=("Segoe UI", 9),
-                padx=6,
-                pady=3,
-            )
-            label.pack()
-        except Exception:
-            pass
-
-    def _hide_tip(self, event=None) -> None:
-        if self.tip_window:
-            try:
-                self.tip_window.destroy()
-            except Exception:
-                pass
-            self.tip_window = None
+from gui.widgets.tooltip import ToolTip
 
 
 class Toolbar(ctk.CTkFrame):
