@@ -10,6 +10,7 @@ States:
 import tkinter as tk
 from typing import Optional, Tuple
 
+import cv2
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont, ImageTk
 
@@ -47,6 +48,13 @@ class PreviewCanvas(ctk.CTkFrame):
         # Labels for before/after
         self._has_output = False
 
+        # Video Playback State
+        self._input_video_cap: Optional[cv2.VideoCapture] = None
+        self._output_video_cap: Optional[cv2.VideoCapture] = None
+        self._is_video = False
+        self._video_loop_id: Optional[str] = None
+        self._video_fps = 30.0
+
         # Canvas
         self._canvas = tk.Canvas(
             self,
@@ -68,6 +76,34 @@ class PreviewCanvas(ctk.CTkFrame):
             height=22,
         )
         self._zoom_label.place(relx=1.0, rely=1.0, anchor="se", x=-8, y=-8)
+
+        # Video Controls (hidden by default)
+        self._controls_frame = ctk.CTkFrame(self, height=40, corner_radius=0, fg_color="#1a1a1a")
+        
+        self._is_paused = True
+        self._total_frames = 0
+        self._current_frame = 0
+        
+        # Timeline
+        self._slider_var = tk.DoubleVar(value=0.0)
+        self._timeline_slider = ctk.CTkSlider(self._controls_frame, from_=0, to=1, variable=self._slider_var, command=self._on_timeline_seek)
+        self._timeline_slider.pack(side="top", fill="x", padx=10, pady=(5,0))
+        
+        # Buttons Frame
+        btns_frame = ctk.CTkFrame(self._controls_frame, fg_color="transparent")
+        btns_frame.pack(side="bottom", fill="x", pady=5, padx=10)
+        
+        self._prev_btn = ctk.CTkButton(btns_frame, text="⏮", width=40, command=self._step_backward)
+        self._prev_btn.pack(side="left", padx=5)
+        
+        self._play_btn = ctk.CTkButton(btns_frame, text="▶ Play", width=80, command=self._toggle_pause, fg_color="#10B981", hover_color="#059669")
+        self._play_btn.pack(side="left", padx=5)
+        
+        self._next_btn = ctk.CTkButton(btns_frame, text="⏭", width=40, command=self._step_forward)
+        self._next_btn.pack(side="left", padx=5)
+        
+        self._time_label = ctk.CTkLabel(btns_frame, text="0:00 / 0:00", text_color="#a0a0a0")
+        self._time_label.pack(side="right", padx=5)
 
         # Bind events
         self._canvas.bind("<Configure>", self._on_resize)
@@ -94,6 +130,8 @@ class PreviewCanvas(ctk.CTkFrame):
 
     def set_input_image(self, img: Image.Image) -> None:
         """Set the input (before) image."""
+        self._stop_video()
+        self._is_video = False
         self._input_image = img.copy()
         self._output_image = None
         self._has_output = False
@@ -102,13 +140,63 @@ class PreviewCanvas(ctk.CTkFrame):
 
     def set_output_image(self, img: Image.Image) -> None:
         """Set the output (after) image for comparison."""
+        self._stop_video()
+        self._is_video = False
         self._output_image = img.copy()
         self._has_output = True
         self._slider_pos = 0.5
         self._render()
 
+    def set_input_video(self, path: str) -> None:
+        """Set the input video and start paused."""
+        self._stop_video()
+        self._is_video = True
+        self._is_paused = True
+        self._input_image = None
+        self._output_image = None
+        self._has_output = False
+        self._slider_pos = 0.5
+        self._input_video_cap = cv2.VideoCapture(path)
+        if self._input_video_cap.isOpened():
+            fps = self._input_video_cap.get(cv2.CAP_PROP_FPS)
+            self._video_fps = fps if fps > 0 else 30.0
+            self._total_frames = int(self._input_video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            self._current_frame = 0
+            
+            # Read first frame to initialize canvas scaling
+            self._read_and_render_once()
+            self._fit_to_canvas()
+            
+            self._start_video()
+            self._update_controls_ui()
+
+    def set_output_video(self, path: str) -> None:
+        """Set the output video for comparison and start paused."""
+        self._is_video = True
+        self._is_paused = True
+        self._output_image = None
+        self._has_output = True
+        self._slider_pos = 0.5
+        
+        if self._output_video_cap is not None:
+            self._output_video_cap.release()
+            
+        self._output_video_cap = cv2.VideoCapture(path)
+        
+        # Sync input video to current frame
+        if self._input_video_cap is not None:
+            self._input_video_cap.set(cv2.CAP_PROP_POS_FRAMES, self._current_frame)
+            
+        self._read_and_render_once()
+        self._start_video()
+        self._update_controls_ui()
+
     def clear(self) -> None:
-        """Clear both images and reset state."""
+        """Clear both images/videos and reset state."""
+        self._stop_video()
+        self._is_video = False
+        self._is_paused = True
+        self._controls_frame.pack_forget()
         self._input_image = None
         self._output_image = None
         self._has_output = False
@@ -123,6 +211,141 @@ class PreviewCanvas(ctk.CTkFrame):
 
     def get_zoom(self) -> float:
         return self._zoom
+
+    # ================================================================== #
+    #  Video Playback                                                     #
+    # ================================================================== #
+
+    def _start_video(self) -> None:
+        """Start the video playback loop."""
+        if self._video_loop_id is None:
+            self._play_video_frame()
+
+    def _stop_video(self) -> None:
+        """Stop video playback and release captures."""
+        if self._video_loop_id is not None:
+            self.after_cancel(self._video_loop_id)
+            self._video_loop_id = None
+            
+        if self._input_video_cap is not None:
+            self._input_video_cap.release()
+            self._input_video_cap = None
+            
+        if self._output_video_cap is not None:
+            self._output_video_cap.release()
+            self._output_video_cap = None
+
+    def _toggle_pause(self) -> None:
+        """Toggle video play/pause state."""
+        self._is_paused = not self._is_paused
+        self._update_controls_ui()
+
+    def _update_controls_ui(self) -> None:
+        """Update button state and visibility."""
+        if not self._is_video:
+            self._controls_frame.pack_forget()
+            return
+            
+        self._controls_frame.pack(side="bottom", fill="x", before=self._canvas)
+        if self._is_paused:
+            self._play_btn.configure(text="▶ Play", fg_color="#10B981", hover_color="#059669")
+        else:
+            self._play_btn.configure(text="⏸ Pause", fg_color="#2563EB", hover_color="#1d4ed8")
+            
+        self._update_time_label()
+
+    def _update_time_label(self):
+        def format_time(frames, fps):
+            seconds = int(frames / max(1, fps))
+            return f"{seconds // 60}:{seconds % 60:02d}"
+        
+        cur = format_time(self._current_frame, self._video_fps)
+        tot = format_time(self._total_frames, self._video_fps)
+        self._time_label.configure(text=f"{cur} / {tot}")
+        
+        if self._total_frames > 0:
+            self._slider_var.set(self._current_frame / self._total_frames)
+
+    def _on_timeline_seek(self, value):
+        if not self._is_video or self._total_frames == 0: return
+        self._is_paused = True
+        self._current_frame = int(float(value) * self._total_frames)
+        self._sync_video_caps(self._current_frame)
+        self._read_and_render_once()
+        self._update_controls_ui()
+
+    def _step_backward(self):
+        if not self._is_video: return
+        self._is_paused = True
+        self._current_frame = max(0, self._current_frame - 1)
+        self._sync_video_caps(self._current_frame)
+        self._read_and_render_once()
+        self._update_controls_ui()
+        
+    def _step_forward(self):
+        if not self._is_video: return
+        self._is_paused = True
+        self._current_frame = min(self._total_frames - 1, self._current_frame + 1)
+        self._sync_video_caps(self._current_frame)
+        self._read_and_render_once()
+        self._update_controls_ui()
+
+    def _sync_video_caps(self, frame_idx):
+        if self._input_video_cap is not None:
+            self._input_video_cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+        if self._output_video_cap is not None:
+            self._output_video_cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+
+    def _read_and_render_once(self) -> bool:
+        need_render = False
+        
+        if self._input_video_cap is not None:
+            ret, frame = self._input_video_cap.read()
+            if ret:
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                self._input_image = Image.fromarray(frame_rgb)
+                need_render = True
+            else:
+                return False
+
+        if self._has_output and self._output_video_cap is not None:
+            ret, frame = self._output_video_cap.read()
+            if ret:
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                self._output_image = Image.fromarray(frame_rgb)
+                need_render = True
+            else:
+                return False
+
+        if need_render:
+            self._render()
+            return True
+        return False
+
+    def _play_video_frame(self) -> None:
+        """Read the next frame from videos, render, and schedule the next frame."""
+        if not self._is_video:
+            self._video_loop_id = None
+            return
+
+        delay_ms = max(10, int(1000 / self._video_fps))
+
+        if self._is_paused:
+            self._video_loop_id = self.after(delay_ms, self._play_video_frame)
+            return
+
+        # Read frame
+        if self._read_and_render_once():
+            self._current_frame += 1
+            self._update_time_label()
+        else:
+            # End of video -> loop back
+            self._current_frame = 0
+            self._sync_video_caps(0)
+            self._read_and_render_once()
+            self._update_time_label()
+
+        self._video_loop_id = self.after(delay_ms, self._play_video_frame)
 
     # ================================================================== #
     #  Rendering                                                          #
@@ -153,7 +376,9 @@ class PreviewCanvas(ctk.CTkFrame):
 
         display_img = self._transform_image(img, cw, ch)
         self._display_input = ImageTk.PhotoImage(display_img)
-        self._canvas.create_image(cw // 2, ch // 2, image=self._display_input, anchor="center")
+        cx = cw // 2 + int(self._pan_x)
+        cy = ch // 2 + int(self._pan_y)
+        self._canvas.create_image(cx, cy, image=self._display_input, anchor="center")
 
         # Label
         self._canvas.create_text(
@@ -179,36 +404,61 @@ class PreviewCanvas(ctk.CTkFrame):
         split_x = int(self._slider_pos * w)
 
         # Create composite: left=before, right=after
-        composite = Image.new("RGB", (w, h))
+        composite = Image.new("RGBA", (w, h), (0,0,0,0))
         # Left side (before / input)
         if split_x > 0:
-            left_crop = input_display.crop((0, 0, split_x, h))
+            left_crop = input_display.crop((0, 0, split_x, h)).convert("RGBA")
             composite.paste(left_crop, (0, 0))
         # Right side (after / output)
         if split_x < w:
-            right_crop = output_display.crop((split_x, 0, w, h))
+            right_crop = output_display.crop((split_x, 0, w, h)).convert("RGBA")
             composite.paste(right_crop, (split_x, 0))
 
-        # Draw divider line
-        draw = ImageDraw.Draw(composite)
-        draw.line([(split_x, 0), (split_x, h)], fill="white", width=2)
+        # Modern Slider Handle UI
+        overlay = Image.new("RGBA", (w, h), (0,0,0,0))
+        draw = ImageDraw.Draw(overlay)
 
-        # Draw slider handle
+        # Draw soft shadow for the line
+        shadow_w = 4
+        for i in range(shadow_w):
+            alpha = int(100 * (1 - i/shadow_w))
+            draw.line([(split_x - i, 0), (split_x - i, h)], fill=(0,0,0,alpha), width=1)
+            draw.line([(split_x + i, 0), (split_x + i, h)], fill=(0,0,0,alpha), width=1)
+            
+        # Draw divider line (thicker)
+        draw.line([(split_x, 0), (split_x, h)], fill=(255, 255, 255, 255), width=3)
+
+        # Pill-shaped handle with shadow
         handle_y = h // 2
-        handle_r = 12
-        draw.ellipse(
-            [split_x - handle_r, handle_y - handle_r, split_x + handle_r, handle_y + handle_r],
-            fill="white",
-            outline="#2563EB",
-            width=2,
-        )
-        # Arrows in handle
-        draw.text((split_x - 7, handle_y - 6), "◀▶", fill="#2563EB")
+        handle_w, handle_h = 44, 28
+        hx0, hy0 = split_x - handle_w // 2, handle_y - handle_h // 2
+        hx1, hy1 = split_x + handle_w // 2, handle_y + handle_h // 2
+        
+        # Handle shadow
+        for i in range(3):
+            alpha = 60 - i * 20
+            draw.rounded_rectangle([hx0-i, hy0-i, hx1+i, hy1+i], radius=14, fill=(0,0,0,alpha))
 
-        self._composite = ImageTk.PhotoImage(composite)
-        # Center in canvas
-        cx = (cw - w) // 2
-        cy = (ch - h) // 2
+        # Handle body (white background, translucent edge)
+        draw.rounded_rectangle([hx0, hy0, hx1, hy1], radius=14, fill=(255,255,255,255), outline=(37, 99, 235, 255), width=2)
+        
+        # Draw inner grip arrows
+        try:
+            # Simple text as fallback since custom font might fail
+            font = ImageFont.truetype("arial.ttf", 12)
+            draw.text((split_x - 14, handle_y - 8), "◀", fill=(37, 99, 235, 255), font=font)
+            draw.text((split_x + 2, handle_y - 8), "▶", fill=(37, 99, 235, 255), font=font)
+        except IOError:
+            draw.text((split_x - 10, handle_y - 6), "<", fill=(37, 99, 235, 255))
+            draw.text((split_x + 4, handle_y - 6), ">", fill=(37, 99, 235, 255))
+
+        # Merge overlay onto composite
+        composite = Image.alpha_composite(composite, overlay)
+
+        self._composite = ImageTk.PhotoImage(composite.convert("RGB"))
+        # Center in canvas, applying pan offsets
+        cx = (cw - w) // 2 + int(self._pan_x)
+        cy = (ch - h) // 2 + int(self._pan_y)
         self._canvas.create_image(cx, cy, image=self._composite, anchor="nw", tags="composite")
 
         # Labels
@@ -271,7 +521,7 @@ class PreviewCanvas(ctk.CTkFrame):
             split_px = self._comp_x + int(self._slider_pos * self._comp_w)
             if abs(event.x - split_px) < 20:
                 self._dragging_slider = True
-                self._canvas.configure(cursor="ew_resize")
+                self._canvas.configure(cursor="size_we")
                 return
         self._drag_start = (event.x, event.y)
 

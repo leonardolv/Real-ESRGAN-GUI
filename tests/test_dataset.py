@@ -28,7 +28,7 @@ def test_realesrgan_dataset():
     assert result['kernel1'].shape == (21, 21)
     assert result['kernel2'].shape == (21, 21)
     assert result['sinc_kernel'].shape == (21, 21)
-    assert result['gt_path'] == 'tests/data/gt/baboon.png'
+    assert result['gt_path'].replace('\\', '/') == 'tests/data/gt/baboon.png'
 
     # ------------------ test lmdb backend -------------------- #
     opt['dataroot_gt'] = 'tests/data/gt.lmdb'
@@ -96,8 +96,8 @@ def test_realesrgan_paired_dataset():
     # check shape and contents
     assert result['gt'].shape == (3, 128, 128)
     assert result['lq'].shape == (3, 32, 32)
-    assert result['gt_path'] == 'tests/data/gt/baboon.png'
-    assert result['lq_path'] == 'tests/data/lq/baboon.png'
+    assert result['gt_path'].replace('\\', '/') == 'tests/data/gt/baboon.png'
+    assert result['lq_path'].replace('\\', '/') == 'tests/data/lq/baboon.png'
 
     # ------------------ test lmdb backend -------------------- #
     opt['dataroot_gt'] = 'tests/data/gt.lmdb'

@@ -1,10 +1,8 @@
+"""Automated test for the Real-ESRGAN GUI upscaling pipeline."""
+
 import os
 import sys
 import time
-from PIL import Image
-from queue import Queue
-
-import sys
 
 # Prevent OpenMP/MKL thread deadlocks when using PyTorch CPU inference on Windows
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -12,10 +10,21 @@ os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
-import cv2
-cv2.setNumThreads(0)
+
 import torch
 torch.set_num_threads(1)
+import cv2
+cv2.setNumThreads(0)
+
+# Patch torchvision for basicsr on newer PyTorch versions
+try:
+    import torchvision.transforms.functional as tv_f
+    sys.modules['torchvision.transforms.functional_tensor'] = tv_f
+except ImportError:
+    pass
+
+from PIL import Image
+from queue import Queue
 
 # Ensure project root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -23,13 +32,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gui.controllers.model_manager import ModelManager
 from gui.controllers.upscale_controller import UpscaleController, MsgType, UpscaleJob
 
+
 def run_test():
     # 1. Create a sample image
     test_img_path = "test_input.jpg"
-    out_img_path = "test_input_out.jpg"
-    img = Image.new('RGB', (64, 64), color = 'red')
-    img.save(test_img_path)
+    out_dir = "test_output"
+    os.makedirs(out_dir, exist_ok=True)
 
+    img = Image.new('RGB', (64, 64), color='red')
+    img.save(test_img_path)
     print("Sample image created.")
 
     # 2. Setup controllers
@@ -45,12 +56,12 @@ def run_test():
 
     # 3. Add job
     job = UpscaleJob(
-        input_path='test_video.mp4',
-        output_path='test_video_out.mp4',
+        input_path=test_img_path,
+        output_path=out_dir,
         model_name="realesr-animevideov3",
         outscale=4.0,
         denoise_strength=0.5,
-        face_enhance=False
+        face_enhance=False,
     )
     print("Job added, running in worker thread...")
     ctrl.submit(job)
@@ -61,10 +72,9 @@ def run_test():
         if not msgs:
             time.sleep(0.1)
             continue
-            
+
         done = False
         for msg in msgs:
-            print(f"[Worker] {msg.type.name}: {msg.data}")
             if msg.type == MsgType.COMPLETE:
                 print("Test successful!")
                 done = True
@@ -76,18 +86,12 @@ def run_test():
             break
 
     # Cleanup
-    import shutil
     if os.path.exists(test_img_path):
         os.remove(test_img_path)
-    if os.path.exists('test_video.mp4'):
-        try: os.remove('test_video.mp4')
-        except: pass
-    if os.path.exists('test_video_out.mp4'):
-        try: shutil.rmtree('test_video_out.mp4')
-        except: pass
-    if os.path.exists(out_img_path):
-        try: shutil.rmtree(out_img_path)
-        except: pass
+    if os.path.isdir(out_dir):
+        import shutil
+        shutil.rmtree(out_dir)
+
 
 if __name__ == "__main__":
     run_test()

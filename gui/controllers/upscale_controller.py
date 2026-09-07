@@ -20,6 +20,16 @@ import cv2
 import numpy as np
 import torch
 
+# Patch torchvision for basicsr compatibility on newer PyTorch versions.
+# Must happen at module level, before any `from basicsr ...` or `from realesrgan ...`
+# import triggers the basicsr import chain.
+import sys as _sys
+try:
+    import torchvision.transforms.functional as _tv_f
+    _sys.modules['torchvision.transforms.functional_tensor'] = _tv_f
+except ImportError:
+    pass
+
 from gui.controllers.model_manager import ModelManager
 
 
@@ -152,7 +162,7 @@ class UpscaleController:
             props = torch.cuda.get_device_properties(0)
             return {
                 "name": torch.cuda.get_device_name(0),
-                "total_vram_gb": round(props.total_mem / (1024 ** 3), 1),
+                "total_vram_gb": round(props.total_memory / (1024 ** 3), 1),
                 "used_vram_gb": round(torch.cuda.memory_allocated(0) / (1024 ** 3), 1),
                 "device": "cuda",
             }
@@ -194,10 +204,6 @@ class UpscaleController:
 
             self._post(MsgType.PROGRESS, {"percent": 20, "status": "Upscaling…"})
 
-            def progress_callback(p):
-                percent = int(20 + p * 65)
-                self._post(MsgType.PROGRESS, {"percent": percent, "status": f"Upscaling ({int(p*100)}%)…"})
-
             # Face enhancement path
             if job.face_enhance:
                 face_enhancer = self._build_face_enhancer(upsampler, job)
@@ -205,9 +211,7 @@ class UpscaleController:
                     img, has_aligned=False, only_center_face=False, paste_back=True
                 )
             else:
-                print("[Worker Debug] Entering upsampler.enhance...")
-                output, _ = upsampler.enhance(img, outscale=job.outscale, progress_callback=progress_callback)
-                print("[Worker Debug] Exited upsampler.enhance!")
+                output, _ = upsampler.enhance(img, outscale=job.outscale)
 
             if self._cancelled():
                 return
@@ -332,15 +336,31 @@ class UpscaleController:
                     pct = 5 + (frame_idx / nb_frames) * 90
                     self._post(MsgType.PROGRESS, {"percent": pct, "status": f"Frame {frame_idx}/{nb_frames}"})
 
-            # Close pipes
-            stream_reader.stdout.close()
-            stream_reader.wait()
-            stream_writer.stdin.close()
-            stream_writer.wait()
+            # Close pipes and kill processes if cancelled
+            if self._cancelled():
+                stream_reader.kill()
+                stream_writer.kill()
+                
+            try:
+                if stream_reader.stdout:
+                    stream_reader.stdout.close()
+                stream_reader.wait(timeout=2)
+            except Exception:
+                pass
+                
+            try:
+                if stream_writer.stdin:
+                    stream_writer.stdin.close()
+                stream_writer.wait(timeout=2)
+            except Exception:
+                pass
             
             if self._cancelled():
                 if os.path.exists(save_path):
-                    os.remove(save_path)
+                    try:
+                        os.remove(save_path)
+                    except OSError:
+                        pass
                 return
 
             self._post(MsgType.PROGRESS, {"percent": 100, "status": "Done"})

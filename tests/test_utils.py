@@ -1,10 +1,14 @@
+import os
 import numpy as np
+import pytest
 from basicsr.archs.rrdbnet_arch import RRDBNet
 
 from realesrgan.utils import RealESRGANer
 
 
 def test_realesrganer():
+    if not os.path.exists('experiments/pretrained_models/RealESRGAN_x4plus.pth'):
+        pytest.skip("Pretrained model experiments/pretrained_models/RealESRGAN_x4plus.pth not found")
     # initialize with default model
     restorer = RealESRGANer(
         scale=4,

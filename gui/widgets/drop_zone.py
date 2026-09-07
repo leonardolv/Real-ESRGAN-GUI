@@ -5,6 +5,7 @@ video files via drag-and-drop or click-to-browse.
 """
 
 import tkinter as tk
+import tkinter.filedialog
 from pathlib import Path
 from typing import Callable, List, Optional
 

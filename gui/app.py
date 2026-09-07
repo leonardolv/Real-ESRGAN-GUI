@@ -9,9 +9,12 @@ Plus toolbar at top, progress bar below preview, and status bar at bottom.
 """
 
 import os
+import re
 import subprocess
 import sys
 import tkinter as tk
+import tkinter.filedialog
+import tkinter.messagebox
 from pathlib import Path
 from typing import List, Optional
 
@@ -377,8 +380,12 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             output_path = d.get("output_path", "")
             if output_path and os.path.isfile(output_path):
                 try:
-                    output_img = Image.open(output_path)
-                    self.preview.set_output_image(output_img)
+                    from gui.utils.image_utils import is_video_file
+                    if is_video_file(output_path):
+                        self.preview.set_output_video(output_path)
+                    else:
+                        output_img = Image.open(output_path)
+                        self.preview.set_output_image(output_img)
                 except Exception:
                     pass
 
@@ -415,16 +422,27 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
 
     def _on_queue_item_selected(self, item) -> None:
         """When user selects a queue item, show its preview."""
-        if is_image_file(item.path):
-            thumb = generate_thumbnail(item.path)
-            if thumb:
-                self.preview.set_input_image(thumb)
+        if os.path.isfile(item.path):
+            try:
+                from gui.utils.image_utils import is_video_file
+                if is_video_file(item.path):
+                    self.preview.set_input_video(item.path)
+                else:
+                    img = Image.open(item.path)
+                    self.preview.set_input_image(img)
+            except Exception:
+                self.preview.clear()
 
-            # If already processed, also show output
-            if item.output_path and os.path.isfile(item.output_path):
+        # If completed, also load output
+        if item.status == ItemStatus.COMPLETED and item.output_path:
+            if os.path.isfile(item.output_path):
                 try:
-                    output_img = Image.open(item.output_path)
-                    self.preview.set_output_image(output_img)
+                    from gui.utils.image_utils import is_video_file
+                    if is_video_file(item.output_path):
+                        self.preview.set_output_video(item.output_path)
+                    else:
+                        out_img = Image.open(item.output_path)
+                        self.preview.set_output_image(out_img)
                     self.toolbar.set_save_enabled(True)
                 except Exception:
                     pass
@@ -567,17 +585,17 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     def _save_geometry(self) -> None:
         try:
             geo = self.geometry()
-            # Format: WxH+X+Y
-            size, pos = geo.split("+", 1)
-            w, h = size.split("x")
-            parts = pos.split("+")
-            self.config_store.update({
-                "window_width": int(w),
-                "window_height": int(h),
-                "window_x": int(parts[0]),
-                "window_y": int(parts[1]) if len(parts) > 1 else 0,
-                "window_maximized": self.state() == "zoomed",
-            })
+            # Format: WxH+X+Y or WxH+-X+Y (negative coords on multi-monitor)
+            match = re.match(r'(\d+)x(\d+)\+(-?\d+)\+(-?\d+)', geo)
+            if match:
+                w, h, x, y = int(match.group(1)), int(match.group(2)), int(match.group(3)), int(match.group(4))
+                self.config_store.update({
+                    "window_width": w,
+                    "window_height": h,
+                    "window_x": x,
+                    "window_y": y,
+                    "window_maximized": self.state() == "zoomed",
+                })
         except Exception:
             pass
 

@@ -338,14 +338,32 @@ class SettingsPanel(ctk.CTkScrollableFrame):
     def get_settings(self) -> Dict[str, Any]:
         """Return the current settings as a dictionary."""
         tile_str = self._tile_var.get()
-        tile = int(tile_str.split()[0]) if tile_str else 0
+        try:
+            tile = int(tile_str.split()[0]) if tile_str else 0
+        except (ValueError, IndexError):
+            tile = 0
+
+        try:
+            tile_pad = int(self._tile_pad_var.get() or 10)
+        except ValueError:
+            tile_pad = 10
+
+        try:
+            pre_pad = int(self._pre_pad_var.get() or 0)
+        except ValueError:
+            pre_pad = 0
+
+        try:
+            outscale = float(self._scale_var.get())
+        except ValueError:
+            outscale = 4.0
 
         return {
             "model_name": self._model_var.get(),
-            "outscale": float(self._scale_var.get()),
+            "outscale": outscale,
             "tile": tile,
-            "tile_pad": int(self._tile_pad_var.get() or 10),
-            "pre_pad": int(self._pre_pad_var.get() or 0),
+            "tile_pad": tile_pad,
+            "pre_pad": pre_pad,
             "face_enhance": self._face_var.get(),
             "fp32": self._fp32_var.get(),
             "denoise_strength": round(self._denoise_var.get(), 2),

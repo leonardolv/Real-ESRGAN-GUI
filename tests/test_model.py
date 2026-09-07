@@ -1,8 +1,13 @@
+import pytest
 import torch
 import yaml
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from basicsr.data.paired_image_dataset import PairedImageDataset
-from basicsr.losses.losses import GANLoss, L1Loss, PerceptualLoss
+try:
+    from basicsr.losses.losses import GANLoss, L1Loss, PerceptualLoss
+except ImportError:
+    from basicsr.losses.basic_loss import L1Loss, PerceptualLoss
+    from basicsr.losses.gan_loss import GANLoss
 
 from realesrgan.archs.discriminator_arch import UNetDiscriminatorSN
 from realesrgan.models.realesrgan_model import RealESRGANModel
@@ -10,6 +15,8 @@ from realesrgan.models.realesrnet_model import RealESRNetModel
 
 
 def test_realesrnet_model():
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA not available for GPU model test")
     with open('tests/data/test_realesrnet_model.yml', mode='r') as f:
         opt = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -62,6 +69,8 @@ def test_realesrnet_model():
 
 
 def test_realesrgan_model():
+    if not torch.cuda.is_available():
+        pytest.skip("CUDA not available for GPU model test")
     with open('tests/data/test_realesrgan_model.yml', mode='r') as f:
         opt = yaml.load(f, Loader=yaml.FullLoader)
 
