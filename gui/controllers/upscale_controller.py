@@ -73,6 +73,7 @@ class UpscaleJob:
     output_ext: str = "auto"
     suffix: str = "out"
     gpu_id: Optional[int] = None
+    item_index: Optional[int] = None
 
 
 # ---------------------------------------------------------------------- #
@@ -98,6 +99,7 @@ class UpscaleController:
         self._msg_queue: queue.Queue[WorkerMessage] = queue.Queue()
         self._cancel_event = threading.Event()
         self._worker: Optional[threading.Thread] = None
+        self._current_job: Optional[UpscaleJob] = None
         self._current_upsampler = None
         self._current_model_name: Optional[str] = None
 
@@ -173,11 +175,15 @@ class UpscaleController:
     # ------------------------------------------------------------------ #
 
     def _run_job(self, job: UpscaleJob) -> None:
-        from gui.utils.image_utils import is_video_file
-        if is_video_file(job.input_path):
-            self._run_video_job(job)
-        else:
-            self._run_image_job(job)
+        self._current_job = job
+        try:
+            from gui.utils.image_utils import is_video_file
+            if is_video_file(job.input_path):
+                self._run_video_job(job)
+            else:
+                self._run_image_job(job)
+        finally:
+            self._current_job = None
 
     def _run_image_job(self, job: UpscaleJob) -> None:
         try:
@@ -396,6 +402,7 @@ class UpscaleController:
                 "current": i + 1,
                 "total": total,
                 "file": os.path.basename(job.input_path),
+                "item_index": job.item_index,
             })
             self._run_job(job)
 
@@ -487,6 +494,12 @@ class UpscaleController:
 
     def _post(self, msg_type: MsgType, data: Any = None) -> None:
         """Post a message to the UI queue."""
+        if self._current_job is not None:
+            if isinstance(data, dict):
+                if "item_index" not in data:
+                    data["item_index"] = self._current_job.item_index
+            elif msg_type == MsgType.ERROR:
+                data = {"error": str(data), "item_index": self._current_job.item_index}
         self._msg_queue.put(WorkerMessage(type=msg_type, data=data))
 
     def _cancelled(self) -> bool:

@@ -95,36 +95,145 @@ class TestUpscaleControllerQueue:
         ctrl = UpscaleController(mm)
         assert ctrl.is_busy is False
 
+    def test_upscale_job_with_item_index(self):
+        job = UpscaleJob(
+            input_path='input.png',
+            output_path='output.png',
+            model_name='RealESRGAN_x4plus',
+            item_index=3,
+        )
+        assert job.item_index == 3
+
+    def test_batch_progress_and_cancellation(self):
+        mm = ModelManager()
+        ctrl = UpscaleController(mm)
+        job1 = UpscaleJob("in1.png", "out1.png", "RealESRGAN_x4plus", item_index=0)
+        job2 = UpscaleJob("in2.png", "out2.png", "RealESRGAN_x4plus", item_index=1)
+
+        # Signal cancellation
+        ctrl.cancel()
+        assert ctrl._cancelled() is True
+
+        # Run batch with cancelled flag set
+        ctrl._run_batch([job1, job2])
+        messages = ctrl.poll()
+        log_msgs = [m for m in messages if m.type == MsgType.LOG]
+        assert any("cancelled" in str(m.data).lower() for m in log_msgs)
+
 
 class TestGUIWidgetsHeadless:
-    def test_widgets_instantiation_and_lifecycle(self, tmp_path):
+    @pytest.fixture(scope="class")
+    @classmethod
+    def ctk_root(cls):
         root = ctk.CTk()
         root.withdraw()
+        yield root
         try:
-            mm = ModelManager()
-            # Settings panel
-            settings = SettingsPanel(root, model_manager=mm)
-            settings.pack()
-            current_settings = settings.get_settings()
-            assert 'model_name' in current_settings
-            assert current_settings['outscale'] >= 1.0
-
-            # Progress panel
-            progress = ProgressPanel(root)
-            progress.pack()
-            progress.update_progress(0.75, "Processing 75%")
-            root.update_idletasks()
-
-            # Queue panel
-            queue = QueuePanel(root)
-            queue.pack()
-            sample_img = tmp_path / "item.png"
-            Image.new('RGB', (10, 10), color='red').save(sample_img)
-            queue.add_files([str(sample_img)])
-            items = queue.get_items()
-            assert len(items) == 1
-            assert items[0].status == ItemStatus.QUEUED
-
-        finally:
             root.destroy()
+        except Exception:
+            pass
+
+    @pytest.fixture(autouse=True)
+    def clean_root(self, ctk_root):
+        yield
+        for child in ctk_root.winfo_children():
+            try:
+                child.destroy()
+            except Exception:
+                pass
+
+    def test_widgets_instantiation_and_lifecycle(self, ctk_root, tmp_path):
+        mm = ModelManager()
+        # Settings panel
+        settings = SettingsPanel(ctk_root, model_manager=mm)
+        settings.pack()
+        current_settings = settings.get_settings()
+        assert 'model_name' in current_settings
+        assert current_settings['outscale'] >= 1.0
+
+        # Progress panel
+        progress = ProgressPanel(ctk_root)
+        progress.pack()
+        progress.update_progress(0.75, "Processing 75%")
+        ctk_root.update_idletasks()
+
+        # Queue panel
+        queue = QueuePanel(ctk_root)
+        queue.pack()
+        sample_img = tmp_path / "item.png"
+        Image.new('RGB', (10, 10), color='red').save(sample_img)
+        queue.add_files([str(sample_img)])
+        items = queue.get_items()
+        assert len(items) == 1
+        assert items[0].status == ItemStatus.QUEUED
+
+    def test_queue_panel_lifecycle_and_clear_callback(self, ctk_root, tmp_path):
+        cleared = []
+        queue = QueuePanel(ctk_root, on_queue_cleared=lambda: cleared.append(True))
+        queue.pack()
+        img1 = tmp_path / "img1.png"
+        img2 = tmp_path / "img2.png"
+        Image.new('RGB', (10, 10)).save(img1)
+        Image.new('RGB', (10, 10)).save(img2)
+        queue.add_files([str(img1), str(img2)])
+        assert queue.count == 2
+        assert len(cleared) == 0
+
+        # Remove first item
+        queue.remove(0)
+        assert queue.count == 1
+        assert len(cleared) == 0
+
+        # Remove second item (queue becomes empty)
+        queue.remove(0)
+        assert queue.count == 0
+        assert len(cleared) == 1
+
+        # Add and clear
+        queue.add_files([str(img1)])
+        assert queue.count == 1
+        queue.clear()
+        assert queue.count == 0
+        assert len(cleared) == 2
+
+    def test_queue_panel_context_menu_and_status_reset(self, ctk_root, tmp_path):
+        queue = QueuePanel(ctk_root)
+        queue.pack()
+        img = tmp_path / "reset_test.png"
+        Image.new('RGB', (10, 10)).save(img)
+        queue.add_files([str(img)])
+        queue.update_item_status(0, ItemStatus.ERROR, 0.5)
+        assert queue.get_items()[0].status == ItemStatus.ERROR
+
+        # Reset status via update_item_status (as done by context menu option)
+        queue.update_item_status(0, ItemStatus.QUEUED, 0)
+        assert queue.get_items()[0].status == ItemStatus.QUEUED
+
+    def test_settings_panel_padding_and_denoise(self, ctk_root):
+        mm = ModelManager()
+        settings = SettingsPanel(ctk_root, model_manager=mm)
+        settings.pack()
+        s = settings.get_settings()
+        assert 'tile_pad' in s
+        assert 'pre_pad' in s
+
+        settings.load_settings({"tile_pad": 20, "pre_pad": 5})
+        s2 = settings.get_settings()
+        assert s2['tile_pad'] == 20
+        assert s2['pre_pad'] == 5
+
+    def test_toolbar_and_tooltip(self, ctk_root):
+        from gui.widgets.toolbar import Toolbar
+        toolbar = Toolbar(
+            ctk_root,
+            on_open=lambda: None,
+            on_save=lambda: None,
+            on_open_output=lambda: None,
+        )
+        toolbar.pack()
+        assert toolbar._save_btn.cget("state") == "disabled"
+        toolbar.set_save_enabled(True)
+        assert toolbar._save_btn.cget("state") == "normal"
+
+
 

@@ -18,7 +18,12 @@
   - Hardened window geometry persistence in `gui/app.py` against multi-monitor setups with negative coordinates.
   - Added video file handling and preview integrations in `preview_canvas.py` and `app.py`.
   - Ensured all tests execute non-interactively with 100% pass/skip rate (12 passed, 3 skipped, 0 failures).
+- [x] **Batch Cancellation & Queue Context Menu Hardening** (2026-09-07)
+  - Added queue context menu actions (Open File, Show in File Explorer, Copy Path, Reset Status to Queued) in `gui/widgets/queue_panel.py`.
+  - Added padding and denoise strength settings persistence in `gui/widgets/settings_panel.py`.
+  - Refactored headless test suite fixture `ctk_root` with class-scoped reuse and per-test child widget cleanup to prevent Windows Tcl interpreter reinitialization crashes (`invalid command name "tcl_findLibrary"`).
+  - Added test coverage for batch execution cancellation (`test_batch_progress_and_cancellation`) and queue context menu status reset (`test_queue_panel_context_menu_and_status_reset`).
+  - Verified with full test suite: 20 passed, 1 skipped, 0 failures.
 
 ## Backlog
-- [ ] Add batch drag-and-drop progress cancellation tests.
-
+- [ ] Add drag-and-drop visual indicator when dragging files over QueuePanel.

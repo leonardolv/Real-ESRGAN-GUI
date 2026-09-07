@@ -161,18 +161,22 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             anchor="w", padx=16, pady=(4, 0)
         )
         self._tile_pad_var = ctk.StringVar(value="10")
-        ctk.CTkEntry(
+        tile_pad_entry = ctk.CTkEntry(
             self, textvariable=self._tile_pad_var, width=248, height=28
-        ).pack(padx=16, pady=(2, 4))
+        )
+        tile_pad_entry.pack(padx=16, pady=(2, 4))
+        tile_pad_entry.bind("<FocusOut>", lambda e: self._emit_int("tile_pad", self._tile_pad_var, 10))
 
         # Pre padding
         ctk.CTkLabel(self, text="Pre Padding", font=ctk.CTkFont(size=12)).pack(
             anchor="w", padx=16, pady=(4, 0)
         )
         self._pre_pad_var = ctk.StringVar(value="0")
-        ctk.CTkEntry(
+        pre_pad_entry = ctk.CTkEntry(
             self, textvariable=self._pre_pad_var, width=248, height=28
-        ).pack(padx=16, pady=(2, 8))
+        )
+        pre_pad_entry.pack(padx=16, pady=(2, 8))
+        pre_pad_entry.bind("<FocusOut>", lambda e: self._emit_int("pre_pad", self._pre_pad_var, 0))
 
     # ================================================================== #
     #  Section 3: Enhancement                                             #
@@ -200,14 +204,18 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         )
         self._face_hint.pack(anchor="w", padx=32, pady=(0, 4))
 
-        # Denoise strength slider
+        # Denoise strength slider — wrapped in a container so show/hide
+        # doesn't break pack ordering when toggling models.
+        self._denoise_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self._denoise_frame.pack(fill="x")
+
         self._denoise_label = ctk.CTkLabel(
-            self, text="Denoise Strength", font=ctk.CTkFont(size=12)
+            self._denoise_frame, text="Denoise Strength", font=ctk.CTkFont(size=12)
         )
         self._denoise_label.pack(anchor="w", padx=16, pady=(4, 0))
         self._denoise_var = ctk.DoubleVar(value=0.5)
         self._denoise_slider = ctk.CTkSlider(
-            self,
+            self._denoise_frame,
             from_=0,
             to=1,
             number_of_steps=20,
@@ -217,12 +225,12 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         )
         self._denoise_slider.pack(padx=16, pady=(2, 0))
         self._denoise_value_label = ctk.CTkLabel(
-            self, text="0.50", font=ctk.CTkFont(size=11), text_color=("gray50", "gray60")
+            self._denoise_frame, text="0.50", font=ctk.CTkFont(size=11), text_color=("gray50", "gray60")
         )
         self._denoise_value_label.pack(anchor="w", padx=16, pady=(0, 2))
         self._denoise_var.trace_add("write", self._on_denoise_changed)
         self._denoise_hint = ctk.CTkLabel(
-            self,
+            self._denoise_frame,
             text="Only for General v3 model. 0=keep noise, 1=strong denoise.",
             font=ctk.CTkFont(size=10),
             text_color="#a0a0a0",
@@ -286,10 +294,12 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             anchor="w", padx=16, pady=(4, 0)
         )
         self._suffix_var = ctk.StringVar(value="out")
-        ctk.CTkEntry(
+        suffix_entry = ctk.CTkEntry(
             self, textvariable=self._suffix_var, width=248, height=28,
             placeholder_text="e.g. out, upscaled, 4x"
-        ).pack(padx=16, pady=(2, 4))
+        )
+        suffix_entry.pack(padx=16, pady=(2, 4))
+        suffix_entry.bind("<FocusOut>", lambda e: self._emit("suffix", self._suffix_var.get()))
 
         # Output folder
         ctk.CTkLabel(self, text="Output Folder", font=ctk.CTkFont(size=12)).pack(
@@ -298,11 +308,13 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         folder_frame = ctk.CTkFrame(self, fg_color="transparent")
         folder_frame.pack(fill="x", padx=16, pady=(2, 8))
         self._output_dir_var = ctk.StringVar(value="results")
-        ctk.CTkEntry(
+        output_dir_entry = ctk.CTkEntry(
             folder_frame,
             textvariable=self._output_dir_var,
             height=28,
-        ).pack(side="left", fill="x", expand=True)
+        )
+        output_dir_entry.pack(side="left", fill="x", expand=True)
+        output_dir_entry.bind("<FocusOut>", lambda e: self._emit("output_folder", self._output_dir_var.get()))
         ctk.CTkButton(
             folder_frame,
             text="📂",
@@ -392,6 +404,10 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             self._ext_var.set(settings["output_format"])
         if "output_suffix" in settings:
             self._suffix_var.set(settings["output_suffix"])
+        if "tile_pad" in settings:
+            self._tile_pad_var.set(str(int(settings["tile_pad"])))
+        if "pre_pad" in settings:
+            self._pre_pad_var.set(str(int(settings["pre_pad"])))
         if "output_folder" in settings:
             self._output_dir_var.set(settings["output_folder"])
 
@@ -472,18 +488,13 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             self._download_btn.pack(padx=16, pady=(0, 8))
             self._download_btn.configure(state="normal")
 
-        # Conditional visibility: denoise slider only for general-v3
+        # Conditional visibility: denoise slider only for general-v3.
+        # Uses a container frame so show/hide doesn't break pack ordering.
         is_v3 = name == "realesr-general-x4v3"
         if is_v3:
-            self._denoise_label.pack(anchor="w", padx=16, pady=(4, 0))
-            self._denoise_slider.pack(padx=16, pady=(2, 0))
-            self._denoise_value_label.pack(anchor="w", padx=16, pady=(0, 2))
-            self._denoise_hint.pack(anchor="w", padx=16, pady=(0, 4))
+            self._denoise_frame.pack(fill="x")
         else:
-            self._denoise_label.pack_forget()
-            self._denoise_slider.pack_forget()
-            self._denoise_value_label.pack_forget()
-            self._denoise_hint.pack_forget()
+            self._denoise_frame.pack_forget()
 
         # Disable face enhance for anime models
         is_anime = "anime" in name.lower()
@@ -513,3 +524,11 @@ class SettingsPanel(ctk.CTkScrollableFrame):
     def _emit(self, key: str, value: Any) -> None:
         if self._on_changed:
             self._on_changed(key, value)
+
+    def _emit_int(self, key: str, var: ctk.StringVar, fallback: int) -> None:
+        """Parse an int from a StringVar and emit, using fallback on error."""
+        try:
+            val = int(var.get() or fallback)
+        except ValueError:
+            val = fallback
+        self._emit(key, val)

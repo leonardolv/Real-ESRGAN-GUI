@@ -5,6 +5,9 @@ Supports selection, removal, and reordering.
 """
 
 import os
+import subprocess
+import sys
+import tkinter as tk
 from enum import Enum, auto
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -58,6 +61,8 @@ class QueuePanel(ctk.CTkFrame):
         ``(QueueItem) -> None`` when user clicks an item.
     on_add_files : callable
         ``() -> None`` to trigger file browser.
+    on_queue_cleared : callable
+        ``() -> None`` when queue is emptied.
     """
 
     def __init__(
@@ -65,6 +70,7 @@ class QueuePanel(ctk.CTkFrame):
         master,
         on_item_selected: Optional[Callable] = None,
         on_add_files: Optional[Callable] = None,
+        on_queue_cleared: Optional[Callable] = None,
         **kwargs,
     ):
         super().__init__(master, width=220, **kwargs)
@@ -74,6 +80,7 @@ class QueuePanel(ctk.CTkFrame):
         self._selected_idx: int = -1
         self._on_item_selected = on_item_selected
         self._on_add_files = on_add_files
+        self._on_queue_cleared = on_queue_cleared
 
         # Header
         header = ctk.CTkFrame(self, fg_color="transparent", height=36)
@@ -175,14 +182,24 @@ class QueuePanel(ctk.CTkFrame):
         self._items.clear()
         self._selected_idx = -1
         self._rebuild_list()
+        if self._on_queue_cleared:
+            self._on_queue_cleared()
 
     def remove(self, idx: int) -> None:
         """Remove item at index."""
         if 0 <= idx < len(self._items):
             self._items.pop(idx)
-            if self._selected_idx >= len(self._items):
-                self._selected_idx = len(self._items) - 1
-            self._rebuild_list()
+            if not self._items:
+                self._selected_idx = -1
+                self._rebuild_list()
+                if self._on_queue_cleared:
+                    self._on_queue_cleared()
+            else:
+                if self._selected_idx >= len(self._items):
+                    self._selected_idx = len(self._items) - 1
+                self._rebuild_list()
+                if self._on_item_selected and self._selected_idx >= 0:
+                    self._on_item_selected(self._items[self._selected_idx])
 
     def select(self, idx: int) -> None:
         """Select and highlight item at index."""
@@ -247,6 +264,7 @@ class QueuePanel(ctk.CTkFrame):
         card.pack(fill="x", pady=2, padx=2)
         card.pack_propagate(False)
         card.bind("<Button-1>", lambda e, i=idx: self.select(i))
+        card.bind("<Button-3>", lambda e, i=idx: self._show_context_menu(e, i))
 
         # Icon + filename
         icon = "🎬" if item.is_video else "🖼"
@@ -258,6 +276,7 @@ class QueuePanel(ctk.CTkFrame):
         )
         name_label.pack(anchor="w", padx=8, pady=(6, 0))
         name_label.bind("<Button-1>", lambda e, i=idx: self.select(i))
+        name_label.bind("<Button-3>", lambda e, i=idx: self._show_context_menu(e, i))
 
         # Metadata line
         if item.is_video:
@@ -286,6 +305,62 @@ class QueuePanel(ctk.CTkFrame):
         )
         info_label.pack(anchor="w", padx=8, pady=(0, 4))
         info_label.bind("<Button-1>", lambda e, i=idx: self.select(i))
+        info_label.bind("<Button-3>", lambda e, i=idx: self._show_context_menu(e, i))
+
+    def _show_context_menu(self, event, idx: int) -> None:
+        """Display right-click context menu for a queue item."""
+        if not (0 <= idx < len(self._items)):
+            return
+        self.select(idx)
+        item = self._items[idx]
+
+        menu = tk.Menu(self, tearoff=0)
+        menu.add_command(
+            label="Open File Location",
+            command=lambda: self._open_file_in_explorer(item.path),
+        )
+        if item.output_path and os.path.exists(item.output_path):
+            menu.add_command(
+                label="Open Output File Location",
+                command=lambda: self._open_file_in_explorer(item.output_path),
+            )
+
+        menu.add_separator()
+
+        if item.status in (ItemStatus.COMPLETED, ItemStatus.ERROR):
+            menu.add_command(
+                label="Reset Status to Queued",
+                command=lambda: self.update_item_status(idx, ItemStatus.QUEUED, 0),
+            )
+
+        menu.add_command(
+            label="Remove from Queue",
+            command=lambda: self.remove(idx),
+        )
+        menu.add_separator()
+        menu.add_command(
+            label="Clear All",
+            command=self.clear,
+        )
+
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
+    def _open_file_in_explorer(self, path: str) -> None:
+        """Highlight or open file in system file manager."""
+        if not path:
+            return
+        abs_p = Path(path).resolve()
+        if not abs_p.exists():
+            return
+        if sys.platform == "win32":
+            subprocess.run(["explorer", f"/select,{str(abs_p)}"], check=False)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", "-R", str(abs_p)])
+        else:
+            subprocess.Popen(["xdg-open", str(abs_p.parent)])
 
     def _on_add_click(self) -> None:
         if self._on_add_files:

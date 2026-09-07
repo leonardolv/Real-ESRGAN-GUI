@@ -38,6 +38,7 @@ from gui.utils.image_utils import (
     generate_thumbnail,
     is_image_file,
     is_supported_file,
+    is_video_file,
     IMAGE_EXTENSIONS,
     VIDEO_EXTENSIONS,
     ALL_EXTENSIONS,
@@ -124,6 +125,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             main,
             on_item_selected=self._on_queue_item_selected,
             on_add_files=self._open_files,
+            on_queue_cleared=self._on_queue_cleared,
         )
         self.queue_panel.pack(side="left", fill="y")
         self.queue_panel.set_process_all_command(self._process_all)
@@ -279,6 +281,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
 
         settings = self.settings_panel.get_settings()
 
+        idx = self.queue_panel.get_selected_index()
         job = UpscaleJob(
             input_path=item.path,
             output_path=settings["output_folder"],
@@ -293,9 +296,9 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             alpha_upsampler=settings["alpha_upsampler"],
             output_ext=settings["output_ext"],
             suffix=settings["suffix"],
+            item_index=idx,
         )
 
-        idx = self.queue_panel.get_selected_index()
         self.queue_panel.update_item_status(idx, ItemStatus.PROCESSING)
         self.settings_panel.set_upscale_button_state(False)
         self.progress.start(cancel_callback=self.upscale_ctrl.cancel)
@@ -314,7 +317,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
 
         settings = self.settings_panel.get_settings()
         jobs = []
-        for item in items:
+        for idx, item in enumerate(items):
             if item.status == ItemStatus.COMPLETED:
                 continue  # skip already done
             jobs.append(UpscaleJob(
@@ -331,6 +334,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
                 alpha_upsampler=settings["alpha_upsampler"],
                 output_ext=settings["output_ext"],
                 suffix=settings["suffix"],
+                item_index=idx,
             ))
 
         if not jobs:
@@ -358,8 +362,10 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         if msg.type == MsgType.PROGRESS:
             d = msg.data
             self.progress.update_progress(d.get("percent", 0), d.get("status", ""))
-            idx = self.queue_panel.get_selected_index()
-            if idx >= 0:
+            idx = d.get("item_index")
+            if idx is None or idx < 0:
+                idx = self.queue_panel.get_selected_index()
+            if idx is not None and idx >= 0:
                 self.queue_panel.update_item_status(
                     idx, ItemStatus.PROCESSING, d.get("percent", 0)
                 )
@@ -370,17 +376,19 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             self.settings_panel.set_upscale_button_state(True)
             self.toolbar.set_save_enabled(True)
 
-            idx = self.queue_panel.get_selected_index()
-            if idx >= 0:
+            idx = d.get("item_index")
+            if idx is None or idx < 0:
+                idx = self.queue_panel.get_selected_index()
+            if idx is not None and idx >= 0:
                 self.queue_panel.update_item_status(
                     idx, ItemStatus.COMPLETED, 100, d.get("output_path", "")
                 )
 
-            # Load output into preview
+            # Load output into preview if matching current selection or only item
             output_path = d.get("output_path", "")
-            if output_path and os.path.isfile(output_path):
+            selected_idx = self.queue_panel.get_selected_index()
+            if (idx == selected_idx or selected_idx < 0) and output_path and os.path.isfile(output_path):
                 try:
-                    from gui.utils.image_utils import is_video_file
                     if is_video_file(output_path):
                         self.preview.set_output_video(output_path)
                     else:
@@ -393,13 +401,20 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             self._update_gpu_info()
 
         elif msg.type == MsgType.ERROR:
-            error_text = str(msg.data)
+            if isinstance(msg.data, dict):
+                error_text = str(msg.data.get("error", ""))
+                idx = msg.data.get("item_index")
+            else:
+                error_text = str(msg.data)
+                idx = self.queue_panel.get_selected_index()
+
             self.progress.set_error(error_text)
             self.settings_panel.set_upscale_button_state(True)
             self._status_text.configure(text=f"Error: {error_text[:80]}")
 
-            idx = self.queue_panel.get_selected_index()
-            if idx >= 0:
+            if idx is None or idx < 0:
+                idx = self.queue_panel.get_selected_index()
+            if idx is not None and idx >= 0:
                 self.queue_panel.update_item_status(idx, ItemStatus.ERROR)
 
             # Show error dialog for CUDA OOM
@@ -412,6 +427,9 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         elif msg.type == MsgType.BATCH_PROGRESS:
             d = msg.data
             self.progress.update_batch(d["current"], d["total"], d.get("file", ""))
+            idx = d.get("item_index")
+            if idx is not None and 0 <= idx < self.queue_panel.count:
+                self.queue_panel.select(idx)
 
         elif msg.type == MsgType.LOG:
             self._status_text.configure(text=str(msg.data))
@@ -424,7 +442,6 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         """When user selects a queue item, show its preview."""
         if os.path.isfile(item.path):
             try:
-                from gui.utils.image_utils import is_video_file
                 if is_video_file(item.path):
                     self.preview.set_input_video(item.path)
                 else:
@@ -437,7 +454,6 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         if item.status == ItemStatus.COMPLETED and item.output_path:
             if os.path.isfile(item.output_path):
                 try:
-                    from gui.utils.image_utils import is_video_file
                     if is_video_file(item.output_path):
                         self.preview.set_output_video(item.output_path)
                     else:
@@ -461,6 +477,8 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             "model_name": "last_model",
             "outscale": "last_scale",
             "tile": "last_tile",
+            "tile_pad": "tile_pad",
+            "pre_pad": "pre_pad",
             "face_enhance": "face_enhance",
             "fp32": "fp32",
             "denoise_strength": "denoise_strength",
@@ -514,13 +532,17 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             return  # Don't trigger upscale when typing in an entry
         self._start_upscale()
 
+    def _on_queue_cleared(self) -> None:
+        """Handle queue becoming empty."""
+        self.preview.clear()
+        self._show_drop_zone()
+        self.toolbar.set_save_enabled(False)
+        self._status_text.configure(text="Ready")
+
     def _delete_selected(self) -> None:
         idx = self.queue_panel.get_selected_index()
         if idx >= 0:
             self.queue_panel.remove(idx)
-            if self.queue_panel.count == 0:
-                self.preview.clear()
-                self._show_drop_zone()
 
     def _toggle_fullscreen(self) -> None:
         current = self.attributes("-fullscreen")

@@ -380,9 +380,10 @@ class PreviewCanvas(ctk.CTkFrame):
         cy = ch // 2 + int(self._pan_y)
         self._canvas.create_image(cx, cy, image=self._display_input, anchor="center")
 
-        # Label
+        # Label with dimensions
+        iw, ih = self._input_image.size
         self._canvas.create_text(
-            12, 12, text="Input", fill="#AAAAAA",
+            12, 12, text=f"Input  ·  {iw} × {ih}", fill="#AAAAAA",
             font=("Segoe UI", 11, "bold"), anchor="nw"
         )
 
@@ -461,13 +462,15 @@ class PreviewCanvas(ctk.CTkFrame):
         cy = (ch - h) // 2 + int(self._pan_y)
         self._canvas.create_image(cx, cy, image=self._composite, anchor="nw", tags="composite")
 
-        # Labels
+        # Labels with dimensions
+        in_w, in_h = self._input_image.size
+        out_w, out_h = self._output_image.size
         self._canvas.create_text(
-            cx + 12, cy + 12, text="Before", fill="#AAAAAA",
+            cx + 12, cy + 12, text=f"Before  ·  {in_w} × {in_h}", fill="#AAAAAA",
             font=("Segoe UI", 11, "bold"), anchor="nw"
         )
         self._canvas.create_text(
-            cx + w - 12, cy + 12, text="After", fill="#AAAAAA",
+            cx + w - 12, cy + 12, text=f"After  ·  {out_w} × {out_h}", fill="#AAAAAA",
             font=("Segoe UI", 11, "bold"), anchor="ne"
         )
 
@@ -537,6 +540,7 @@ class PreviewCanvas(ctk.CTkFrame):
             self._pan_x += dx
             self._pan_y += dy
             self._drag_start = (event.x, event.y)
+            self._render()
 
     def _on_mouse_up(self, event) -> None:
         self._dragging_slider = False
