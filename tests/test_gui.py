@@ -368,6 +368,68 @@ class TestGUIWidgetsHeadless:
         assert len(queue._active_tooltips) == 0
         assert completed_tip.tip_window is None
 
+    def test_queue_panel_keyboard_navigation(self, ctk_root, tmp_path, monkeypatch):
+        f1 = tmp_path / "img1.png"
+        f2 = tmp_path / "img2.png"
+        f3 = tmp_path / "img3.png"
+        for f in (f1, f2, f3):
+            Image.new("RGB", (10, 10)).save(f)
+
+        selected_events = []
+        queue = QueuePanel(ctk_root, on_item_selected=lambda item: selected_events.append(item.filename))
+        queue.pack()
+        queue.add_files([str(f1), str(f2), str(f3)])
+        assert queue.count == 3
+        # First item is auto-selected when adding to an empty queue
+        assert queue._selected_idx == 0
+        assert len(selected_events) == 1
+        assert selected_events[-1] == "img1.png"
+
+        # Key down moves to next item
+        queue._on_key_down()
+        assert queue._selected_idx == 1
+        assert selected_events[-1] == "img2.png"
+
+        queue._on_key_down()
+        assert queue._selected_idx == 2
+        assert selected_events[-1] == "img3.png"
+
+        # Key down at end stays at end
+        queue._on_key_down()
+        assert queue._selected_idx == 2
+
+        # Key up moves back
+        res = queue._on_key_up()
+        assert res == "break"
+        assert queue._selected_idx == 1
+        assert selected_events[-1] == "img2.png"
+
+        queue._on_key_up()
+        assert queue._selected_idx == 0
+        assert selected_events[-1] == "img1.png"
+
+        # Key up at start stays at start
+        queue._on_key_up()
+        assert queue._selected_idx == 0
+
+        # Delete removes current selected item
+        res = queue._on_key_delete()
+        assert res == "break"
+        assert queue.count == 2
+        # Remaining files are f2 and f3
+
+        # Test text entry focused guard
+        entry = ctk.CTkEntry(ctk_root)
+        entry.pack()
+        monkeypatch.setattr(queue, "focus_get", lambda: getattr(entry, "_entry", entry))
+        assert queue._is_text_entry_focused()
+        # When text entry is focused, navigation returns None without modifying selection
+        prev_idx = queue._selected_idx
+        assert queue._on_key_down() is None
+        assert queue._selected_idx == prev_idx
+        assert queue._on_key_delete() is None
+        assert queue.count == 2
+
 
 
 

@@ -5,6 +5,12 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **Keyboard Navigation in QueuePanel** (2026-09-08)
+  - Added keyboard bindings for `<Up>`, `<Down>`, `<Delete>`, and `<BackSpace>` to `QueuePanel` allowing intuitive item selection and deletion without mouse reliance.
+  - Implemented smart text input focus guard (`_is_text_entry_focused`) to ensure navigation keys never intercept text typing in active entries or spinboxes.
+  - Added click focus integration (`_set_panel_focus`) on item cards and labels.
+  - Added comprehensive automated test `test_queue_panel_keyboard_navigation` in `tests/test_gui.py`.
+  - Verified with headless test suite: 25 passed, 1 skipped, 0 failures in 8.33s.
 - [x] **Fix App Startup Failure & Harden main.py Launch Pipeline** (2026-09-07)
   - Resolved startup crash (`AttributeError: module 'torch' has no attribute 'set_num_threads'`): cleared corrupted/conflicting PyTorch packages and OneDrive `-GALAXY` sync conflict files from `.venv\Lib\site-packages`.
   - Reinstalled clean PyTorch 2.5.1 with CUDA 12.1 acceleration (`torch==2.5.1+cu121`, `torchvision==0.20.1+cu121`) and `pytest`.
@@ -42,6 +48,5 @@
   - Verified with headless test suite: 19 passed, 0 failures in 5.02s.
 
 ## Backlog
-- [ ] Add keyboard navigation (Up/Down arrow keys to select, Delete key to remove) in QueuePanel.
 - [ ] Add estimated time remaining (ETA) calculation in ProgressPanel based on average item processing speed.
 

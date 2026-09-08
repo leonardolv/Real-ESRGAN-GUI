@@ -134,6 +134,9 @@ class QueuePanel(ctk.CTkFrame):
         # Drag-and-drop setup
         self._setup_dnd()
 
+        # Keyboard navigation
+        self._bind_keyboard_navigation()
+
         # Bottom buttons
         btn_frame = ctk.CTkFrame(self, fg_color="transparent")
         btn_frame.pack(fill="x", padx=8, pady=(4, 8))
@@ -306,7 +309,7 @@ class QueuePanel(ctk.CTkFrame):
         card = ctk.CTkFrame(self._list_frame, fg_color=fg, corner_radius=6, height=56)
         card.pack(fill="x", pady=2, padx=2)
         card.pack_propagate(False)
-        card.bind("<Button-1>", lambda e, i=idx: self.select(i))
+        card.bind("<Button-1>", lambda e, i=idx: (self._set_panel_focus(), self.select(i)))
         card.bind("<Button-3>", lambda e, i=idx: self._show_context_menu(e, i))
 
         # Icon + filename
@@ -318,7 +321,7 @@ class QueuePanel(ctk.CTkFrame):
             anchor="w",
         )
         name_label.pack(anchor="w", padx=8, pady=(6, 0))
-        name_label.bind("<Button-1>", lambda e, i=idx: self.select(i))
+        name_label.bind("<Button-1>", lambda e, i=idx: (self._set_panel_focus(), self.select(i)))
         name_label.bind("<Button-3>", lambda e, i=idx: self._show_context_menu(e, i))
 
         # Metadata line
@@ -347,7 +350,7 @@ class QueuePanel(ctk.CTkFrame):
             anchor="w",
         )
         info_label.pack(anchor="w", padx=8, pady=(0, 4))
-        info_label.bind("<Button-1>", lambda e, i=idx: self.select(i))
+        info_label.bind("<Button-1>", lambda e, i=idx: (self._set_panel_focus(), self.select(i)))
         info_label.bind("<Button-3>", lambda e, i=idx: self._show_context_menu(e, i))
 
         # Attach hover preview tooltip (thumbnail for completed/queued images, diagnostics for error)
@@ -527,4 +530,66 @@ class QueuePanel(ctk.CTkFrame):
         if current:
             paths.append("".join(current).strip())
         return [p for p in paths if p]
+
+    # ------------------------------------------------------------------ #
+    #  Keyboard Navigation                                                #
+    # ------------------------------------------------------------------ #
+
+    def _set_panel_focus(self) -> None:
+        """Focus the panel to capture keyboard events."""
+        try:
+            self.focus_set()
+        except Exception:
+            pass
+
+    def _bind_keyboard_navigation(self) -> None:
+        """Bind Up, Down, Delete, and BackSpace keys for queue item navigation."""
+        targets = [self, self._list_frame]
+        if hasattr(self._list_frame, "_parent_canvas"):
+            targets.append(self._list_frame._parent_canvas)
+        for target in targets:
+            try:
+                target.bind("<Up>", self._on_key_up, add="+")
+                target.bind("<Down>", self._on_key_down, add="+")
+                target.bind("<Delete>", self._on_key_delete, add="+")
+                target.bind("<BackSpace>", self._on_key_delete, add="+")
+            except Exception:
+                pass
+
+    def _is_text_entry_focused(self) -> bool:
+        """Return True if focused widget is an active text input."""
+        try:
+            focused = self.focus_get()
+            if focused is None:
+                return False
+            cls_name = focused.__class__.__name__.lower()
+            return "entry" in cls_name or "text" in cls_name or "spinbox" in cls_name
+        except Exception:
+            return False
+
+    def _on_key_up(self, event=None) -> Optional[str]:
+        """Navigate to previous item in the queue."""
+        if self._is_text_entry_focused() or not self._items:
+            return None
+        new_idx = max(0, self._selected_idx - 1) if self._selected_idx > 0 else 0
+        self.select(new_idx)
+        return "break"
+
+    def _on_key_down(self, event=None) -> Optional[str]:
+        """Navigate to next item in the queue."""
+        if self._is_text_entry_focused() or not self._items:
+            return None
+        if self._selected_idx < 0:
+            new_idx = 0
+        else:
+            new_idx = min(len(self._items) - 1, self._selected_idx + 1)
+        self.select(new_idx)
+        return "break"
+
+    def _on_key_delete(self, event=None) -> Optional[str]:
+        """Remove the currently selected item from the queue."""
+        if self._is_text_entry_focused() or not self._items or self._selected_idx < 0:
+            return None
+        self.remove(self._selected_idx)
+        return "break"
 
