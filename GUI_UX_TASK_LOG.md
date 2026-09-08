@@ -5,6 +5,13 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **Estimated Time Remaining (ETA) & Batch Progress in ProgressPanel** (2026-09-08)
+  - Enhanced `ProgressPanel` with multi-item batch tracking (`_batch_total`, `_batch_current`, `_item_durations`), monotonic overall progress bar calculation across all queued items, and intelligent ETA estimation based on completed item average processing speed.
+  - Formatted time durations cleanly across ranges: seconds (`12s`), minutes (`1m 05s`, `2m`), and hours (`1h 01m`).
+  - Added `MsgType.BATCH_COMPLETE` to `UpscaleController` and emitted completion signal with item totals once batch completes.
+  - Hardened batch lifecycle in `gui/app.py`: prevented premature completion callbacks on intermediate items, maintained cancel button visibility until batch finished or cancelled, and kept persistent item progress counters `[X/Y]`.
+  - Added unit and headless GUI integration tests (`test_batch_complete_emission`, `test_progress_panel_time_formatting`, `test_progress_panel_batch_progress_and_eta`) in `tests/test_gui.py`.
+  - Verified with full headless test suite: 28 passed, 1 skipped, 0 failures in 11.58s.
 - [x] **Keyboard Navigation in QueuePanel** (2026-09-08)
   - Added keyboard bindings for `<Up>`, `<Down>`, `<Delete>`, and `<BackSpace>` to `QueuePanel` allowing intuitive item selection and deletion without mouse reliance.
   - Implemented smart text input focus guard (`_is_text_entry_focused`) to ensure navigation keys never intercept text typing in active entries or spinboxes.
@@ -48,5 +55,5 @@
   - Verified with headless test suite: 19 passed, 0 failures in 5.02s.
 
 ## Backlog
-- [ ] Add estimated time remaining (ETA) calculation in ProgressPanel based on average item processing speed.
+<!-- Prioritized list of identified issues and ergonomics tasks -->
 

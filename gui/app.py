@@ -81,6 +81,11 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         self.upscale_ctrl = UpscaleController(self.model_manager)
         self.upscale_ctrl.on_message = self._on_worker_message
 
+        # ---- Batch state tracking ---- #
+        self._is_batch: bool = False
+        self._batch_total: int = 0
+        self._batch_completed_count: int = 0
+
         # ---- Build UI ---- #
         self._build_toolbar()
         self._build_main_area()
@@ -300,9 +305,12 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             item_index=idx,
         )
 
+        self._is_batch = False
+        self._batch_total = 1
+        self._batch_completed_count = 0
         self.queue_panel.update_item_status(idx, ItemStatus.PROCESSING)
         self.settings_panel.set_upscale_button_state(False)
-        self.progress.start(cancel_callback=self.upscale_ctrl.cancel)
+        self.progress.start(cancel_callback=self.upscale_ctrl.cancel, batch_total=1)
 
         self.upscale_ctrl.submit(job)
 
@@ -342,8 +350,11 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             self._status_text.configure(text="All items already processed")
             return
 
+        self._is_batch = len(jobs) > 1
+        self._batch_total = len(jobs)
+        self._batch_completed_count = 0
         self.settings_panel.set_upscale_button_state(False)
-        self.progress.start(cancel_callback=self.upscale_ctrl.cancel)
+        self.progress.start(cancel_callback=self.upscale_ctrl.cancel, batch_total=len(jobs))
         self.upscale_ctrl.submit_batch(jobs)
 
     # ================================================================== #
@@ -373,10 +384,6 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
 
         elif msg.type == MsgType.COMPLETE:
             d = msg.data
-            self.progress.finish("✓ Upscaling complete")
-            self.settings_panel.set_upscale_button_state(True)
-            self.toolbar.set_save_enabled(True)
-
             idx = d.get("item_index")
             if idx is None or idx < 0:
                 idx = self.queue_panel.get_selected_index()
@@ -384,6 +391,9 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
                 self.queue_panel.update_item_status(
                     idx, ItemStatus.COMPLETED, 100, d.get("output_path", "")
                 )
+
+            # Record item completion for batch cadence & speed calculation
+            self.progress.item_finished()
 
             # Load output into preview if matching current selection or only item
             output_path = d.get("output_path", "")
@@ -398,8 +408,27 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
                 except Exception:
                     pass
 
-            self._status_text.configure(text=f"✓ Saved: {os.path.basename(output_path)}")
+            if not self._is_batch:
+                self.progress.finish("✓ Upscaling complete")
+                self.settings_panel.set_upscale_button_state(True)
+                self.toolbar.set_save_enabled(True)
+                self._status_text.configure(text=f"✓ Saved: {os.path.basename(output_path)}")
+            else:
+                self._batch_completed_count += 1
+                self.toolbar.set_save_enabled(True)
+                self._status_text.configure(
+                    text=f"✓ [{self._batch_completed_count}/{self._batch_total}] Saved: {os.path.basename(output_path)}"
+                )
             self._update_gpu_info()
+
+        elif msg.type == MsgType.BATCH_COMPLETE:
+            d = msg.data or {}
+            total = d.get("total", self._batch_completed_count)
+            self._is_batch = False
+            self.progress.finish(f"✓ Batch complete ({total} items)")
+            self.settings_panel.set_upscale_button_state(True)
+            self.toolbar.set_save_enabled(True)
+            self._status_text.configure(text=f"✓ Batch complete: {total} items processed")
 
         elif msg.type == MsgType.ERROR:
             if isinstance(msg.data, dict):
@@ -409,9 +438,13 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
                 error_text = str(msg.data)
                 idx = self.queue_panel.get_selected_index()
 
-            self.progress.set_error(error_text)
-            self.settings_panel.set_upscale_button_state(True)
-            self._status_text.configure(text=f"Error: {error_text[:80]}")
+            if self._is_batch:
+                self.progress.item_finished()
+                self._status_text.configure(text=f"Error on item: {error_text[:80]}")
+            else:
+                self.progress.set_error(error_text)
+                self.settings_panel.set_upscale_button_state(True)
+                self._status_text.configure(text=f"Error: {error_text[:80]}")
 
             if idx is None or idx < 0:
                 idx = self.queue_panel.get_selected_index()
@@ -433,7 +466,12 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
                 self.queue_panel.select(idx)
 
         elif msg.type == MsgType.LOG:
-            self._status_text.configure(text=str(msg.data))
+            log_str = str(msg.data)
+            self._status_text.configure(text=log_str)
+            if "cancelled" in log_str.lower():
+                self._is_batch = False
+                self.progress.finish("Operation cancelled")
+                self.settings_panel.set_upscale_button_state(True)
 
     # ================================================================== #
     #  Queue selection                                                    #

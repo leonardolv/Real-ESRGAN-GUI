@@ -1,11 +1,11 @@
-"""Progress bar widget — animated processing indicator with ETA.
+"""Progress bar widget — animated processing indicator with batch ETA.
 
 Shows determinate progress (0-100%), a status label, and an estimated time
-remaining during upscaling operations.
+remaining (ETA) based on average item processing speed during upscaling operations.
 """
 
 import time
-from typing import Optional
+from typing import Callable, List, Optional
 
 import customtkinter as ctk
 
@@ -19,6 +19,11 @@ class ProgressPanel(ctk.CTkFrame):
 
         self._start_time: Optional[float] = None
         self._last_percent: float = 0
+        self._batch_total: int = 1
+        self._batch_current: int = 1
+        self._item_start_time: Optional[float] = None
+        self._item_durations: List[float] = []
+        self._current_filename: str = ""
 
         # Top row: status text + percentage
         top = ctk.CTkFrame(self, fg_color="transparent")
@@ -65,16 +70,27 @@ class ProgressPanel(ctk.CTkFrame):
             hover_color="#444444",
             command=self._on_cancel,
         )
-        self._cancel_callback = None
+        self._cancel_callback: Optional[Callable[[], None]] = None
 
     # ------------------------------------------------------------------ #
     #  Public API                                                         #
     # ------------------------------------------------------------------ #
 
-    def start(self, cancel_callback=None) -> None:
-        """Reset and start tracking a new operation."""
-        self._start_time = time.time()
+    def start(self, cancel_callback=None, batch_total: int = 1) -> None:
+        """Reset and start tracking a new operation.
+
+        Args:
+            cancel_callback: Optional callable when cancel is clicked.
+            batch_total: Total number of items in the job batch (default 1).
+        """
+        now = time.time()
+        self._start_time = now
+        self._item_start_time = now
         self._last_percent = 0
+        self._batch_total = max(1, int(batch_total))
+        self._batch_current = 1
+        self._item_durations.clear()
+        self._current_filename = ""
         self._cancel_callback = cancel_callback
         self._bar.set(0)
         self._bar.configure(progress_color=("#3a7ebf", "#1f538d"))  # restore default
@@ -84,37 +100,97 @@ class ProgressPanel(ctk.CTkFrame):
         if cancel_callback:
             self._cancel_btn.pack(pady=(0, 4))
 
+    def update_batch(self, current: int, total: int, filename: str = "") -> None:
+        """Update for batch mode: 'Image 3 of 12 — photo.jpg'."""
+        self._batch_current = max(1, current)
+        self._batch_total = max(1, total)
+        self._current_filename = filename
+        self._item_start_time = time.time()
+
+        prefix = f"Image {self._batch_current} of {self._batch_total}"
+        if filename:
+            prefix += f"  —  {filename}"
+        self._status_label.configure(text=prefix)
+
+    def item_finished(self) -> None:
+        """Record the completion of the current item to calculate average speed."""
+        now = time.time()
+        if self._item_start_time is not None:
+            duration = max(0.001, now - self._item_start_time)
+            self._item_durations.append(duration)
+        self._item_start_time = now
+
     def update_progress(self, percent: float, status: str = "") -> None:
         """Update the progress bar, percentage label, and status text.
 
         Args:
-            percent: 0-100 completion.
+            percent: 0-100 completion for current item or overall.
             status: Short status string (e.g. "Upscaling…", "Saving…").
         """
-        clamped = max(0.0, min(100.0, percent))
-        self._bar.set(clamped / 100.0)
-        self._pct_label.configure(text=f"{int(clamped)}%")
-        self._last_percent = clamped
+        item_pct = max(0.0, min(100.0, percent))
+
+        if self._batch_total > 1:
+            # Map item progress into overall batch progress
+            completed_items = max(0, self._batch_current - 1)
+            overall_pct = ((completed_items + (item_pct / 100.0)) / self._batch_total) * 100.0
+            display_pct = max(0.0, min(100.0, overall_pct))
+        else:
+            display_pct = item_pct
+
+        self._bar.set(display_pct / 100.0)
+        self._pct_label.configure(text=f"{int(display_pct)}%")
+        self._last_percent = display_pct
 
         if status:
-            self._status_label.configure(text=status)
+            if self._batch_total > 1:
+                prefix = f"[{self._batch_current}/{self._batch_total}] "
+                if self._current_filename:
+                    prefix += f"{self._current_filename}: "
+                self._status_label.configure(text=f"{prefix}{status}")
+            else:
+                self._status_label.configure(text=status)
 
         # ETA calculation
-        if self._start_time and 0 < clamped < 100:
-            elapsed = time.time() - self._start_time
-            rate = clamped / elapsed  # percent per second
-            remaining = (100 - clamped) / rate if rate > 0 else 0
+        now = time.time()
+        if self._batch_total > 1:
+            self._update_batch_eta(item_pct, now)
+        else:
+            self._update_single_eta(item_pct, now)
+
+    def _update_single_eta(self, item_pct: float, now: float) -> None:
+        if self._start_time and 0 < item_pct < 100:
+            elapsed = now - self._start_time
+            rate = item_pct / elapsed if elapsed > 0 else 0  # percent per second
+            remaining = (100.0 - item_pct) / rate if rate > 0 else 0
             self._eta_label.configure(text=f"ETA {self._fmt_time(remaining)}")
-        elif clamped >= 100:
-            elapsed = time.time() - self._start_time if self._start_time else 0
+        elif item_pct >= 100:
+            elapsed = now - self._start_time if self._start_time else 0
             self._eta_label.configure(text=f"Done in {self._fmt_time(elapsed)}")
 
-    def update_batch(self, current: int, total: int, filename: str = "") -> None:
-        """Update for batch mode: 'Image 3 of 12 — photo.jpg'."""
-        text = f"Image {current} of {total}"
-        if filename:
-            text += f"  —  {filename}"
-        self._status_label.configure(text=text)
+    def _update_batch_eta(self, item_pct: float, now: float) -> None:
+        if not self._start_time:
+            return
+
+        total_items = self._batch_total
+        completed_count = len(self._item_durations)
+        remaining_unstarted = max(0, total_items - self._batch_current)
+
+        if completed_count > 0:
+            avg_speed = sum(self._item_durations) / completed_count
+            current_fraction_left = max(0.0, 1.0 - (item_pct / 100.0))
+            current_item_remaining = current_fraction_left * avg_speed
+            total_remaining = current_item_remaining + (remaining_unstarted * avg_speed)
+            avg_str = f" (~{self._fmt_time(avg_speed)}/item)"
+            self._eta_label.configure(text=f"ETA {self._fmt_time(total_remaining)}{avg_str}")
+        else:
+            # First item in progress
+            item_elapsed = (now - self._item_start_time) if self._item_start_time else (now - self._start_time)
+            if item_pct > 0 and item_elapsed > 0.3:
+                rate = item_pct / item_elapsed
+                est_item_time = 100.0 / rate if rate > 0 else 0
+                current_rem = max(0.0, (100.0 - item_pct) / rate) if rate > 0 else 0
+                total_remaining = current_rem + (remaining_unstarted * est_item_time)
+                self._eta_label.configure(text=f"ETA {self._fmt_time(total_remaining)}")
 
     def finish(self, message: str = "Done") -> None:
         """Mark the operation as complete."""
@@ -123,6 +199,9 @@ class ProgressPanel(ctk.CTkFrame):
         self._status_label.configure(text=message)
         self._cancel_btn.pack_forget()
         self._cancel_callback = None
+        if self._start_time:
+            elapsed = time.time() - self._start_time
+            self._eta_label.configure(text=f"Done in {self._fmt_time(elapsed)}")
 
     def reset(self) -> None:
         """Reset to idle state."""
@@ -133,6 +212,11 @@ class ProgressPanel(ctk.CTkFrame):
         self._status_label.configure(text="Ready")
         self._cancel_btn.pack_forget()
         self._start_time = None
+        self._item_start_time = None
+        self._item_durations.clear()
+        self._batch_total = 1
+        self._batch_current = 1
+        self._current_filename = ""
         self._cancel_callback = None
 
     def set_error(self, message: str) -> None:
@@ -154,9 +238,13 @@ class ProgressPanel(ctk.CTkFrame):
     @staticmethod
     def _fmt_time(seconds: float) -> str:
         """Format seconds into a human-readable string."""
-        s = int(seconds)
+        s = max(0, int(round(seconds)))
         if s < 60:
             return f"{s}s"
         m = s // 60
         s = s % 60
-        return f"{m}m {s}s"
+        if m < 60:
+            return f"{m}m {s:02d}s" if s > 0 else f"{m}m"
+        h = m // 60
+        m = m % 60
+        return f"{h}h {m:02d}m"

@@ -121,6 +121,21 @@ class TestUpscaleControllerQueue:
         log_msgs = [m for m in messages if m.type == MsgType.LOG]
         assert any("cancelled" in str(m.data).lower() for m in log_msgs)
 
+    def test_batch_complete_emission(self, monkeypatch):
+        mm = ModelManager()
+        ctrl = UpscaleController(mm)
+        job1 = UpscaleJob("in1.png", "out1.png", "RealESRGAN_x4plus", item_index=0)
+        job2 = UpscaleJob("in2.png", "out2.png", "RealESRGAN_x4plus", item_index=1)
+
+        # Mock _run_job so it does not execute real inference
+        monkeypatch.setattr(ctrl, "_run_job", lambda job: None)
+
+        ctrl._run_batch([job1, job2])
+        messages = ctrl.poll()
+        batch_completes = [m for m in messages if m.type == MsgType.BATCH_COMPLETE]
+        assert len(batch_completes) == 1
+        assert batch_completes[0].data["total"] == 2
+
 
 class TestGUIWidgetsHeadless:
     @pytest.fixture(scope="class")
@@ -429,6 +444,58 @@ class TestGUIWidgetsHeadless:
         assert queue._selected_idx == prev_idx
         assert queue._on_key_delete() is None
         assert queue.count == 2
+
+    def test_progress_panel_time_formatting(self):
+        assert ProgressPanel._fmt_time(0) == "0s"
+        assert ProgressPanel._fmt_time(45) == "45s"
+        assert ProgressPanel._fmt_time(65) == "1m 05s"
+        assert ProgressPanel._fmt_time(120) == "2m"
+        assert ProgressPanel._fmt_time(3665) == "1h 01m"
+        assert ProgressPanel._fmt_time(7200) == "2h 00m"
+
+    def test_progress_panel_batch_progress_and_eta(self, ctk_root):
+        progress = ProgressPanel(ctk_root)
+        progress.pack()
+
+        # Start batch with 3 items
+        progress.start(cancel_callback=lambda: None, batch_total=3)
+        assert progress._pct_label.cget("text") == "0%"
+        assert progress._status_label.cget("text") == "Starting…"
+        assert progress._batch_total == 3
+        assert progress._batch_current == 1
+
+        # Item 1 progress update (50% of item 1 in 3-item batch = 16.66% -> "16%")
+        progress.update_batch(1, 3, "file1.png")
+        progress.update_progress(50.0, "Upscaling…")
+        assert progress._pct_label.cget("text") == "16%"
+        assert "[1/3] file1.png: Upscaling…" in progress._status_label.cget("text")
+
+        # Complete item 1 and record duration
+        progress._item_durations.append(10.0)
+        progress.item_finished()
+
+        # Item 2 progress update ((1 + 0.5) / 3 = 50%)
+        progress.update_batch(2, 3, "file2.png")
+        progress.update_progress(50.0, "Upscaling…")
+        assert progress._pct_label.cget("text") == "50%"
+        assert "[2/3] file2.png: Upscaling…" in progress._status_label.cget("text")
+        eta_text = progress._eta_label.cget("text")
+        assert "ETA " in eta_text
+        assert "/item)" in eta_text
+
+        # Finish batch
+        progress.finish("✓ Batch complete")
+        assert progress._pct_label.cget("text") == "100%"
+        assert progress._status_label.cget("text") == "✓ Batch complete"
+        assert "Done in" in progress._eta_label.cget("text")
+
+        # Reset
+        progress.reset()
+        assert progress._status_label.cget("text") == "Ready"
+        assert progress._pct_label.cget("text") == ""
+        assert progress._eta_label.cget("text") == ""
+        assert len(progress._item_durations) == 0
+        assert progress._batch_total == 1
 
 
 

@@ -43,6 +43,7 @@ class MsgType(Enum):
     COMPLETE = auto()
     ERROR = auto()
     BATCH_PROGRESS = auto()
+    BATCH_COMPLETE = auto()
     LOG = auto()
 
 
@@ -405,6 +406,9 @@ class UpscaleController:
                 "item_index": job.item_index,
             })
             self._run_job(job)
+        self._post(MsgType.BATCH_COMPLETE, {
+            "total": total,
+        })
 
     # ------------------------------------------------------------------ #
     #  Helpers                                                            #
