@@ -19,6 +19,7 @@ from gui.controllers.upscale_controller import UpscaleJob, UpscaleController, Ms
 from gui.widgets.queue_panel import QueuePanel, ItemStatus
 from gui.widgets.settings_panel import SettingsPanel
 from gui.widgets.progress_bar import ProgressPanel
+from gui.widgets.preview_canvas import PreviewCanvas
 from gui.widgets.tooltip import ToolTip, ThumbnailToolTip
 
 
@@ -538,6 +539,54 @@ class TestGUIWidgetsHeadless:
         assert progress._eta_label.cget("text") == ""
         assert len(progress._item_durations) == 0
         assert progress._batch_total == 1
+
+    def test_preview_canvas_zoom_controls_and_input_guards(self, ctk_root, monkeypatch):
+        canvas = PreviewCanvas(ctk_root)
+        canvas.pack()
+
+        # Verify zoom controls
+        assert hasattr(canvas, "_zoom_out_btn")
+        assert hasattr(canvas, "_zoom_in_btn")
+        assert hasattr(canvas, "_zoom_label")
+        assert canvas._zoom == 1.0
+        assert canvas._zoom_label.cget("text") == "100%"
+
+        # Zoom in
+        canvas._zoom_in_btn.invoke()
+        assert canvas._zoom == 1.25
+        assert canvas._zoom_label.cget("text") == "125%"
+
+        # Zoom out
+        canvas._zoom_out_btn.invoke()
+        assert canvas._zoom == 1.0
+
+        # Load dummy input and output image
+        img = Image.new("RGB", (100, 100), color="red")
+        canvas.set_input_image(img)
+        canvas.set_output_image(img)
+        assert canvas._has_output is True
+        initial_slider = canvas._slider_pos
+
+        # Nudge without text focus
+        res = canvas._nudge_slider_right()
+        assert res == "break"
+        assert canvas._slider_pos > initial_slider
+
+        # Create text entry and focus it
+        entry = ctk.CTkEntry(ctk_root)
+        entry.pack()
+        monkeypatch.setattr(canvas, "focus_get", lambda: getattr(entry, "_entry", entry))
+        assert canvas._is_text_entry_focused() is True
+
+        # When focused in text entry, slider nudges and toggle return None (no-op)
+        assert canvas._nudge_slider_left() is None
+        assert canvas._nudge_slider_right() is None
+        assert canvas._toggle_slider() is None
+
+        # Clean up
+        canvas.destroy()
+        entry.destroy()
+
 
 
 

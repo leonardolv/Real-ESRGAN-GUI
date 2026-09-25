@@ -5,6 +5,13 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **Interactive Zoom Overlay Controls & Focus-Guarded Slider Navigation in PreviewCanvas** (2026-09-26)
+  - Replaced static zoom label with interactive zoom overlay bar (`_zoom_frame`) featuring zoom out (`-`), reset/fit (`100%`), and zoom in (`+`) buttons with accessible `ToolTip` bindings (`Ctrl+-`, `Ctrl+0`, `Ctrl++`).
+  - Added smart text input focus guard `_is_text_entry_focused()` to `PreviewCanvas` preventing `<Left>`, `<Right>`, and `<space>` from intercepting keystrokes when the user is typing or navigating inside settings entries or text boxes.
+  - Wired spacebar shortcut `<space>` to toggle video play/pause when a video is loaded in `PreviewCanvas`.
+  - Implemented clean widget destruction lifecycle (`destroy()`) that stops active video threads and disposes child tooltip popups.
+  - Added unit test coverage `test_preview_canvas_zoom_controls_and_input_guards` in `tests/test_gui.py`.
+  - Verified with full headless test suite: 25 passed in 3.38s with 0 errors.
 - [x] **SettingsPanel Reset to Defaults, Return Key Commit, and Comprehensive Tooltips** (2026-09-25)
   - Added "↺ Reset to Defaults" action button in `gui/widgets/settings_panel.py` and implemented `reset_to_defaults()` restoring model category, model selection, scaling factor, tile geometry, padding, face enhancement, precision, alpha upsampling, output format, suffix, and output directory back to default values.
   - Bound `<Return>` key on text entries (`tile_pad`, `pre_pad`, `suffix`, `output_folder`) to immediately commit typed changes and notify subscribers without requiring mouse click-away focus loss.

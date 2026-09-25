@@ -14,6 +14,8 @@ import cv2
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont, ImageTk
 
+from gui.widgets.tooltip import ToolTip
+
 
 class PreviewCanvas(ctk.CTkFrame):
     """Image preview area with before/after comparison.
@@ -64,18 +66,49 @@ class PreviewCanvas(ctk.CTkFrame):
         )
         self._canvas.pack(fill="both", expand=True)
 
-        # Zoom indicator label (bottom-right overlay)
-        self._zoom_label = ctk.CTkLabel(
-            self,
+        # Zoom controls overlay (bottom-right)
+        self._zoom_frame = ctk.CTkFrame(self, fg_color="#1e1e1e", corner_radius=6, height=28)
+        self._zoom_frame.place(relx=1.0, rely=1.0, anchor="se", x=-8, y=-8)
+
+        self._zoom_out_btn = ctk.CTkButton(
+            self._zoom_frame,
+            text="−",
+            width=24,
+            height=24,
+            font=ctk.CTkFont(size=14, weight="bold"),
+            fg_color="transparent",
+            hover_color="#2b2b2b",
+            command=lambda: self._zoom_step(-1),
+        )
+        self._zoom_out_btn.pack(side="left", padx=(2, 0), pady=2)
+        self._tip_zoom_out = ToolTip(self._zoom_out_btn, "Zoom Out (Ctrl+-)")
+
+        self._zoom_label = ctk.CTkButton(
+            self._zoom_frame,
             text="100%",
+            width=48,
+            height=24,
             font=ctk.CTkFont(size=11),
             text_color="#a0a0a0",
-            fg_color="#222222",
-            corner_radius=4,
-            width=60,
-            height=22,
+            fg_color="transparent",
+            hover_color="#2b2b2b",
+            command=self._fit_to_canvas,
         )
-        self._zoom_label.place(relx=1.0, rely=1.0, anchor="se", x=-8, y=-8)
+        self._zoom_label.pack(side="left", padx=1, pady=2)
+        self._tip_zoom_fit = ToolTip(self._zoom_label, "Fit to Canvas / Reset Zoom (Ctrl+0)")
+
+        self._zoom_in_btn = ctk.CTkButton(
+            self._zoom_frame,
+            text="+",
+            width=24,
+            height=24,
+            font=ctk.CTkFont(size=14, weight="bold"),
+            fg_color="transparent",
+            hover_color="#2b2b2b",
+            command=lambda: self._zoom_step(1),
+        )
+        self._zoom_in_btn.pack(side="left", padx=(0, 2), pady=2)
+        self._tip_zoom_in = ToolTip(self._zoom_in_btn, "Zoom In (Ctrl++)")
 
         # Video Controls (hidden by default)
         self._controls_frame = ctk.CTkFrame(self, height=40, corner_radius=0, fg_color="#1a1a1a")
@@ -566,28 +599,68 @@ class PreviewCanvas(ctk.CTkFrame):
             self._slider_pos = 0.5
             self._render()
 
-    def _nudge_slider_left(self, event) -> None:
+    def _is_text_entry_focused(self) -> bool:
+        """Return True if focused widget is an active text input."""
+        try:
+            focused = self.focus_get()
+            if focused is None:
+                return False
+            cls_name = focused.__class__.__name__.lower()
+            winfo_cls = focused.winfo_class().lower() if hasattr(focused, "winfo_class") else ""
+            return ("entry" in cls_name or "text" in cls_name or "spinbox" in cls_name or
+                    "entry" in winfo_cls or "text" in winfo_cls or "spinbox" in winfo_cls)
+        except Exception:
+            return False
+
+    def _nudge_slider_left(self, event=None) -> Optional[str]:
+        if self._is_text_entry_focused():
+            return None
         if self._has_output:
             self._slider_pos = max(0.02, self._slider_pos - 0.05)
             self._render()
+            return "break"
+        return None
 
-    def _nudge_slider_right(self, event) -> None:
+    def _nudge_slider_right(self, event=None) -> Optional[str]:
+        if self._is_text_entry_focused():
+            return None
         if self._has_output:
             self._slider_pos = min(0.98, self._slider_pos + 0.05)
             self._render()
+            return "break"
+        return None
 
-    def _toggle_slider(self, event) -> None:
-        """Toggle between 50/50 and 0/100 (full after)."""
+    def _toggle_slider(self, event=None) -> Optional[str]:
+        """Toggle between 50/50 and 0/100 (or play/pause if video)."""
+        if self._is_text_entry_focused():
+            return None
+        if self._is_video:
+            self._toggle_pause()
+            return "break"
         if self._has_output:
             if self._slider_pos > 0.1:
                 self._slider_pos = 0.02
             else:
                 self._slider_pos = 0.5
             self._render()
+            return "break"
+        return None
 
     # ================================================================== #
-    #  Resize                                                             #
+    #  Resize & Lifecycle                                                 #
     # ================================================================== #
 
     def _on_resize(self, event) -> None:
         self._render()
+
+    def destroy(self) -> None:
+        """Clean up video captures and child tooltips on widget destruction."""
+        self._stop_video()
+        for tip_attr in ("_tip_zoom_out", "_tip_zoom_fit", "_tip_zoom_in"):
+            tip = getattr(self, tip_attr, None)
+            if tip is not None and hasattr(tip, "destroy"):
+                try:
+                    tip.destroy()
+                except Exception:
+                    pass
+        super().destroy()
