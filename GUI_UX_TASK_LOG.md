@@ -5,6 +5,14 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **SettingsPanel Reset to Defaults, Return Key Commit, and Comprehensive Tooltips** (2026-09-25)
+  - Added "↺ Reset to Defaults" action button in `gui/widgets/settings_panel.py` and implemented `reset_to_defaults()` restoring model category, model selection, scaling factor, tile geometry, padding, face enhancement, precision, alpha upsampling, output format, suffix, and output directory back to default values.
+  - Bound `<Return>` key on text entries (`tile_pad`, `pre_pad`, `suffix`, `output_folder`) to immediately commit typed changes and notify subscribers without requiring mouse click-away focus loss.
+  - Enriched all controls (model category, model dropdown, download button, scale, tile size, padding, face restoration, denoise slider, precision, alpha channel, format, suffix, destination folder, and browse button) with descriptive, accessible `ToolTip` affordances.
+  - Implemented clean tooltip destruction lifecycle (`destroy()`) to prevent lingering hover timers.
+  - Corrected `setup.cfg` pytest configuration from greedy `addopts=tests/` to standard `testpaths = tests`, and cleansed line ending corruptions and sync duplicates in `.gitignore`.
+  - Added automated unit test coverage `test_settings_panel_reset_to_defaults_and_tooltips` in `tests/test_gui.py`.
+  - Verified with full headless test suite: 24 passed in 3.87s.
 - [x] **Estimated Time Remaining (ETA) & Batch Progress in ProgressPanel** (2026-09-08)
   - Enhanced `ProgressPanel` with multi-item batch tracking (`_batch_total`, `_batch_current`, `_item_durations`), monotonic overall progress bar calculation across all queued items, and intelligent ETA estimation based on completed item average processing speed.
   - Formatted time durations cleanly across ranges: seconds (`12s`), minutes (`1m 05s`, `2m`), and hours (`1h 01m`).

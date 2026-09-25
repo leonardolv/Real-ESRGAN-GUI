@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, List, Optional
 import customtkinter as ctk
 
 from gui.controllers.model_manager import ModelInfo, ModelManager
+from gui.widgets.tooltip import ToolTip
 
 
 class SettingsPanel(ctk.CTkScrollableFrame):
@@ -38,6 +39,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
 
         # Internal state
         self._vars: Dict[str, Any] = {}
+        self._tooltips: List[ToolTip] = []
 
         self._build_model_section()
         self._build_upscaling_section()
@@ -62,13 +64,15 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         cat_frame = ctk.CTkFrame(self, fg_color="transparent")
         cat_frame.pack(fill="x", padx=16, pady=(2, 4))
         for cat in self._mm.categories():
-            ctk.CTkRadioButton(
+            rb = ctk.CTkRadioButton(
                 cat_frame,
                 text=cat,
                 variable=self._category_var,
                 value=cat,
                 command=self._on_category_changed,
-            ).pack(anchor="w", pady=1)
+            )
+            rb.pack(anchor="w", pady=1)
+            self._add_tooltip(rb, f"Filter models by '{cat}' category")
 
         # Model dropdown
         ctk.CTkLabel(self, text="Model", font=ctk.CTkFont(size=12)).pack(
@@ -83,6 +87,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             width=248,
         )
         self._model_dropdown.pack(padx=16, pady=(2, 4))
+        self._add_tooltip(self._model_dropdown, "Select upscaling model architecture")
 
         # Description label
         self._model_desc = ctk.CTkLabel(
@@ -114,6 +119,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         # Only shown when model is missing — initially hidden
         self._download_btn.pack(padx=16, pady=(0, 8))
         self._download_btn.pack_forget()
+        self._add_tooltip(self._download_btn, "Download model weights from official repository")
 
     # ================================================================== #
     #  Section 2: Upscaling                                               #
@@ -135,6 +141,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             width=248,
         )
         self._scale_dropdown.pack(padx=16, pady=(2, 4))
+        self._add_tooltip(self._scale_dropdown, "Output image scaling multiplier (1x to 4x)")
 
         # Tile size
         ctk.CTkLabel(self, text="Tile Size", font=ctk.CTkFont(size=12)).pack(
@@ -149,6 +156,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             width=248,
         )
         self._tile_dropdown.pack(padx=16, pady=(2, 2))
+        self._add_tooltip(self._tile_dropdown, "Tile dimension to conserve GPU VRAM (0 for un-tiled)")
         ctk.CTkLabel(
             self,
             text="Use tiles if you run out of VRAM",
@@ -166,6 +174,8 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         )
         tile_pad_entry.pack(padx=16, pady=(2, 4))
         tile_pad_entry.bind("<FocusOut>", lambda e: self._emit_int("tile_pad", self._tile_pad_var, 10))
+        tile_pad_entry.bind("<Return>", lambda e: self._emit_int("tile_pad", self._tile_pad_var, 10))
+        self._add_tooltip(tile_pad_entry, "Overlap border padding in pixels between tiles")
 
         # Pre padding
         ctk.CTkLabel(self, text="Pre Padding", font=ctk.CTkFont(size=12)).pack(
@@ -177,6 +187,8 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         )
         pre_pad_entry.pack(padx=16, pady=(2, 8))
         pre_pad_entry.bind("<FocusOut>", lambda e: self._emit_int("pre_pad", self._pre_pad_var, 0))
+        pre_pad_entry.bind("<Return>", lambda e: self._emit_int("pre_pad", self._pre_pad_var, 0))
+        self._add_tooltip(pre_pad_entry, "Pre-padding pixels to reduce edge boundary artifacts")
 
     # ================================================================== #
     #  Section 3: Enhancement                                             #
@@ -194,6 +206,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             command=lambda: self._emit("face_enhance", self._face_var.get()),
         )
         self._face_check.pack(anchor="w", padx=16, pady=(4, 2))
+        self._add_tooltip(self._face_check, "Face restoration using GFPGAN (recommended for portraits only)")
         self._face_hint = ctk.CTkLabel(
             self,
             text="Restores and enhances faces. Not for anime.",
@@ -224,6 +237,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             width=248,
         )
         self._denoise_slider.pack(padx=16, pady=(2, 0))
+        self._add_tooltip(self._denoise_slider, "Noise reduction strength for general-v3 model")
         self._denoise_value_label = ctk.CTkLabel(
             self._denoise_frame, text="0.50", font=ctk.CTkFont(size=11), text_color=("gray50", "gray60")
         )
@@ -241,12 +255,14 @@ class SettingsPanel(ctk.CTkScrollableFrame):
 
         # FP32 precision
         self._fp32_var = ctk.BooleanVar(value=False)
-        ctk.CTkCheckBox(
+        self._fp32_check = ctk.CTkCheckBox(
             self,
             text="FP32 Precision",
             variable=self._fp32_var,
             command=lambda: self._emit("fp32", self._fp32_var.get()),
-        ).pack(anchor="w", padx=16, pady=(4, 2))
+        )
+        self._fp32_check.pack(anchor="w", padx=16, pady=(4, 2))
+        self._add_tooltip(self._fp32_check, "Force FP32 precision to avoid black or NaN outputs on older GPUs")
         ctk.CTkLabel(
             self,
             text="Use if you get NaN errors on older GPUs.",
@@ -261,13 +277,15 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             anchor="w", padx=16, pady=(4, 0)
         )
         self._alpha_var = ctk.StringVar(value="realesrgan")
-        ctk.CTkOptionMenu(
+        self._alpha_dropdown = ctk.CTkOptionMenu(
             self,
             variable=self._alpha_var,
             values=["realesrgan", "bicubic"],
             command=lambda v: self._emit("alpha_upsampler", v),
             width=248,
-        ).pack(padx=16, pady=(2, 8))
+        )
+        self._alpha_dropdown.pack(padx=16, pady=(2, 8))
+        self._add_tooltip(self._alpha_dropdown, "Upsampling technique for transparency / alpha channels")
 
     # ================================================================== #
     #  Section 4: Output                                                  #
@@ -281,13 +299,15 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             anchor="w", padx=16, pady=(4, 0)
         )
         self._ext_var = ctk.StringVar(value="auto")
-        ctk.CTkOptionMenu(
+        self._ext_dropdown = ctk.CTkOptionMenu(
             self,
             variable=self._ext_var,
             values=["auto", "png", "jpg", "webp"],
             command=lambda v: self._emit("output_ext", v),
             width=248,
-        ).pack(padx=16, pady=(2, 4))
+        )
+        self._ext_dropdown.pack(padx=16, pady=(2, 4))
+        self._add_tooltip(self._ext_dropdown, "Output image container format")
 
         # Suffix
         ctk.CTkLabel(self, text="Suffix", font=ctk.CTkFont(size=12)).pack(
@@ -300,6 +320,8 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         )
         suffix_entry.pack(padx=16, pady=(2, 4))
         suffix_entry.bind("<FocusOut>", lambda e: self._emit("suffix", self._suffix_var.get()))
+        suffix_entry.bind("<Return>", lambda e: self._emit("suffix", self._suffix_var.get()))
+        self._add_tooltip(suffix_entry, "Suffix appended to upscaled filenames")
 
         # Output folder
         ctk.CTkLabel(self, text="Output Folder", font=ctk.CTkFont(size=12)).pack(
@@ -315,13 +337,18 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         )
         output_dir_entry.pack(side="left", fill="x", expand=True)
         output_dir_entry.bind("<FocusOut>", lambda e: self._emit("output_folder", self._output_dir_var.get()))
-        ctk.CTkButton(
+        output_dir_entry.bind("<Return>", lambda e: self._emit("output_folder", self._output_dir_var.get()))
+        self._add_tooltip(output_dir_entry, "Destination directory for generated files")
+
+        self._browse_btn = ctk.CTkButton(
             folder_frame,
             text="📂",
             width=36,
             height=28,
             command=self._browse_output_folder,
-        ).pack(side="right", padx=(4, 0))
+        )
+        self._browse_btn.pack(side="right", padx=(4, 0))
+        self._add_tooltip(self._browse_btn, "Browse filesystem for destination folder")
 
     # ================================================================== #
     #  Big Upscale Button                                                 #
@@ -330,6 +357,19 @@ class SettingsPanel(ctk.CTkScrollableFrame):
     def add_upscale_button(self, command: Callable) -> ctk.CTkButton:
         """Add the primary action button at the bottom. Returns the button
         so the parent can control its state."""
+        self._reset_btn = ctk.CTkButton(
+            self,
+            text="↺  Reset to Defaults",
+            height=28,
+            font=ctk.CTkFont(size=12),
+            fg_color="transparent",
+            hover_color="#2b2b2b",
+            text_color="#a0a0a0",
+            command=self.reset_to_defaults,
+        )
+        self._reset_btn.pack(fill="x", padx=16, pady=(12, 4))
+        self._add_tooltip(self._reset_btn, "Reset all model and upscaling configurations to factory defaults")
+
         self._upscale_btn = ctk.CTkButton(
             self,
             text="▶  UPSCALE",
@@ -340,7 +380,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             hover_color="#1d4ed8",
             command=command,
         )
-        self._upscale_btn.pack(fill="x", padx=16, pady=(16, 16))
+        self._upscale_btn.pack(fill="x", padx=16, pady=(4, 16))
         return self._upscale_btn
 
     # ================================================================== #
@@ -532,3 +572,64 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         except ValueError:
             val = fallback
         self._emit(key, val)
+
+    def reset_to_defaults(self) -> None:
+        """Reset all parameters to factory defaults and notify listeners."""
+        self._category_var.set("General")
+        self._on_category_changed()
+
+        default_model = "RealESRGAN_x4plus"
+        info = self._mm.get(default_model)
+        disp = info.display_name if info else default_model
+        self._model_var.set(default_model)
+        self._on_model_changed(disp)
+
+        self._scale_var.set("4")
+        self._emit("outscale", 4.0)
+
+        self._tile_var.set("0 (no tile)")
+        self._emit("tile", 0)
+
+        self._tile_pad_var.set("10")
+        self._emit("tile_pad", 10)
+
+        self._pre_pad_var.set("0")
+        self._emit("pre_pad", 0)
+
+        self._face_var.set(False)
+        self._emit("face_enhance", False)
+
+        self._fp32_var.set(False)
+        self._emit("fp32", False)
+
+        self._denoise_var.set(0.5)
+        self._emit("denoise_strength", 0.5)
+
+        self._alpha_var.set("realesrgan")
+        self._emit("alpha_upsampler", "realesrgan")
+
+        self._ext_var.set("auto")
+        self._emit("output_ext", "auto")
+
+        self._suffix_var.set("out")
+        self._emit("suffix", "out")
+
+        self._output_dir_var.set("results")
+        self._emit("output_folder", "results")
+
+    def _add_tooltip(self, widget: Any, text: str) -> Optional[ToolTip]:
+        try:
+            tip = ToolTip(widget, text=text, delay_ms=300)
+            self._tooltips.append(tip)
+            return tip
+        except Exception:
+            return None
+
+    def destroy(self) -> None:
+        for tip in self._tooltips:
+            try:
+                tip.destroy()
+            except Exception:
+                pass
+        self._tooltips.clear()
+        super().destroy()

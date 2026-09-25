@@ -238,6 +238,48 @@ class TestGUIWidgetsHeadless:
         assert s2['tile_pad'] == 20
         assert s2['pre_pad'] == 5
 
+    def test_settings_panel_reset_to_defaults_and_tooltips(self, ctk_root):
+        emitted_changes = {}
+        mm = ModelManager()
+        settings = SettingsPanel(
+            ctk_root,
+            model_manager=mm,
+            on_settings_changed=lambda k, v: emitted_changes.update({k: v}),
+        )
+        settings.pack()
+        settings.add_upscale_button(lambda: None)
+
+        # Modify values
+        settings.load_settings({
+            "tile_pad": 42,
+            "pre_pad": 16,
+            "output_suffix": "test_suffix",
+            "output_folder": "custom_dir",
+        })
+        s_custom = settings.get_settings()
+        assert s_custom["tile_pad"] == 42
+        assert s_custom["pre_pad"] == 16
+        assert s_custom["suffix"] == "test_suffix"
+        assert s_custom["output_folder"] == "custom_dir"
+
+        # Verify tooltips populated
+        assert len(settings._tooltips) >= 10
+
+        # Trigger reset
+        settings.reset_to_defaults()
+        s_default = settings.get_settings()
+        assert s_default["model_name"] == "RealESRGAN_x4plus"
+        assert s_default["outscale"] == 4.0
+        assert s_default["tile"] == 0
+        assert s_default["tile_pad"] == 10
+        assert s_default["pre_pad"] == 0
+        assert s_default["suffix"] == "out"
+        assert s_default["output_folder"] == "results"
+
+        # Clean destruction
+        settings.destroy()
+        assert len(settings._tooltips) == 0
+
     def test_toolbar_and_tooltip(self, ctk_root):
         from gui.widgets.toolbar import Toolbar
         toolbar = Toolbar(
