@@ -631,6 +631,40 @@ class TestGUIWidgetsHeadless:
 
         dz.destroy()
 
+    def test_queue_panel_empty_state_and_button_tooltips(self, ctk_root, tmp_path):
+        queue = QueuePanel(ctk_root)
+        queue.pack()
+
+        # Check action buttons attributes and cursors
+        assert queue._add_files_btn.cget("cursor") == "hand2"
+        assert queue._process_all_btn.cget("cursor") == "hand2"
+        assert queue._clear_all_btn.cget("cursor") == "hand2"
+
+        # Check tooltips attached to buttons
+        assert len(queue._button_tooltips) == 3
+        for tip in queue._button_tooltips:
+            assert tip.text != ""
+
+        # Check empty state placeholder rendered
+        children = queue._list_frame.winfo_children()
+        assert len(children) >= 1  # empty_frame present
+
+        # Add a file, verify item card replaces empty placeholder
+        img = tmp_path / "test_empty_state.png"
+        Image.new('RGB', (10, 10)).save(img)
+        queue.add_files([str(img)])
+        assert queue.count == 1
+        children_after_add = queue._list_frame.winfo_children()
+        assert len(children_after_add) == 1  # 1 card
+
+        # Clear queue, verify empty state restored
+        queue.clear()
+        assert queue.count == 0
+        children_after_clear = queue._list_frame.winfo_children()
+        assert len(children_after_clear) >= 1
+
+        queue.destroy()
+
 
 
 

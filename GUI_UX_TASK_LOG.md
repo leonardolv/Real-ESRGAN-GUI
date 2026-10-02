@@ -5,6 +5,13 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **QueuePanel Empty State Visual Placeholder, Action Button Attributes, Hand Cursors, and Tooltips** (2026-10-02)
+  - Added an empty state placeholder ("📂 Queue is empty / Click '+ Add Files' or drag images here") displayed when no files are in the queue.
+  - Exposed bottom action buttons as instance attributes (`_add_files_btn`, `_clear_all_btn`) and attached ergonomic tooltips to all three actions (`_add_files_btn`, `_process_all_btn`, `_clear_all_btn`).
+  - Added pointer hand cursor (`cursor="hand2"`) across all bottom action buttons.
+  - Added clean tooltip lifecycle management (`_button_tooltips`) ensuring button tooltips are disposed when `QueuePanel` is destroyed without interfering with dynamic item tooltip rebuilding.
+  - Added automated unit test coverage `test_queue_panel_empty_state_and_button_tooltips` in `tests/test_gui.py`.
+  - Verified with full test suite: 32 passed, 1 skipped, 0 failures in 12.46s.
 - [x] **DropZone Keyboard Navigation, Focus Ring, Hover Affordance, and Tooltips** (2026-10-02)
   - Added full keyboard accessibility to `DropZone`: configured canvas focus traversal, active focus ring (`#3b82f6`) on `<FocusIn>` / `<FocusOut>`, and keyboard file dialog activation via `<Return>` and `<space>`.
   - Added subtle hover highlight border (`#666666`) and pointer hand cursor (`cursor="hand2"`) across the drop frame and child labels.

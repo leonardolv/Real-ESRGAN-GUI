@@ -86,6 +86,7 @@ class QueuePanel(ctk.CTkFrame):
         self._on_files_dropped = on_files_dropped
         self._is_drag_active: bool = False
         self._active_tooltips: List[ToolTip] = []
+        self._button_tooltips: List[ToolTip] = []
 
         # Header
         header = ctk.CTkFrame(self, fg_color="transparent", height=36)
@@ -141,15 +142,20 @@ class QueuePanel(ctk.CTkFrame):
         btn_frame = ctk.CTkFrame(self, fg_color="transparent")
         btn_frame.pack(fill="x", padx=8, pady=(4, 8))
 
-        ctk.CTkButton(
+        self._add_files_btn = ctk.CTkButton(
             btn_frame,
             text="+ Add Files",
             height=30,
             font=ctk.CTkFont(size=12),
             fg_color="#2b2b2b",
             hover_color="#3b3b3b",
+            cursor="hand2",
             command=self._on_add_click,
-        ).pack(fill="x", pady=(0, 4))
+        )
+        self._add_files_btn.pack(fill="x", pady=(0, 4))
+        self._button_tooltips.append(
+            ToolTip(self._add_files_btn, "Open file dialog to add images or videos to queue")
+        )
 
         self._process_all_btn = ctk.CTkButton(
             btn_frame,
@@ -158,10 +164,14 @@ class QueuePanel(ctk.CTkFrame):
             font=ctk.CTkFont(size=12),
             fg_color="#2563eb",
             hover_color="#1d4ed8",
+            cursor="hand2",
         )
         self._process_all_btn.pack(fill="x", pady=(0, 4))
+        self._button_tooltips.append(
+            ToolTip(self._process_all_btn, "Start upscaling all items currently in queue")
+        )
 
-        ctk.CTkButton(
+        self._clear_all_btn = ctk.CTkButton(
             btn_frame,
             text="✕ Clear All",
             height=30,
@@ -169,8 +179,16 @@ class QueuePanel(ctk.CTkFrame):
             fg_color="transparent",
             hover_color="#2b2b2b",
             text_color="#a0a0a0",
+            cursor="hand2",
             command=self.clear,
-        ).pack(fill="x")
+        )
+        self._clear_all_btn.pack(fill="x")
+        self._button_tooltips.append(
+            ToolTip(self._clear_all_btn, "Remove all files from the queue")
+        )
+
+        # Initial render of empty state
+        self._rebuild_list()
 
     # ------------------------------------------------------------------ #
     #  Public API                                                         #
@@ -288,6 +306,12 @@ class QueuePanel(ctk.CTkFrame):
     def destroy(self) -> None:
         """Clean up tooltips and destroy widget."""
         self._cleanup_tooltips()
+        for tip in getattr(self, "_button_tooltips", []):
+            try:
+                tip.destroy()
+            except Exception:
+                pass
+        self._button_tooltips = []
         super().destroy()
 
     def _rebuild_list(self) -> None:
@@ -298,6 +322,30 @@ class QueuePanel(ctk.CTkFrame):
             w.destroy()
 
         self._count_label.configure(text=f"{len(self._items)} file{'s' if len(self._items) != 1 else ''}")
+
+        if not self._items:
+            empty_frame = ctk.CTkFrame(self._list_frame, fg_color="transparent")
+            empty_frame.pack(fill="both", expand=True, pady=30)
+            ctk.CTkLabel(
+                empty_frame,
+                text="📂",
+                font=ctk.CTkFont(size=24),
+                text_color="#606060",
+            ).pack(pady=(0, 4))
+            ctk.CTkLabel(
+                empty_frame,
+                text="Queue is empty",
+                font=ctk.CTkFont(size=12, weight="bold"),
+                text_color="#808080",
+            ).pack()
+            ctk.CTkLabel(
+                empty_frame,
+                text="Click '+ Add Files'\nor drag images here",
+                font=ctk.CTkFont(size=11),
+                text_color="#606060",
+                justify="center",
+            ).pack(pady=(2, 0))
+            return
 
         for i, item in enumerate(self._items):
             selected = i == self._selected_idx
