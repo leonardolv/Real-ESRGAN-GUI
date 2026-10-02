@@ -12,6 +12,7 @@ from typing import Callable, List, Optional
 import customtkinter as ctk
 
 from gui.utils.image_utils import ALL_EXTENSIONS, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
+from gui.widgets.tooltip import ToolTip
 
 
 class DropZone(ctk.CTkFrame):
@@ -33,13 +34,23 @@ class DropZone(ctk.CTkFrame):
     ):
         super().__init__(master, **kwargs)
         self.on_files_dropped = on_files_dropped
+        self._is_focused: bool = False
+        self._is_dragging: bool = False
 
         self.configure(
             corner_radius=12,
             fg_color="#1c1c1c",
             border_width=2,
             border_color="#444444",
+            cursor="hand2",
         )
+        try:
+            if hasattr(self, "_canvas"):
+                self._canvas.configure(takefocus=1)
+            elif hasattr(self, "_bg_canvas"):
+                self._bg_canvas.configure(takefocus=1)
+        except Exception:
+            pass
 
         # ---- inner content ---- #
         self._icon_label = ctk.CTkLabel(
@@ -76,13 +87,58 @@ class DropZone(ctk.CTkFrame):
         )
         self._formats_label.pack(pady=(4, 40))
 
-        # Bind click to open file dialog
+        # Bind click, focus, and keyboard activation
         self.bind("<Button-1>", self._on_click)
+        self.bind("<FocusIn>", self._on_focus_in)
+        self.bind("<FocusOut>", self._on_focus_out)
+        self.bind("<Return>", self._on_key_activate)
+        self.bind("<space>", self._on_key_activate)
+        self.bind("<Enter>", self._on_hover_enter, add="+")
+        self.bind("<Leave>", self._on_hover_leave, add="+")
+
         for child in self.winfo_children():
+            try:
+                child.configure(cursor="hand2")
+            except Exception:
+                pass
             child.bind("<Button-1>", self._on_click)
+            child.bind("<Enter>", self._on_hover_enter, add="+")
+            child.bind("<Leave>", self._on_hover_leave, add="+")
+
+        self._tooltip: Optional[ToolTip] = ToolTip(
+            self,
+            "Click to browse images or videos, or drag and drop files directly onto this zone",
+        )
+        for child in self.winfo_children():
+            self._tooltip.bind_widget(child)
 
         # Try to set up tkdnd (drag-and-drop) — gracefully degrade if unavailable
         self._setup_dnd()
+
+    # ------------------------------------------------------------------ #
+    #  Focus & Hover Affordances                                          #
+    # ------------------------------------------------------------------ #
+
+    def _on_focus_in(self, event=None) -> None:
+        self._is_focused = True
+        self.configure(border_color="#3b82f6")
+
+    def _on_focus_out(self, event=None) -> None:
+        self._is_focused = False
+        if not self._is_dragging:
+            self.configure(border_color="#444444")
+
+    def _on_hover_enter(self, event=None) -> None:
+        if not self._is_focused and not self._is_dragging:
+            self.configure(border_color="#666666")
+
+    def _on_hover_leave(self, event=None) -> None:
+        if not self._is_focused and not self._is_dragging:
+            self.configure(border_color="#444444")
+
+    def _on_key_activate(self, event=None) -> str:
+        self._on_click()
+        return "break"
 
     # ------------------------------------------------------------------ #
     #  Drag-and-drop via tkdnd                                            #
@@ -112,10 +168,12 @@ class DropZone(ctk.CTkFrame):
         self._reset_style()
 
     def _on_drag_enter(self, event) -> None:
+        self._is_dragging = True
         self.configure(border_color="#3b82f6")
         self._icon_label.configure(text="⬇️")
 
     def _on_drag_leave(self, event) -> None:
+        self._is_dragging = False
         self._reset_style()
 
     # ------------------------------------------------------------------ #
@@ -170,5 +228,17 @@ class DropZone(ctk.CTkFrame):
         return p.suffix.lower() in ALL_EXTENSIONS
 
     def _reset_style(self) -> None:
-        self.configure(border_color="#444444")
+        self._is_dragging = False
+        border = "#3b82f6" if self._is_focused else "#444444"
+        self.configure(border_color=border)
         self._icon_label.configure(text="📁")
+
+    def destroy(self) -> None:
+        """Clean up tooltip timers and window on widget destruction."""
+        if hasattr(self, "_tooltip") and self._tooltip:
+            try:
+                self._tooltip.hide()
+            except Exception:
+                pass
+            self._tooltip = None
+        super().destroy()

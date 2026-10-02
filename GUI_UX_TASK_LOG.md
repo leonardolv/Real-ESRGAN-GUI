@@ -5,6 +5,12 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **DropZone Keyboard Navigation, Focus Ring, Hover Affordance, and Tooltips** (2026-10-02)
+  - Added full keyboard accessibility to `DropZone`: configured canvas focus traversal, active focus ring (`#3b82f6`) on `<FocusIn>` / `<FocusOut>`, and keyboard file dialog activation via `<Return>` and `<space>`.
+  - Added subtle hover highlight border (`#666666`) and pointer hand cursor (`cursor="hand2"`) across the drop frame and child labels.
+  - Attached descriptive `ToolTip` ("Click to browse images or videos, or drag and drop files directly onto this zone") to the drop zone container and child labels with clean `destroy()` lifecycle disposal.
+  - Added unit test coverage `test_drop_zone_keyboard_focus_and_tooltips` in `tests/test_gui.py`.
+  - Verified with full headless test suite: 29 passed, 3 skipped, 0 failures in 4.46s.
 - [x] **Interactive Zoom Overlay Controls & Focus-Guarded Slider Navigation in PreviewCanvas** (2026-09-26)
   - Replaced static zoom label with interactive zoom overlay bar (`_zoom_frame`) featuring zoom out (`-`), reset/fit (`100%`), and zoom in (`+`) buttons with accessible `ToolTip` bindings (`Ctrl+-`, `Ctrl+0`, `Ctrl++`).
   - Added smart text input focus guard `_is_text_entry_focused()` to `PreviewCanvas` preventing `<Left>`, `<Right>`, and `<space>` from intercepting keystrokes when the user is typing or navigating inside settings entries or text boxes.

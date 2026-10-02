@@ -587,6 +587,50 @@ class TestGUIWidgetsHeadless:
         canvas.destroy()
         entry.destroy()
 
+    def test_drop_zone_keyboard_focus_and_tooltips(self, ctk_root, monkeypatch):
+        from gui.widgets.drop_zone import DropZone
+
+        dropped_files = []
+        dz = DropZone(ctk_root, on_files_dropped=lambda f: dropped_files.extend(f))
+        dz.pack()
+
+        assert dz.cget("cursor") == "hand2"
+        assert dz._tooltip is not None
+
+        # Focus in / out
+        dz._on_focus_in()
+        assert dz._is_focused is True
+        assert dz.cget("border_color") == "#3b82f6"
+
+        dz._on_focus_out()
+        assert dz._is_focused is False
+        assert dz.cget("border_color") == "#444444"
+
+        # Hover in / out
+        dz._on_hover_enter()
+        assert dz.cget("border_color") == "#666666"
+
+        dz._on_hover_leave()
+        assert dz.cget("border_color") == "#444444"
+
+        # Keyboard activation via Return / Space
+        clicked = {"count": 0}
+        monkeypatch.setattr(dz, "_on_click", lambda: clicked.__setitem__("count", clicked["count"] + 1))
+        res = dz._on_key_activate()
+        assert res == "break"
+        assert clicked["count"] == 1
+
+        # Drag enter / leave
+        dz._on_drag_enter(None)
+        assert dz._is_dragging is True
+        assert dz.cget("border_color") == "#3b82f6"
+
+        dz._on_drag_leave(None)
+        assert dz._is_dragging is False
+        assert dz.cget("border_color") == "#444444"
+
+        dz.destroy()
+
 
 
 
