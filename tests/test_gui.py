@@ -290,9 +290,36 @@ class TestGUIWidgetsHeadless:
             on_open_output=lambda: None,
         )
         toolbar.pack()
+
+        # Attribute exposure and cursors
+        assert hasattr(toolbar, "_open_btn")
+        assert hasattr(toolbar, "_save_btn")
+        assert hasattr(toolbar, "_output_btn")
+        assert hasattr(toolbar, "_about_btn")
+
+        for btn in (toolbar._open_btn, toolbar._output_btn, toolbar._about_btn):
+            assert btn.cget("cursor") == "hand2"
+
+        # Tooltips tracking
+        assert len(toolbar._tooltips) >= 4
+
+        # Save enabled/disabled and cursor state
         assert toolbar._save_btn.cget("state") == "disabled"
         toolbar.set_save_enabled(True)
         assert toolbar._save_btn.cget("state") == "normal"
+        assert toolbar._save_btn.cget("cursor") == "hand2"
+        toolbar.set_save_enabled(False)
+        assert toolbar._save_btn.cget("state") == "disabled"
+
+        # About dialog creation and escape dismissal
+        toolbar._show_about()
+        assert toolbar._about_dialog is not None
+        assert toolbar._about_dialog.winfo_exists()
+        toolbar._about_dialog.destroy()
+
+        # Clean destruction
+        toolbar.destroy()
+        assert len(toolbar._tooltips) == 0
 
     def test_queue_panel_drag_and_drop_visual_indicator(self, ctk_root, tmp_path):
         dropped_files = []

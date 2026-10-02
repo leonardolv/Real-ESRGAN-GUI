@@ -5,6 +5,13 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **Toolbar Button Attributes, Hand Cursors, Tooltips Lifecycle, and About Dialog Dismissal** (2026-10-03)
+  - Exposed all toolbar action buttons as instance attributes (`_open_btn`, `_save_btn`, `_output_btn`, `_about_btn`).
+  - Added pointer hand cursor (`cursor="hand2"`) across all toolbar and About dialog action buttons.
+  - Implemented clean tooltip tracking (`_tooltips`) and disposal lifecycle (`destroy()`).
+  - Added `<Escape>` key binding to cleanly dismiss the About dialog and added tooltips to dialog buttons.
+  - Expanded unit test coverage `test_toolbar_and_tooltip` in `tests/test_gui.py`.
+  - Verified with full test suite: 27 passed, 0 failures in 3.61s.
 - [x] **QueuePanel Empty State Visual Placeholder, Action Button Attributes, Hand Cursors, and Tooltips** (2026-10-02)
   - Added an empty state placeholder ("📂 Queue is empty / Click '+ Add Files' or drag images here") displayed when no files are in the queue.
   - Exposed bottom action buttons as instance attributes (`_add_files_btn`, `_clear_all_btn`) and attached ergonomic tooltips to all three actions (`_add_files_btn`, `_process_all_btn`, `_clear_all_btn`).
