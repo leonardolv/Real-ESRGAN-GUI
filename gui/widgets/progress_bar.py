@@ -9,6 +9,8 @@ from typing import Callable, List, Optional
 
 import customtkinter as ctk
 
+from .tooltip import ToolTip
+
 
 class ProgressPanel(ctk.CTkFrame):
     """Horizontal progress bar with status text, percentage, and ETA."""
@@ -24,6 +26,7 @@ class ProgressPanel(ctk.CTkFrame):
         self._item_start_time: Optional[float] = None
         self._item_durations: List[float] = []
         self._current_filename: str = ""
+        self._tooltips: List[ToolTip] = []
 
         # Top row: status text + percentage
         top = ctk.CTkFrame(self, fg_color="transparent")
@@ -68,9 +71,15 @@ class ProgressPanel(ctk.CTkFrame):
             font=ctk.CTkFont(size=11),
             fg_color="#333333",
             hover_color="#444444",
+            cursor="hand2",
             command=self._on_cancel,
         )
+        self._cancel_tooltip = ToolTip(
+            self._cancel_btn, "Cancel the currently active processing operation"
+        )
+        self._tooltips.append(self._cancel_tooltip)
         self._cancel_callback: Optional[Callable[[], None]] = None
+
 
     # ------------------------------------------------------------------ #
     #  Public API                                                         #
@@ -97,8 +106,10 @@ class ProgressPanel(ctk.CTkFrame):
         self._pct_label.configure(text="0%")
         self._eta_label.configure(text="")
         self._status_label.configure(text="Starting…")
+        self._cancel_btn.configure(state="normal")
         if cancel_callback:
             self._cancel_btn.pack(pady=(0, 4))
+
 
     def update_batch(self, current: int, total: int, filename: str = "") -> None:
         """Update for batch mode: 'Image 3 of 12 — photo.jpg'."""
@@ -210,6 +221,7 @@ class ProgressPanel(ctk.CTkFrame):
         self._pct_label.configure(text="")
         self._eta_label.configure(text="")
         self._status_label.configure(text="Ready")
+        self._cancel_btn.configure(state="normal")
         self._cancel_btn.pack_forget()
         self._start_time = None
         self._item_start_time = None
@@ -218,6 +230,18 @@ class ProgressPanel(ctk.CTkFrame):
         self._batch_current = 1
         self._current_filename = ""
         self._cancel_callback = None
+
+    def destroy(self) -> None:
+        """Clean up tooltips and child widgets."""
+        for tt in getattr(self, "_tooltips", []):
+            try:
+                tt.destroy()
+            except Exception:
+                pass
+        if hasattr(self, "_tooltips"):
+            self._tooltips.clear()
+        super().destroy()
+
 
     def set_error(self, message: str) -> None:
         """Show an error state."""

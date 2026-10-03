@@ -5,6 +5,13 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **ProgressPanel Cancel Button Hand Cursor, Tooltip Lifecycle, and State Restoration** (2026-10-03)
+  - Configured pointer hand cursor (`cursor="hand2"`) and attached descriptive `ToolTip` ("Cancel the currently active processing operation") to `_cancel_btn` in `gui/widgets/progress_bar.py`.
+  - Implemented clean widget destruction lifecycle (`destroy()`) safely disposing tooltip popup instances.
+  - Ensured cancel button state (`state="normal"`) is automatically restored whenever a new operation or batch starts (`start()`) or when the progress bar is reset to idle (`reset()`).
+  - Added automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` in `tests/test_gui.py`.
+  - Verified with full test suite: 28 passed, 0 failures in 3.74s.
+
 - [x] **Toolbar Button Attributes, Hand Cursors, Tooltips Lifecycle, and About Dialog Dismissal** (2026-10-03)
   - Exposed all toolbar action buttons as instance attributes (`_open_btn`, `_save_btn`, `_output_btn`, `_about_btn`).
   - Added pointer hand cursor (`cursor="hand2"`) across all toolbar and About dialog action buttons.

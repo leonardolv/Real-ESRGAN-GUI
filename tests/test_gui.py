@@ -567,7 +567,42 @@ class TestGUIWidgetsHeadless:
         assert len(progress._item_durations) == 0
         assert progress._batch_total == 1
 
+    def test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle(self, ctk_root):
+        cancelled = []
+        progress = ProgressPanel(ctk_root)
+        progress.pack()
+
+        # Verify cursor and tooltip
+        assert progress._cancel_btn.cget("cursor") == "hand2"
+        assert hasattr(progress, "_tooltips")
+        assert len(progress._tooltips) >= 1
+        assert "cancel" in progress._cancel_tooltip.text.lower()
+
+        # Start with callback
+        progress.start(cancel_callback=lambda: cancelled.append(True), batch_total=1)
+        assert progress._cancel_btn.cget("state") == "normal"
+
+        # Trigger cancel
+        progress._on_cancel()
+        assert cancelled == [True]
+        assert progress._cancel_btn.cget("state") == "disabled"
+        assert "Cancelling" in progress._status_label.cget("text")
+
+        # Reset restores normal state
+        progress.reset()
+        assert progress._cancel_btn.cget("state") == "normal"
+
+        # Start also restores normal state
+        progress._cancel_btn.configure(state="disabled")
+        progress.start(cancel_callback=lambda: None)
+        assert progress._cancel_btn.cget("state") == "normal"
+
+        # Destroy cleans up tooltips
+        progress.destroy()
+        assert len(progress._tooltips) == 0
+
     def test_preview_canvas_zoom_controls_and_input_guards(self, ctk_root, monkeypatch):
+
         canvas = PreviewCanvas(ctk_root)
         canvas.pack()
 
