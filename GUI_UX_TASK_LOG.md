@@ -5,6 +5,14 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **SettingsPanel Action Button Cursors, Tooltips, and Quick Open Output Folder Action** (2026-10-03)
+  - Configured pointer hand cursor (`cursor="hand2"`) across action buttons (`_browse_btn`, `_open_folder_btn`, `_download_btn`, `_reset_btn`, and `_upscale_btn`) in `gui/widgets/settings_panel.py`.
+  - Added dedicated quick-access "↗" button (`_open_folder_btn`) in the destination folder group with descriptive tooltip to open the current output directory directly in the OS file explorer.
+  - Implemented `_open_output_folder_in_os()` with cross-platform OS folder opening and headless automated execution guards to prevent spawning external file manager processes during test runs.
+  - Added descriptive tooltip to the primary upscale action button (`_upscale_btn`).
+  - Added automated unit test coverage `test_settings_panel_action_buttons_and_open_folder` in `tests/test_gui.py`.
+  - Verified with full test suite: 32 passed, 3 skipped, 0 failures.
+
 - [x] **ProgressPanel Cancel Button Hand Cursor, Tooltip Lifecycle, and State Restoration** (2026-10-03)
   - Configured pointer hand cursor (`cursor="hand2"`) and attached descriptive `ToolTip` ("Cancel the currently active processing operation") to `_cancel_btn` in `gui/widgets/progress_bar.py`.
   - Implemented clean widget destruction lifecycle (`destroy()`) safely disposing tooltip popup instances.

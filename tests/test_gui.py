@@ -281,6 +281,27 @@ class TestGUIWidgetsHeadless:
         settings.destroy()
         assert len(settings._tooltips) == 0
 
+    def test_settings_panel_action_buttons_and_open_folder(self, ctk_root, tmp_path):
+        mm = ModelManager()
+        settings = SettingsPanel(ctk_root, model_manager=mm)
+        settings.pack()
+        settings.add_upscale_button(lambda: None)
+
+        # Action buttons exist with hand2 cursors
+        assert settings._browse_btn.cget("cursor") == "hand2"
+        assert settings._open_folder_btn.cget("cursor") == "hand2"
+        assert settings._reset_btn.cget("cursor") == "hand2"
+        assert settings._upscale_btn.cget("cursor") == "hand2"
+        assert settings._download_btn.cget("cursor") == "hand2"
+
+        # Verify open folder action creates dir and executes cleanly under headless guard
+        custom_out = tmp_path / "custom_output"
+        settings._output_dir_var.set(str(custom_out))
+        settings._open_output_folder_in_os()
+        assert custom_out.exists()
+
+        settings.destroy()
+
     def test_toolbar_and_tooltip(self, ctk_root):
         from gui.widgets.toolbar import Toolbar
         toolbar = Toolbar(

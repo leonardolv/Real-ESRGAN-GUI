@@ -5,6 +5,9 @@ and Output.  Controls are wired to a shared settings dictionary that the
 main app reads when submitting jobs.
 """
 
+import os
+from pathlib import Path
+import sys
 from typing import Any, Callable, Dict, List, Optional
 
 import customtkinter as ctk
@@ -114,6 +117,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             text="Download Model",
             height=28,
             font=ctk.CTkFont(size=12),
+            cursor="hand2",
             command=self._on_download_model,
         )
         # Only shown when model is missing — initially hidden
@@ -340,11 +344,23 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         output_dir_entry.bind("<Return>", lambda e: self._emit("output_folder", self._output_dir_var.get()))
         self._add_tooltip(output_dir_entry, "Destination directory for generated files")
 
+        self._open_folder_btn = ctk.CTkButton(
+            folder_frame,
+            text="↗",
+            width=36,
+            height=28,
+            cursor="hand2",
+            command=self._open_output_folder_in_os,
+        )
+        self._open_folder_btn.pack(side="right", padx=(2, 0))
+        self._add_tooltip(self._open_folder_btn, "Open output folder in system file manager")
+
         self._browse_btn = ctk.CTkButton(
             folder_frame,
             text="📂",
             width=36,
             height=28,
+            cursor="hand2",
             command=self._browse_output_folder,
         )
         self._browse_btn.pack(side="right", padx=(4, 0))
@@ -365,6 +381,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             fg_color="transparent",
             hover_color="#2b2b2b",
             text_color="#a0a0a0",
+            cursor="hand2",
             command=self.reset_to_defaults,
         )
         self._reset_btn.pack(fill="x", padx=16, pady=(12, 4))
@@ -378,9 +395,11 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             corner_radius=10,
             fg_color="#2563eb",
             hover_color="#1d4ed8",
+            cursor="hand2",
             command=command,
         )
         self._upscale_btn.pack(fill="x", padx=16, pady=(4, 16))
+        self._add_tooltip(self._upscale_btn, "Execute Real-ESRGAN super-resolution upscaling on queued files")
         return self._upscale_btn
 
     # ================================================================== #
@@ -506,6 +525,33 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         if folder:
             self._output_dir_var.set(folder)
             self._emit("output_folder", folder)
+
+    def _open_output_folder_in_os(self) -> None:
+        """Open the current output folder in the OS file explorer."""
+        folder = self._output_dir_var.get().strip()
+        if not folder:
+            folder = "results"
+        folder_path = Path(folder)
+        try:
+            folder_path.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+
+        # Headless testing guard: do not spawn OS processes/explorers during automated runs
+        if "PYTEST_CURRENT_TEST" in os.environ or os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+            return
+
+        try:
+            if sys.platform == "win32":
+                os.startfile(str(folder_path.resolve()))
+            elif sys.platform == "darwin":
+                import subprocess
+                subprocess.Popen(["open", str(folder_path.resolve())])
+            else:
+                import subprocess
+                subprocess.Popen(["xdg-open", str(folder_path.resolve())])
+        except Exception:
+            pass
 
     # ================================================================== #
     #  Helpers                                                            #
