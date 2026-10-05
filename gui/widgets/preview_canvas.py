@@ -119,22 +119,56 @@ class PreviewCanvas(ctk.CTkFrame):
         
         # Timeline
         self._slider_var = tk.DoubleVar(value=0.0)
-        self._timeline_slider = ctk.CTkSlider(self._controls_frame, from_=0, to=1, variable=self._slider_var, command=self._on_timeline_seek)
-        self._timeline_slider.pack(side="top", fill="x", padx=10, pady=(5,0))
-        
+        self._timeline_slider = ctk.CTkSlider(
+            self._controls_frame,
+            from_=0,
+            to=1,
+            variable=self._slider_var,
+            command=self._on_timeline_seek,
+            cursor="hand2",
+        )
+        self._timeline_slider.pack(side="top", fill="x", padx=10, pady=(5, 0))
+        self._tip_timeline = ToolTip(self._timeline_slider, "Seek video playback position")
+
         # Buttons Frame
         btns_frame = ctk.CTkFrame(self._controls_frame, fg_color="transparent")
         btns_frame.pack(side="bottom", fill="x", pady=5, padx=10)
-        
-        self._prev_btn = ctk.CTkButton(btns_frame, text="⏮", width=40, command=self._step_backward)
+
+        self._prev_btn = ctk.CTkButton(
+            btns_frame,
+            text="⏮",
+            width=40,
+            command=self._step_backward,
+            cursor="hand2",
+        )
         self._prev_btn.pack(side="left", padx=5)
-        
-        self._play_btn = ctk.CTkButton(btns_frame, text="▶ Play", width=80, command=self._toggle_pause, fg_color="#10B981", hover_color="#059669")
+        self._tip_prev = ToolTip(self._prev_btn, "Step Backward 1 frame (Left Arrow)")
+
+        self._play_btn = ctk.CTkButton(
+            btns_frame,
+            text="▶ Play",
+            width=80,
+            command=self._toggle_pause,
+            fg_color="#10B981",
+            hover_color="#059669",
+            cursor="hand2",
+        )
         self._play_btn.pack(side="left", padx=5)
-        
-        self._next_btn = ctk.CTkButton(btns_frame, text="⏭", width=40, command=self._step_forward)
+        self._tip_play = ToolTip(
+            self._play_btn,
+            lambda: "Pause Video (Space)" if not self._is_paused else "Play Video (Space)",
+        )
+
+        self._next_btn = ctk.CTkButton(
+            btns_frame,
+            text="⏭",
+            width=40,
+            command=self._step_forward,
+            cursor="hand2",
+        )
         self._next_btn.pack(side="left", padx=5)
-        
+        self._tip_next = ToolTip(self._next_btn, "Step Forward 1 frame (Right Arrow)")
+
         self._time_label = ctk.CTkLabel(btns_frame, text="0:00 / 0:00", text_color="#a0a0a0")
         self._time_label.pack(side="right", padx=5)
 
@@ -656,7 +690,15 @@ class PreviewCanvas(ctk.CTkFrame):
     def destroy(self) -> None:
         """Clean up video captures and child tooltips on widget destruction."""
         self._stop_video()
-        for tip_attr in ("_tip_zoom_out", "_tip_zoom_fit", "_tip_zoom_in"):
+        for tip_attr in (
+            "_tip_zoom_out",
+            "_tip_zoom_fit",
+            "_tip_zoom_in",
+            "_tip_timeline",
+            "_tip_prev",
+            "_tip_play",
+            "_tip_next",
+        ):
             tip = getattr(self, tip_attr, None)
             if tip is not None and hasattr(tip, "destroy"):
                 try:

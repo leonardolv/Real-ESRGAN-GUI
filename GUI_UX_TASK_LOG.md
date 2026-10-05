@@ -5,6 +5,13 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **PreviewCanvas Video Controls Hand Cursors, Tooltips, and Lifecycle Disposal** (2026-10-06)
+  - Configured pointer hand cursor (`cursor="hand2"`) across video playback controls (`_timeline_slider`, `_prev_btn`, `_play_btn`, `_next_btn`) in `gui/widgets/preview_canvas.py`.
+  - Added descriptive `ToolTip` instances for seeking timeline, stepping backward 1 frame, stepping forward 1 frame, and dynamic play/pause state feedback ("Play Video (Space)" vs "Pause Video (Space)").
+  - Updated `destroy()` lifecycle to cleanly dispose video control tooltips alongside existing zoom tooltips.
+  - Added automated unit test coverage `test_preview_canvas_video_controls_cursors_and_tooltips` in `tests/test_gui.py`.
+  - Verified with full test suite: 30 passed with 0 errors.
+
 - [x] **SettingsPanel Action Button Cursors, Tooltips, and Quick Open Output Folder Action** (2026-10-03)
   - Configured pointer hand cursor (`cursor="hand2"`) across action buttons (`_browse_btn`, `_open_folder_btn`, `_download_btn`, `_reset_btn`, and `_upscale_btn`) in `gui/widgets/settings_panel.py`.
   - Added dedicated quick-access "↗" button (`_open_folder_btn`) in the destination folder group with descriptive tooltip to open the current output directory directly in the OS file explorer.

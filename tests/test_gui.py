@@ -670,6 +670,34 @@ class TestGUIWidgetsHeadless:
         canvas.destroy()
         entry.destroy()
 
+    def test_preview_canvas_video_controls_cursors_and_tooltips(self, ctk_root):
+        canvas = PreviewCanvas(ctk_root)
+        canvas.pack()
+
+        # Check cursor affordances on video controls
+        assert canvas._timeline_slider.cget("cursor") == "hand2"
+        assert canvas._prev_btn.cget("cursor") == "hand2"
+        assert canvas._play_btn.cget("cursor") == "hand2"
+        assert canvas._next_btn.cget("cursor") == "hand2"
+
+        # Check tooltips attached
+        assert hasattr(canvas, "_tip_timeline")
+        assert "seek" in canvas._tip_timeline._get_text().lower()
+        assert hasattr(canvas, "_tip_prev")
+        assert "backward" in canvas._tip_prev._get_text().lower()
+        assert hasattr(canvas, "_tip_next")
+        assert "forward" in canvas._tip_next._get_text().lower()
+
+        # Check dynamic play/pause tooltip text
+        assert hasattr(canvas, "_tip_play")
+        assert canvas._is_paused is True
+        assert "play" in canvas._tip_play._get_text().lower()
+        canvas._is_paused = False
+        assert "pause" in canvas._tip_play._get_text().lower()
+
+        # Clean destruction
+        canvas.destroy()
+
     def test_drop_zone_keyboard_focus_and_tooltips(self, ctk_root, monkeypatch):
         from gui.widgets.drop_zone import DropZone
 
