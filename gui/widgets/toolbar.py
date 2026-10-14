@@ -75,7 +75,7 @@ class Toolbar(ctk.CTkFrame):
             left, text="📁  Output Folder", command=on_open_output, width=140, **btn_kwargs
         )
         self._output_btn.pack(side="left", padx=2)
-        self._tooltips.append(ToolTip(self._output_btn, "Open output directory in file manager"))
+        self._tooltips.append(ToolTip(self._output_btn, "Open output directory in file manager (Ctrl+Shift+O)"))
 
         # Right buttons
         right = ctk.CTkFrame(self, fg_color="transparent")
@@ -85,7 +85,7 @@ class Toolbar(ctk.CTkFrame):
             right, text="ℹ  About", command=self._show_about, width=80, **btn_kwargs
         )
         self._about_btn.pack(side="left", padx=2)
-        self._tooltips.append(ToolTip(self._about_btn, "About Real-ESRGAN GUI"))
+        self._tooltips.append(ToolTip(self._about_btn, "About Real-ESRGAN GUI (F1)"))
 
     # ------------------------------------------------------------------ #
     #  Public                                                             #

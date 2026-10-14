@@ -776,6 +776,78 @@ class TestGUIWidgetsHeadless:
 
         queue.destroy()
 
+    def test_queue_and_toolbar_shortcuts_and_explorer_guards(self, ctk_root, tmp_path):
+        from unittest.mock import patch
+
+        queue = QueuePanel(ctk_root)
+        queue.pack()
+
+        # Check button tooltips reflect shortcut hints
+        tips = {btn: tip.text for btn, tip in zip([queue._add_files_btn, queue._process_all_btn, queue._clear_all_btn], queue._button_tooltips)}
+        assert "Ctrl+O" in tips[queue._add_files_btn]
+        assert "Ctrl+P" in tips[queue._process_all_btn] or "Ctrl+Enter" in tips[queue._process_all_btn]
+
+        # Verify explorer headless guard does not launch subprocess
+        test_file = tmp_path / "test_file.png"
+        test_file.write_text("dummy", encoding="utf-8")
+        with patch("subprocess.run") as mock_subproc, patch("subprocess.Popen") as mock_popen:
+            queue._open_file_in_explorer(str(test_file))
+            mock_subproc.assert_not_called()
+            mock_popen.assert_not_called()
+
+        queue.destroy()
+
+        from gui.widgets.toolbar import Toolbar
+        toolbar = Toolbar(ctk_root, on_open=lambda: None, on_save=lambda: None, on_open_output=lambda: None)
+        toolbar.pack()
+        tb_tips = [t.text for t in toolbar._tooltips]
+        assert any("Ctrl+Shift+O" in t for t in tb_tips)
+        assert any("F1" in t for t in tb_tips)
+        toolbar.destroy()
+
+    def test_app_shortcuts_and_status_bar_tooltips(self, monkeypatch):
+        from unittest.mock import MagicMock, patch
+        from gui.app import RealESRGANApp
+
+        with patch("gui.app.ModelManager"), \
+             patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX",
+                "total_vram_gb": 8.0,
+                "used_vram_gb": 2.0,
+                "device": "cuda",
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
+
+            app = RealESRGANApp()
+            app.withdraw()
+            try:
+                # Status bar tooltips exist
+                assert hasattr(app, "_status_tooltip")
+                assert app._status_tooltip is not None
+                assert "status" in app._status_tooltip.text.lower()
+
+                assert hasattr(app, "_gpu_tooltip")
+                assert app._gpu_tooltip is not None
+                assert "hardware" in app._gpu_tooltip.text.lower() or "vram" in app._gpu_tooltip.text.lower()
+
+                # Process all shortcut handler
+                processed = []
+                monkeypatch.setattr(app, "_process_all", lambda: processed.append(True))
+                app._on_process_all_shortcut()
+                assert len(processed) == 1
+
+                # Headless output folder guard does not call os.startfile
+                with patch("os.startfile") as mock_startfile, patch("subprocess.Popen") as mock_popen:
+                    app._open_output_folder()
+                    mock_startfile.assert_not_called()
+                    mock_popen.assert_not_called()
+            finally:
+                app._on_close()
+
+
 
 
 

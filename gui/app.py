@@ -49,6 +49,7 @@ from gui.widgets.progress_bar import ProgressPanel
 from gui.widgets.queue_panel import ItemStatus, QueuePanel
 from gui.widgets.settings_panel import SettingsPanel
 from gui.widgets.toolbar import Toolbar
+from gui.widgets.tooltip import ToolTip
 
 
 class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
@@ -174,6 +175,9 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             anchor="w",
         )
         self._status_text.pack(side="left", padx=8)
+        self._status_tooltip = ToolTip(
+            self._status_text, "Current application status and upscale activity"
+        )
 
         # GPU info
         gpu = self.upscale_ctrl.get_gpu_info()
@@ -189,11 +193,15 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             anchor="e",
         )
         self._gpu_label.pack(side="right", padx=8)
+        self._gpu_tooltip = ToolTip(
+            self._gpu_label,
+            "Hardware acceleration info (device, active model execution backend, and VRAM utilization)",
+        )
 
         # Show CPU warning if no GPU
         if gpu["device"] == "cpu":
             self._status_text.configure(
-                text="⚠ No CUDA GPU — running in CPU mode (slower)",
+                text="⚠ No CUDA GPU - running in CPU mode (slower)",
                 text_color="#fbbf24",
             )
 
@@ -263,6 +271,8 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         folder = self.settings_panel.get_settings().get("output_folder", "results")
         abs_folder = Path(folder).resolve()
         abs_folder.mkdir(parents=True, exist_ok=True)
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
+            return
         if sys.platform == "win32":
             os.startfile(str(abs_folder))
         elif sys.platform == "darwin":
@@ -282,7 +292,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             return
 
         if self.upscale_ctrl.is_busy:
-            self._status_text.configure(text="Already processing — please wait")
+            self._status_text.configure(text="Already processing - please wait")
             return
 
         settings = self.settings_panel.get_settings()
@@ -321,7 +331,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             return
 
         if self.upscale_ctrl.is_busy:
-            self._status_text.configure(text="Already processing — please wait")
+            self._status_text.configure(text="Already processing - please wait")
             return
 
         settings = self.settings_panel.get_settings()
@@ -558,18 +568,31 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     def _bind_shortcuts(self) -> None:
         self.bind("<Control-o>", lambda e: self._open_files())
         self.bind("<Control-s>", lambda e: self._save_output())
+        self.bind("<Control-Shift-O>", lambda e: self._open_output_folder())
+        self.bind("<Control-Shift-o>", lambda e: self._open_output_folder())
+        self.bind("<Control-p>", self._on_process_all_shortcut)
+        self.bind("<Control-P>", self._on_process_all_shortcut)
+        self.bind("<Control-Return>", self._on_process_all_shortcut)
         self.bind("<Return>", self._on_return_key)
         self.bind("<Escape>", lambda e: self.upscale_ctrl.cancel())
         self.bind("<Delete>", lambda e: self._delete_selected())
         self.bind("<Control-q>", lambda e: self._on_close())
+        self.bind("<F1>", lambda e: self.toolbar._show_about())
         self.bind("<F11>", lambda e: self._toggle_fullscreen())
 
     def _on_return_key(self, event) -> None:
-        """Handle Return key — ignore if focus is in a text entry."""
+        """Handle Return key - ignore if focus is in a text entry."""
         widget = self.focus_get()
         if widget and widget.winfo_class() in ("Entry", "TEntry", "Text"):
             return  # Don't trigger upscale when typing in an entry
         self._start_upscale()
+
+    def _on_process_all_shortcut(self, event=None) -> None:
+        """Handle Process All shortcut key - ignore if focus is in a text entry."""
+        widget = self.focus_get()
+        if widget and widget.winfo_class() in ("Entry", "TEntry", "Text"):
+            return  # Don't trigger batch upscale when typing in an entry
+        self._process_all()
 
     def _on_queue_cleared(self) -> None:
         """Handle queue becoming empty."""
@@ -670,6 +693,17 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
 
         if self.upscale_ctrl.is_busy:
             self.upscale_ctrl.cancel()
+
+        if hasattr(self, "_status_tooltip") and self._status_tooltip:
+            try:
+                self._status_tooltip.destroy()
+            except Exception:
+                pass
+        if hasattr(self, "_gpu_tooltip") and self._gpu_tooltip:
+            try:
+                self._gpu_tooltip.destroy()
+            except Exception:
+                pass
 
         self.destroy()
 

@@ -154,7 +154,7 @@ class QueuePanel(ctk.CTkFrame):
         )
         self._add_files_btn.pack(fill="x", pady=(0, 4))
         self._button_tooltips.append(
-            ToolTip(self._add_files_btn, "Open file dialog to add images or videos to queue")
+            ToolTip(self._add_files_btn, "Open file dialog to add images or videos to queue (Ctrl+O)")
         )
 
         self._process_all_btn = ctk.CTkButton(
@@ -168,7 +168,7 @@ class QueuePanel(ctk.CTkFrame):
         )
         self._process_all_btn.pack(fill="x", pady=(0, 4))
         self._button_tooltips.append(
-            ToolTip(self._process_all_btn, "Start upscaling all items currently in queue")
+            ToolTip(self._process_all_btn, "Start upscaling all items currently in queue (Ctrl+P / Ctrl+Enter)")
         )
 
         self._clear_all_btn = ctk.CTkButton(
@@ -502,6 +502,8 @@ class QueuePanel(ctk.CTkFrame):
             return
         abs_p = Path(path).resolve()
         if not abs_p.exists():
+            return
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
             return
         if sys.platform == "win32":
             subprocess.run(["explorer", f"/select,{str(abs_p)}"], check=False)

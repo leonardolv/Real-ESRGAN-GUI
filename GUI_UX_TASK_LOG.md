@@ -5,6 +5,16 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **Process All Shortcuts, F1 Help, Status Bar Tooltips, and Headless File Explorer Guards** (2026-10-14)
+  - Added `<Control-p>`, `<Control-P>`, and `<Control-Return>` keyboard shortcuts triggering batch upscale (`_process_all`) with active text-entry focus protection.
+  - Added `<Control-Shift-O>` and `<Control-Shift-o>` keyboard shortcuts to open destination folder directly from anywhere in the app.
+  - Added standard `<F1>` shortcut to open the About dialog.
+  - Attached descriptive `ToolTip` instances to status bar labels (`_status_text` and `_gpu_label`) with clean shutdown disposal in `_on_close()`.
+  - Added shortcut key hints to button tooltips in `Toolbar` (`_output_btn`, `_about_btn`) and `QueuePanel` (`_add_files_btn`, `_process_all_btn`).
+  - Added headless automated execution guards to `_open_file_in_explorer` in `QueuePanel` and `_open_output_folder` in `RealESRGANApp` to prevent spawning external file manager processes during test runs.
+  - Added automated unit test coverage `test_queue_and_toolbar_shortcuts_and_explorer_guards` and `test_app_shortcuts_and_status_bar_tooltips` in `tests/test_gui.py`.
+  - Verified with full test suite: 32 passed with 0 errors.
+
 - [x] **PreviewCanvas Video Controls Hand Cursors, Tooltips, and Lifecycle Disposal** (2026-10-06)
   - Configured pointer hand cursor (`cursor="hand2"`) across video playback controls (`_timeline_slider`, `_prev_btn`, `_play_btn`, `_next_btn`) in `gui/widgets/preview_canvas.py`.
   - Added descriptive `ToolTip` instances for seeking timeline, stepping backward 1 frame, stepping forward 1 frame, and dynamic play/pause state feedback ("Play Video (Space)" vs "Pause Video (Space)").
