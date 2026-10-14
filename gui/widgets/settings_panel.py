@@ -1,4 +1,4 @@
-"""Settings panel — right-hand sidebar with all upscaling controls.
+"""Settings panel - right-hand sidebar with all upscaling controls.
 
 Organized into four collapsible sections: Model, Upscaling, Enhancement,
 and Output.  Controls are wired to a shared settings dictionary that the
@@ -43,6 +43,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         # Internal state
         self._vars: Dict[str, Any] = {}
         self._tooltips: List[ToolTip] = []
+        self._category_radios: List[ctk.CTkRadioButton] = []
 
         self._build_model_section()
         self._build_upscaling_section()
@@ -73,8 +74,10 @@ class SettingsPanel(ctk.CTkScrollableFrame):
                 variable=self._category_var,
                 value=cat,
                 command=self._on_category_changed,
+                cursor="hand2",
             )
             rb.pack(anchor="w", pady=1)
+            self._category_radios.append(rb)
             self._add_tooltip(rb, f"Filter models by '{cat}' category")
 
         # Model dropdown
@@ -88,6 +91,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             values=self._get_model_names("General"),
             command=self._on_model_changed,
             width=248,
+            cursor="hand2",
         )
         self._model_dropdown.pack(padx=16, pady=(2, 4))
         self._add_tooltip(self._model_dropdown, "Select upscaling model architecture")
@@ -120,7 +124,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             cursor="hand2",
             command=self._on_download_model,
         )
-        # Only shown when model is missing — initially hidden
+        # Only shown when model is missing - initially hidden
         self._download_btn.pack(padx=16, pady=(0, 8))
         self._download_btn.pack_forget()
         self._add_tooltip(self._download_btn, "Download model weights from official repository")
@@ -143,6 +147,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             values=["1", "2", "3", "4"],
             command=lambda v: self._emit("outscale", float(v)),
             width=248,
+            cursor="hand2",
         )
         self._scale_dropdown.pack(padx=16, pady=(2, 4))
         self._add_tooltip(self._scale_dropdown, "Output image scaling multiplier (1x to 4x)")
@@ -158,6 +163,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             values=["0 (no tile)", "128", "256", "512", "1024"],
             command=self._on_tile_changed,
             width=248,
+            cursor="hand2",
         )
         self._tile_dropdown.pack(padx=16, pady=(2, 2))
         self._add_tooltip(self._tile_dropdown, "Tile dimension to conserve GPU VRAM (0 for un-tiled)")
@@ -208,6 +214,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             text="Face Enhancement (GFPGAN)",
             variable=self._face_var,
             command=lambda: self._emit("face_enhance", self._face_var.get()),
+            cursor="hand2",
         )
         self._face_check.pack(anchor="w", padx=16, pady=(4, 2))
         self._add_tooltip(self._face_check, "Face restoration using GFPGAN (recommended for portraits only)")
@@ -221,7 +228,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         )
         self._face_hint.pack(anchor="w", padx=32, pady=(0, 4))
 
-        # Denoise strength slider — wrapped in a container so show/hide
+        # Denoise strength slider - wrapped in a container so show/hide
         # doesn't break pack ordering when toggling models.
         self._denoise_frame = ctk.CTkFrame(self, fg_color="transparent")
         self._denoise_frame.pack(fill="x")
@@ -239,6 +246,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             variable=self._denoise_var,
             command=lambda v: self._emit("denoise_strength", round(float(v), 2)),
             width=248,
+            cursor="hand2",
         )
         self._denoise_slider.pack(padx=16, pady=(2, 0))
         self._add_tooltip(self._denoise_slider, "Noise reduction strength for general-v3 model")
@@ -264,6 +272,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             text="FP32 Precision",
             variable=self._fp32_var,
             command=lambda: self._emit("fp32", self._fp32_var.get()),
+            cursor="hand2",
         )
         self._fp32_check.pack(anchor="w", padx=16, pady=(4, 2))
         self._add_tooltip(self._fp32_check, "Force FP32 precision to avoid black or NaN outputs on older GPUs")
@@ -287,6 +296,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             values=["realesrgan", "bicubic"],
             command=lambda v: self._emit("alpha_upsampler", v),
             width=248,
+            cursor="hand2",
         )
         self._alpha_dropdown.pack(padx=16, pady=(2, 8))
         self._add_tooltip(self._alpha_dropdown, "Upsampling technique for transparency / alpha channels")
@@ -309,6 +319,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             values=["auto", "png", "jpg", "webp"],
             command=lambda v: self._emit("output_ext", v),
             width=248,
+            cursor="hand2",
         )
         self._ext_dropdown.pack(padx=16, pady=(2, 4))
         self._add_tooltip(self._ext_dropdown, "Output image container format")
@@ -353,7 +364,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             command=self._open_output_folder_in_os,
         )
         self._open_folder_btn.pack(side="right", padx=(2, 0))
-        self._add_tooltip(self._open_folder_btn, "Open output folder in system file manager")
+        self._add_tooltip(self._open_folder_btn, "Open output folder in system file manager (Ctrl+Shift+O)")
 
         self._browse_btn = ctk.CTkButton(
             folder_frame,
@@ -399,7 +410,7 @@ class SettingsPanel(ctk.CTkScrollableFrame):
             command=command,
         )
         self._upscale_btn.pack(fill="x", padx=16, pady=(4, 16))
-        self._add_tooltip(self._upscale_btn, "Execute Real-ESRGAN super-resolution upscaling on queued files")
+        self._add_tooltip(self._upscale_btn, "Execute Real-ESRGAN super-resolution upscaling on queued files (Return)")
         return self._upscale_btn
 
     # ================================================================== #

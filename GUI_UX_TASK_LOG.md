@@ -5,6 +5,13 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **SettingsPanel Option Menus, Radio Buttons, Checkboxes, and Slider Pointer Affordances, Upscale Shortcut Hint, and Dash Standardization** (2026-10-14)
+  - Configured pointer hand cursor (`cursor="hand2"`) across category radio buttons (`_category_radios`), model/scale/tile/alpha/format option menus (`_model_dropdown`, `_scale_dropdown`, `_tile_dropdown`, `_alpha_dropdown`, `_ext_dropdown`), face enhancement checkbox (`_face_check`), FP32 precision checkbox (`_fp32_check`), and denoise strength slider (`_denoise_slider`).
+  - Added keyboard shortcut cues to tooltips: `(Return)` on primary upscale button (`_upscale_btn`) and `(Ctrl+Shift+O)` on open output folder button (`_open_folder_btn`).
+  - Standardized all em dashes in comments and headers to hyphens (`-`).
+  - Expanded automated unit test `test_settings_panel_action_buttons_and_open_folder` in `tests/test_gui.py` validating cursors on all option menus, radio buttons, checkboxes, slider, and shortcut cues in tooltips.
+  - Verified with full test suite: 32 passed, 0 failures in 5.85s.
+
 - [x] **Process All Shortcuts, F1 Help, Status Bar Tooltips, and Headless File Explorer Guards** (2026-10-14)
   - Added `<Control-p>`, `<Control-P>`, and `<Control-Return>` keyboard shortcuts triggering batch upscale (`_process_all`) with active text-entry focus protection.
   - Added `<Control-Shift-O>` and `<Control-Shift-o>` keyboard shortcuts to open destination folder directly from anywhere in the app.

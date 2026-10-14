@@ -294,6 +294,26 @@ class TestGUIWidgetsHeadless:
         assert settings._upscale_btn.cget("cursor") == "hand2"
         assert settings._download_btn.cget("cursor") == "hand2"
 
+        # Controls affordances: radios, dropdowns, checkboxes, and slider have hand2 cursors
+        assert len(settings._category_radios) > 0
+        for rb in settings._category_radios:
+            assert rb.cget("cursor") == "hand2"
+
+        assert settings._model_dropdown.cget("cursor") == "hand2"
+        assert settings._scale_dropdown.cget("cursor") == "hand2"
+        assert settings._tile_dropdown.cget("cursor") == "hand2"
+        assert settings._alpha_dropdown.cget("cursor") == "hand2"
+        assert settings._ext_dropdown.cget("cursor") == "hand2"
+        assert settings._face_check.cget("cursor") == "hand2"
+        assert settings._fp32_check.cget("cursor") == "hand2"
+        assert settings._denoise_slider.cget("cursor") == "hand2"
+
+        # Verify tooltips include shortcut hints
+        upscale_tips = [t.text for t in settings._tooltips if "Return" in t.text]
+        assert len(upscale_tips) >= 1
+        open_folder_tips = [t.text for t in settings._tooltips if "Ctrl+Shift+O" in t.text]
+        assert len(open_folder_tips) >= 1
+
         # Verify open folder action creates dir and executes cleanly under headless guard
         custom_out = tmp_path / "custom_output"
         settings._output_dir_var.set(str(custom_out))
