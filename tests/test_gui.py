@@ -21,6 +21,7 @@ from gui.widgets.settings_panel import SettingsPanel
 from gui.widgets.progress_bar import ProgressPanel
 from gui.widgets.preview_canvas import PreviewCanvas
 from gui.widgets.tooltip import ToolTip, ThumbnailToolTip
+from gui.widgets.toolbar import Toolbar
 
 
 class TestImageUtils:
@@ -356,6 +357,8 @@ class TestGUIWidgetsHeadless:
         toolbar._show_about()
         assert toolbar._about_dialog is not None
         assert toolbar._about_dialog.winfo_exists()
+        assert toolbar._about_dialog.bind("<Return>") is not None
+        assert toolbar._about_dialog.bind("<Escape>") is not None
         toolbar._about_dialog.destroy()
 
         # Clean destruction
@@ -470,6 +473,14 @@ class TestGUIWidgetsHeadless:
         queue = QueuePanel(ctk_root)
         queue.pack()
         queue.add_files([str(in_img)])
+
+        # Queued item card and labels have pointer cursor affordance
+        cards = [w for w in queue._list_frame.winfo_children() if isinstance(w, ctk.CTkFrame)]
+        assert len(cards) >= 1
+        assert cards[0].cget("cursor") == "hand2"
+        for child in cards[0].winfo_children():
+            if isinstance(child, ctk.CTkLabel):
+                assert child.cget("cursor") == "hand2"
 
         # Queued item has tooltip
         assert len(queue._active_tooltips) == 1
@@ -866,6 +877,8 @@ class TestGUIWidgetsHeadless:
                     mock_popen.assert_not_called()
             finally:
                 app._on_close()
+
+
 
 
 

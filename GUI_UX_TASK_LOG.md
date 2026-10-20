@@ -5,6 +5,12 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **QueuePanel Item Cards Pointer Affordance, About Dialog Return Dismissal, and Browser Launch Guards** (2026-10-20)
+  - Configured pointer hand cursor (`cursor="hand2"`) across item cards (`card`), name labels (`name_label`), and status labels (`info_label`) in `QueuePanel`.
+  - Added `<Return>` key binding on About dialog to dismiss alongside `<Escape>`.
+  - Guarded About dialog `grab_set()` and `webbrowser.open_new_tab()` during automated test runs (`"PYTEST_CURRENT_TEST" in os.environ` or `HEADLESS`).
+  - Added automated unit test verification in `tests/test_gui.py` (`test_queue_panel_item_tooltip_integration` and `test_toolbar_and_tooltip`).
+  - Verified with full test suite: 32 passed, 0 failures in 8.53s.
 - [x] **SettingsPanel Option Menus, Radio Buttons, Checkboxes, and Slider Pointer Affordances, Upscale Shortcut Hint, and Dash Standardization** (2026-10-14)
   - Configured pointer hand cursor (`cursor="hand2"`) across category radio buttons (`_category_radios`), model/scale/tile/alpha/format option menus (`_model_dropdown`, `_scale_dropdown`, `_tile_dropdown`, `_alpha_dropdown`, `_ext_dropdown`), face enhancement checkbox (`_face_check`), FP32 precision checkbox (`_fp32_check`), and denoise strength slider (`_denoise_slider`).
   - Added keyboard shortcut cues to tooltips: `(Return)` on primary upscale button (`_upscale_btn`) and `(Ctrl+Shift+O)` on open output folder button (`_open_folder_btn`).

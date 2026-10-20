@@ -124,8 +124,14 @@ class Toolbar(ctk.CTkFrame):
         dialog.title("About Real-ESRGAN GUI")
         dialog.geometry("440x370")
         dialog.resizable(False, False)
-        dialog.grab_set()
+        if not ("PYTEST_CURRENT_TEST" in os.environ or os.environ.get("HEADLESS")):
+            dialog.grab_set()
         dialog.bind("<Escape>", lambda e: dialog.destroy())
+        dialog.bind("<Return>", lambda e: dialog.destroy())
+
+        def _safe_open_url(url: str) -> None:
+            if not ("PYTEST_CURRENT_TEST" in os.environ or os.environ.get("HEADLESS")):
+                webbrowser.open_new_tab(url)
 
         ctk.CTkLabel(
             dialog,
@@ -165,7 +171,7 @@ class Toolbar(ctk.CTkFrame):
             cursor="hand2",
             fg_color="#2b2b2b",
             hover_color="#3b3b3b",
-            command=lambda: webbrowser.open_new_tab("https://github.com/leonardolv/Real-ESRGAN-GUI"),
+            command=lambda: _safe_open_url("https://github.com/leonardolv/Real-ESRGAN-GUI"),
         )
         gh_btn.pack(side="left", padx=4)
         ToolTip(gh_btn, "Open GitHub project page in browser")
@@ -179,7 +185,7 @@ class Toolbar(ctk.CTkFrame):
             cursor="hand2",
             fg_color="#2b2b2b",
             hover_color="#3b3b3b",
-            command=lambda: webbrowser.open_new_tab("https://github.com/xinntao/Real-ESRGAN"),
+            command=lambda: _safe_open_url("https://github.com/xinntao/Real-ESRGAN"),
         )
         upstream_btn.pack(side="left", padx=4)
         ToolTip(upstream_btn, "Open upstream Real-ESRGAN repository in browser")

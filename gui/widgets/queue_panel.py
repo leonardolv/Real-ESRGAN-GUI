@@ -354,7 +354,7 @@ class QueuePanel(ctk.CTkFrame):
     def _create_item_widget(self, idx: int, item: QueueItem, selected: bool) -> None:
         """Create a single queue item card."""
         fg = "#2a2d35" if selected else "transparent"
-        card = ctk.CTkFrame(self._list_frame, fg_color=fg, corner_radius=6, height=56)
+        card = ctk.CTkFrame(self._list_frame, fg_color=fg, corner_radius=6, height=56, cursor="hand2")
         card.pack(fill="x", pady=2, padx=2)
         card.pack_propagate(False)
         card.bind("<Button-1>", lambda e, i=idx: (self._set_panel_focus(), self.select(i)))
@@ -367,6 +367,7 @@ class QueuePanel(ctk.CTkFrame):
             text=f"{icon}  {item.filename}",
             font=ctk.CTkFont(size=12, weight="bold" if selected else "normal"),
             anchor="w",
+            cursor="hand2",
         )
         name_label.pack(anchor="w", padx=8, pady=(6, 0))
         name_label.bind("<Button-1>", lambda e, i=idx: (self._set_panel_focus(), self.select(i)))
@@ -396,6 +397,7 @@ class QueuePanel(ctk.CTkFrame):
             font=ctk.CTkFont(size=10),
             text_color=status_color,
             anchor="w",
+            cursor="hand2",
         )
         info_label.pack(anchor="w", padx=8, pady=(0, 4))
         info_label.bind("<Button-1>", lambda e, i=idx: (self._set_panel_focus(), self.select(i)))
