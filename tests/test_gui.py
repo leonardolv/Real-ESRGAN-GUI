@@ -574,6 +574,9 @@ class TestGUIWidgetsHeadless:
         assert ProgressPanel._fmt_time(120) == "2m"
         assert ProgressPanel._fmt_time(3665) == "1h 01m"
         assert ProgressPanel._fmt_time(7200) == "2h 00m"
+        assert ProgressPanel._fmt_time(-5) == "0s"
+        assert ProgressPanel._fmt_time("invalid") == "0s"
+        assert ProgressPanel._fmt_time(None) == "0s"
 
     def test_progress_panel_batch_progress_and_eta(self, ctk_root):
         progress = ProgressPanel(ctk_root)
@@ -627,7 +630,11 @@ class TestGUIWidgetsHeadless:
         # Verify cursor and tooltip
         assert progress._cancel_btn.cget("cursor") == "hand2"
         assert hasattr(progress, "_tooltips")
-        assert len(progress._tooltips) >= 1
+        assert len(progress._tooltips) >= 3
+        assert hasattr(progress, "_status_tooltip")
+        assert "status" in progress._status_tooltip.text.lower()
+        assert hasattr(progress, "_bar_tooltip")
+        assert "progress" in progress._bar_tooltip.text.lower()
         assert "cancel" in progress._cancel_tooltip.text.lower()
 
         # Start with callback

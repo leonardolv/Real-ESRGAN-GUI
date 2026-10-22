@@ -5,6 +5,12 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **ProgressPanel Status and Progress Bar Tooltips, Robust Time Formatting, and Hyphen Standardization** (2026-10-22)
+  - Attached descriptive `ToolTip` instances to `_status_label` ("Current operation or batch processing status") and `_bar` ("Progress of current operation or batch") with automatic disposal on `destroy()`.
+  - Hardened `_fmt_time()` against invalid/non-numeric/negative input values with safe float coercion and fallback to `"0s"`.
+  - Standardized em dashes to hyphens in module docstrings, batch prefix formatting, and status updates.
+  - Expanded automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` and `test_progress_panel_time_formatting` in `tests/test_gui.py`.
+  - Verified with full test suite: 32 passed, 0 failures in 4.97s.
 - [x] **QueuePanel Item Cards Pointer Affordance, About Dialog Return Dismissal, and Browser Launch Guards** (2026-10-20)
   - Configured pointer hand cursor (`cursor="hand2"`) across item cards (`card`), name labels (`name_label`), and status labels (`info_label`) in `QueuePanel`.
   - Added `<Return>` key binding on About dialog to dismiss alongside `<Escape>`.

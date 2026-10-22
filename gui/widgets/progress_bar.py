@@ -1,4 +1,4 @@
-"""Progress bar widget — animated processing indicator with batch ETA.
+"""Progress bar widget - animated processing indicator with batch ETA.
 
 Shows determinate progress (0-100%), a status label, and an estimated time
 remaining (ETA) based on average item processing speed during upscaling operations.
@@ -39,6 +39,10 @@ class ProgressPanel(ctk.CTkFrame):
             anchor="w",
         )
         self._status_label.pack(side="left")
+        self._status_tooltip = ToolTip(
+            self._status_label, "Current operation or batch processing status"
+        )
+        self._tooltips.append(self._status_tooltip)
 
         self._eta_label = ctk.CTkLabel(
             top,
@@ -61,6 +65,10 @@ class ProgressPanel(ctk.CTkFrame):
         self._bar = ctk.CTkProgressBar(self, height=8, corner_radius=4)
         self._bar.pack(fill="x", padx=4, pady=(4, 4))
         self._bar.set(0)
+        self._bar_tooltip = ToolTip(
+            self._bar, "Progress of current operation or batch"
+        )
+        self._tooltips.append(self._bar_tooltip)
 
         # Cancel button (hidden by default)
         self._cancel_btn = ctk.CTkButton(
@@ -112,7 +120,7 @@ class ProgressPanel(ctk.CTkFrame):
 
 
     def update_batch(self, current: int, total: int, filename: str = "") -> None:
-        """Update for batch mode: 'Image 3 of 12 — photo.jpg'."""
+        """Update for batch mode: 'Image 3 of 12 - photo.jpg'."""
         self._batch_current = max(1, current)
         self._batch_total = max(1, total)
         self._current_filename = filename
@@ -120,7 +128,7 @@ class ProgressPanel(ctk.CTkFrame):
 
         prefix = f"Image {self._batch_current} of {self._batch_total}"
         if filename:
-            prefix += f"  —  {filename}"
+            prefix += f"  -  {filename}"
         self._status_label.configure(text=prefix)
 
     def item_finished(self) -> None:
@@ -256,13 +264,16 @@ class ProgressPanel(ctk.CTkFrame):
     def _on_cancel(self) -> None:
         if self._cancel_callback:
             self._cancel_callback()
-        self._status_label.configure(text="Cancelling…")
+        self._status_label.configure(text="Cancelling...")
         self._cancel_btn.configure(state="disabled")
 
     @staticmethod
     def _fmt_time(seconds: float) -> str:
         """Format seconds into a human-readable string."""
-        s = max(0, int(round(seconds)))
+        try:
+            s = max(0, int(round(float(seconds))))
+        except (ValueError, TypeError):
+            return "0s"
         if s < 60:
             return f"{s}s"
         m = s // 60
