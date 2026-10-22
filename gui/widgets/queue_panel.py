@@ -1,4 +1,4 @@
-"""Queue panel — left-hand sidebar showing the batch processing queue.
+"""Queue panel - left-hand sidebar showing the batch processing queue.
 
 Each item displays filename, dimensions, size, and processing status.
 Supports selection, removal, and reordering.

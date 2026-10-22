@@ -108,7 +108,7 @@ class Config:
                 # Merge: defaults first, then stored values overwrite
                 self._data = {**_DEFAULTS, **stored}
             except (json.JSONDecodeError, OSError):
-                # Corrupted file — fall back to defaults
+                # Corrupted file - fall back to defaults
                 self._data = dict(_DEFAULTS)
         # Ensure config dir exists for future saves
         self._path.parent.mkdir(parents=True, exist_ok=True)
@@ -120,4 +120,4 @@ class Config:
             with open(self._path, "w", encoding="utf-8") as f:
                 json.dump(self._data, f, indent=2, ensure_ascii=False)
         except OSError:
-            pass  # Silently fail — not critical
+            pass  # Silently fail - not critical

@@ -1,4 +1,4 @@
-"""Upscale controller — threaded bridge between the GUI and the Real-ESRGAN
+"""Upscale controller - threaded bridge between the GUI and the Real-ESRGAN
 inference engine.
 
 Runs all GPU-bound work on a background ``threading.Thread`` and communicates

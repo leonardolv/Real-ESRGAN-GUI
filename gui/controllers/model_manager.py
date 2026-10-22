@@ -1,4 +1,4 @@
-"""Model manager — discovery, download, and registry for Real-ESRGAN weights.
+"""Model manager - discovery, download, and registry for Real-ESRGAN weights.
 
 Maps the six official models to their network architectures, download URLs,
 and metadata.  Scans the ``weights/`` directory on startup and reports which
@@ -63,7 +63,7 @@ _REGISTRY: List[ModelInfo] = [
         display_name="RealESRNet x4plus",
         category="General",
         scale=4,
-        description="MSE-trained variant — smoother results, less artifacts.",
+        description="MSE-trained variant - smoother results, less artifacts.",
         urls=["https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.1/RealESRNet_x4plus.pth"],
         arch="rrdb",
         arch_params={"num_in_ch": 3, "num_out_ch": 3, "num_feat": 64, "num_block": 23, "num_grow_ch": 32, "scale": 4},
@@ -203,7 +203,7 @@ class ModelManager:
     def build_network(self, name: str):
         """Instantiate the PyTorch network (nn.Module) for a model.
 
-        Returns the *unloaded* network — weights are loaded by RealESRGANer.
+        Returns the *unloaded* network - weights are loaded by RealESRGANer.
         """
         model = self._models.get(name)
         if model is None:

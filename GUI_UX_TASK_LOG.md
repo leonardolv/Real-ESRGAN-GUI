@@ -5,6 +5,12 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **DropZone Tooltip Disposal Lifecycle, ToolTip Hide Alias, and Repository-Wide Hyphen Standardization** (2026-10-22)
+  - Enhanced `DropZone.destroy()` in `gui/widgets/drop_zone.py` to invoke `self._tooltip.destroy()` ensuring tooltip bindings and pending timers are cleanly released upon widget destruction.
+  - Added `hide = hide_tip` alias to `ToolTip` in `gui/widgets/tooltip.py` for API consistency and backwards compatibility.
+  - Standardized em dashes and en dashes to hyphens across all GUI docstrings, comments, and config modules (`app.py`, `model_manager.py`, `upscale_controller.py`, `config.py`, `image_utils.py`, `video_utils.py`, `drop_zone.py`, `preview_canvas.py`, `queue_panel.py`, `toolbar.py`).
+  - Expanded automated unit test `test_drop_zone_keyboard_focus_and_tooltips` in `tests/test_gui.py` asserting clean tooltip destruction and widget unbinding.
+  - Verified with full test suite: 32 passed, 0 failures in 4.86s.
 - [x] **ProgressPanel Status and Progress Bar Tooltips, Robust Time Formatting, and Hyphen Standardization** (2026-10-22)
   - Attached descriptive `ToolTip` instances to `_status_label` ("Current operation or batch processing status") and `_bar` ("Progress of current operation or batch") with automatic disposal on `destroy()`.
   - Hardened `_fmt_time()` against invalid/non-numeric/negative input values with safe float coercion and fallback to `"0s"`.

@@ -1,4 +1,4 @@
-"""Main application window — wires together all widgets and controllers.
+"""Main application window - wires together all widgets and controllers.
 
 Three-column layout:
   Left:   QueuePanel (220px)
@@ -625,7 +625,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             if self._is_position_on_screen(x, y, w, h):
                 self.geometry(f"{w}x{h}+{x}+{y}")
             else:
-                # Position is off-screen — center on primary monitor
+                # Position is off-screen - center on primary monitor
                 self.geometry(f"{w}x{h}")
                 self.update_idletasks()
                 screen_w = self.winfo_screenwidth()
@@ -663,7 +663,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
                 and y < screen_y + screen_h
             )
         except Exception:
-            # Not on Windows or ctypes unavailable — trust the saved position
+            # Not on Windows or ctypes unavailable - trust the saved position
             return True
 
     def _save_geometry(self) -> None:

@@ -140,6 +140,8 @@ class ToolTip:
                 pass
             self.tip_window = None
 
+    hide = hide_tip
+
     def destroy(self) -> None:
         """Permanently clean up bindings and destroy any active window."""
         self.hide_tip()

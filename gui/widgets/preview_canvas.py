@@ -1,4 +1,4 @@
-"""Preview canvas — centerpiece widget for image display with before/after
+"""Preview canvas - centerpiece widget for image display with before/after
 comparison slider, zoom, and pan.
 
 States:

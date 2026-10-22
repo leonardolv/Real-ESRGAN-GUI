@@ -1,4 +1,4 @@
-"""Video utility helpers — FFmpeg detection and video metadata."""
+"""Video utility helpers - FFmpeg detection and video metadata."""
 
 import shutil
 import subprocess

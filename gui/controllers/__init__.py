@@ -1,1 +1,1 @@
-"""GUI controllers — bridge between UI and inference engine."""
+"""GUI controllers - bridge between UI and inference engine."""

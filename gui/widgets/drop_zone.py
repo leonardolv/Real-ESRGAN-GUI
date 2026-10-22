@@ -1,4 +1,4 @@
-"""Drop zone widget — drag-and-drop area for file input.
+"""Drop zone widget - drag-and-drop area for file input.
 
 Displays a large, inviting area with a dashed border that accepts image and
 video files via drag-and-drop or click-to-browse.
@@ -112,7 +112,7 @@ class DropZone(ctk.CTkFrame):
         for child in self.winfo_children():
             self._tooltip.bind_widget(child)
 
-        # Try to set up tkdnd (drag-and-drop) — gracefully degrade if unavailable
+        # Try to set up tkdnd (drag-and-drop) - gracefully degrade if unavailable
         self._setup_dnd()
 
     # ------------------------------------------------------------------ #
@@ -155,7 +155,7 @@ class DropZone(ctk.CTkFrame):
                 root.dnd_bind("<<DragEnter>>", self._on_drag_enter)  # type: ignore[attr-defined]
                 root.dnd_bind("<<DragLeave>>", self._on_drag_leave)  # type: ignore[attr-defined]
         except Exception:
-            pass  # tkinterdnd2 not available — browse-only mode
+            pass  # tkinterdnd2 not available - browse-only mode
 
     def _on_dnd_drop(self, event) -> None:
         """Handle file drop event from the OS."""
@@ -237,7 +237,7 @@ class DropZone(ctk.CTkFrame):
         """Clean up tooltip timers and window on widget destruction."""
         if hasattr(self, "_tooltip") and self._tooltip:
             try:
-                self._tooltip.hide()
+                self._tooltip.destroy()
             except Exception:
                 pass
             self._tooltip = None

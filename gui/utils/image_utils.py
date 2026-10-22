@@ -1,4 +1,4 @@
-"""Image utility helpers — thumbnail generation, format detection, clipboard."""
+"""Image utility helpers - thumbnail generation, format detection, clipboard."""
 
 import os
 from pathlib import Path

@@ -778,7 +778,10 @@ class TestGUIWidgetsHeadless:
         assert dz._is_dragging is False
         assert dz.cget("border_color") == "#444444"
 
+        tt = dz._tooltip
         dz.destroy()
+        assert dz._tooltip is None
+        assert tt._bound_widgets == []
 
     def test_queue_panel_empty_state_and_button_tooltips(self, ctk_root, tmp_path):
         queue = QueuePanel(ctk_root)

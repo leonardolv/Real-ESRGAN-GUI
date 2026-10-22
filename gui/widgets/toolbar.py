@@ -1,4 +1,4 @@
-"""Toolbar — top action bar with Open, Save, Output Folder, and About buttons."""
+"""Toolbar - top action bar with Open, Save, Output Folder, and About buttons."""
 
 import os
 import subprocess
