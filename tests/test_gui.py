@@ -635,7 +635,12 @@ class TestGUIWidgetsHeadless:
         assert "status" in progress._status_tooltip.text.lower()
         assert hasattr(progress, "_bar_tooltip")
         assert "progress" in progress._bar_tooltip.text.lower()
+        assert hasattr(progress, "_eta_tooltip")
+        assert "estimated" in progress._eta_tooltip.text.lower()
+        assert hasattr(progress, "_pct_tooltip")
+        assert "percentage" in progress._pct_tooltip.text.lower()
         assert "cancel" in progress._cancel_tooltip.text.lower()
+        assert len(progress._tooltips) >= 5
 
         # Start with callback
         progress.start(cancel_callback=lambda: cancelled.append(True), batch_total=1)

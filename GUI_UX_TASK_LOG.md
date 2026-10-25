@@ -5,6 +5,10 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **ProgressPanel ETA and Percentage Label Tooltips, Automatic Disposal, and Test Coverage** (2026-10-25)
+  - Attached descriptive `ToolTip` instances to `_eta_label` ("Estimated remaining processing time") and `_pct_label` ("Current operation completion percentage") in `gui/widgets/progress_bar.py` with automatic disposal on `destroy()`.
+  - Expanded automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` in `tests/test_gui.py` asserting `_eta_tooltip` and `_pct_tooltip` presence, text, and inclusion in `_tooltips` list.
+  - Verified with full test suite: 32 passed, 0 failures in 9.41s.
 - [x] **DropZone Tooltip Disposal Lifecycle, ToolTip Hide Alias, and Repository-Wide Hyphen Standardization** (2026-10-22)
   - Enhanced `DropZone.destroy()` in `gui/widgets/drop_zone.py` to invoke `self._tooltip.destroy()` ensuring tooltip bindings and pending timers are cleanly released upon widget destruction.
   - Added `hide = hide_tip` alias to `ToolTip` in `gui/widgets/tooltip.py` for API consistency and backwards compatibility.

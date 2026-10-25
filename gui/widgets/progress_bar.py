@@ -52,6 +52,10 @@ class ProgressPanel(ctk.CTkFrame):
             anchor="e",
         )
         self._eta_label.pack(side="right")
+        self._eta_tooltip = ToolTip(
+            self._eta_label, "Estimated remaining processing time"
+        )
+        self._tooltips.append(self._eta_tooltip)
 
         self._pct_label = ctk.CTkLabel(
             top,
@@ -60,6 +64,10 @@ class ProgressPanel(ctk.CTkFrame):
             anchor="e",
         )
         self._pct_label.pack(side="right", padx=(0, 8))
+        self._pct_tooltip = ToolTip(
+            self._pct_label, "Current operation completion percentage"
+        )
+        self._tooltips.append(self._pct_tooltip)
 
         # Progress bar
         self._bar = ctk.CTkProgressBar(self, height=8, corner_radius=4)
