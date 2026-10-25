@@ -5,6 +5,11 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **Toolbar About Dialog Tooltip Tracking, Clean Lifecycle Disposal, and Unit Tests** (2026-10-25)
+  - Attached and tracked tooltip instances (`_about_tooltips`) on About dialog buttons (GitHub link, upstream link, and close button) in `gui/widgets/toolbar.py`.
+  - Added `<Destroy>` event binding and `destroy()` disposal loop ensuring all child tooltips are cleanly released when the About dialog or toolbar is closed.
+  - Expanded automated unit test `test_toolbar_and_tooltip` in `tests/test_gui.py` asserting tooltip tracking and clean disposal.
+  - Verified with automated tests: 2 passed in 2.05s with 0 errors.
 - [x] **PreviewCanvas Zoom Controls Pointer Cursors, Time Label Tooltip, and Lifecycle Disposal** (2026-10-25)
   - Configured pointer hand cursor (`cursor="hand2"`) across zoom out (`_zoom_out_btn`), zoom in (`_zoom_in_btn`), and fit-to-canvas zoom reset (`_zoom_label`) buttons in `gui/widgets/preview_canvas.py`.
   - Attached descriptive `ToolTip` instance (`_tip_time`) to playback time label (`_time_label`) indicating current video playback time and total duration.

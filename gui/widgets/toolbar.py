@@ -42,6 +42,7 @@ class Toolbar(ctk.CTkFrame):
         self._on_save = on_save
         self._on_open_output = on_open_output
         self._tooltips: list[ToolTip] = []
+        self._about_tooltips: list[ToolTip] = []
         self._about_dialog: Optional[ctk.CTkToplevel] = None
 
         btn_kwargs = dict(
@@ -102,6 +103,12 @@ class Toolbar(ctk.CTkFrame):
             except Exception:
                 pass
         self._tooltips.clear()
+        for tooltip in self._about_tooltips:
+            try:
+                tooltip.destroy()
+            except Exception:
+                pass
+        self._about_tooltips.clear()
         if self._about_dialog and self._about_dialog.winfo_exists():
             try:
                 self._about_dialog.destroy()
@@ -174,7 +181,7 @@ class Toolbar(ctk.CTkFrame):
             command=lambda: _safe_open_url("https://github.com/leonardolv/Real-ESRGAN-GUI"),
         )
         gh_btn.pack(side="left", padx=4)
-        ToolTip(gh_btn, "Open GitHub project page in browser")
+        gh_tip = ToolTip(gh_btn, "Open GitHub project page in browser")
 
         upstream_btn = ctk.CTkButton(
             links_frame,
@@ -188,10 +195,23 @@ class Toolbar(ctk.CTkFrame):
             command=lambda: _safe_open_url("https://github.com/xinntao/Real-ESRGAN"),
         )
         upstream_btn.pack(side="left", padx=4)
-        ToolTip(upstream_btn, "Open upstream Real-ESRGAN repository in browser")
+        upstream_tip = ToolTip(upstream_btn, "Open upstream Real-ESRGAN repository in browser")
 
         close_btn = ctk.CTkButton(
             dialog, text="Close", width=100, cursor="hand2", command=dialog.destroy
         )
         close_btn.pack(pady=(0, 16))
-        ToolTip(close_btn, "Dismiss dialog (Esc)")
+        close_tip = ToolTip(close_btn, "Dismiss dialog (Esc)")
+
+        self._about_tooltips.extend([gh_tip, upstream_tip, close_tip])
+
+        def _on_about_destroy(e):
+            if e.widget is dialog:
+                for tip in self._about_tooltips:
+                    try:
+                        tip.destroy()
+                    except Exception:
+                        pass
+                self._about_tooltips.clear()
+
+        dialog.bind("<Destroy>", _on_about_destroy, add="+")

@@ -856,6 +856,15 @@ class TestGUIWidgetsHeadless:
         tb_tips = [t.text for t in toolbar._tooltips]
         assert any("Ctrl+Shift+O" in t for t in tb_tips)
         assert any("F1" in t for t in tb_tips)
+
+        # Verify about dialog tooltip tracking and cleanup
+        toolbar._show_about()
+        assert toolbar._about_dialog is not None
+        assert len(toolbar._about_tooltips) == 3
+        toolbar._about_dialog.destroy()
+        ctk_root.update_idletasks()
+        assert len(toolbar._about_tooltips) == 0
+
         toolbar.destroy()
 
     def test_app_shortcuts_and_status_bar_tooltips(self, monkeypatch):
