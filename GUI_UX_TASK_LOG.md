@@ -1,166 +1,172 @@
-# GUI & UX Maintenance Log
-
-## In Progress
-
-## Blocked / Needs Review
-
-## Completed
-- [x] **Toolbar About Dialog Tooltip Tracking, Clean Lifecycle Disposal, and Unit Tests** (2026-10-25)
-  - Attached and tracked tooltip instances (`_about_tooltips`) on About dialog buttons (GitHub link, upstream link, and close button) in `gui/widgets/toolbar.py`.
-  - Added `<Destroy>` event binding and `destroy()` disposal loop ensuring all child tooltips are cleanly released when the About dialog or toolbar is closed.
-  - Expanded automated unit test `test_toolbar_and_tooltip` in `tests/test_gui.py` asserting tooltip tracking and clean disposal.
-  - Verified with automated tests: 2 passed in 2.05s with 0 errors.
-- [x] **PreviewCanvas Zoom Controls Pointer Cursors, Time Label Tooltip, and Lifecycle Disposal** (2026-10-25)
-  - Configured pointer hand cursor (`cursor="hand2"`) across zoom out (`_zoom_out_btn`), zoom in (`_zoom_in_btn`), and fit-to-canvas zoom reset (`_zoom_label`) buttons in `gui/widgets/preview_canvas.py`.
-  - Attached descriptive `ToolTip` instance (`_tip_time`) to playback time label (`_time_label`) indicating current video playback time and total duration.
-  - Added `_tip_time` to `destroy()` disposal loop for clean widget and tooltip lifecycle cleanup.
-  - Expanded automated unit tests `test_preview_canvas_zoom_controls_and_input_guards` and `test_preview_canvas_video_controls_cursors_and_tooltips` in `tests/test_gui.py` asserting pointer cursors on zoom controls and tooltip text on time label.
-  - Verified with automated tests: 2 passed in 0.77s with 0 errors.
-- [x] **ProgressPanel ETA and Percentage Label Tooltips, Automatic Disposal, and Test Coverage** (2026-10-25)
-  - Attached descriptive `ToolTip` instances to `_eta_label` ("Estimated remaining processing time") and `_pct_label` ("Current operation completion percentage") in `gui/widgets/progress_bar.py` with automatic disposal on `destroy()`.
-  - Expanded automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` in `tests/test_gui.py` asserting `_eta_tooltip` and `_pct_tooltip` presence, text, and inclusion in `_tooltips` list.
-  - Verified with full test suite: 32 passed, 0 failures in 9.41s.
-- [x] **DropZone Tooltip Disposal Lifecycle, ToolTip Hide Alias, and Repository-Wide Hyphen Standardization** (2026-10-22)
-  - Enhanced `DropZone.destroy()` in `gui/widgets/drop_zone.py` to invoke `self._tooltip.destroy()` ensuring tooltip bindings and pending timers are cleanly released upon widget destruction.
-  - Added `hide = hide_tip` alias to `ToolTip` in `gui/widgets/tooltip.py` for API consistency and backwards compatibility.
-  - Standardized em dashes and en dashes to hyphens across all GUI docstrings, comments, and config modules (`app.py`, `model_manager.py`, `upscale_controller.py`, `config.py`, `image_utils.py`, `video_utils.py`, `drop_zone.py`, `preview_canvas.py`, `queue_panel.py`, `toolbar.py`).
-  - Expanded automated unit test `test_drop_zone_keyboard_focus_and_tooltips` in `tests/test_gui.py` asserting clean tooltip destruction and widget unbinding.
-  - Verified with full test suite: 32 passed, 0 failures in 4.86s.
-- [x] **ProgressPanel Status and Progress Bar Tooltips, Robust Time Formatting, and Hyphen Standardization** (2026-10-22)
-  - Attached descriptive `ToolTip` instances to `_status_label` ("Current operation or batch processing status") and `_bar` ("Progress of current operation or batch") with automatic disposal on `destroy()`.
-  - Hardened `_fmt_time()` against invalid/non-numeric/negative input values with safe float coercion and fallback to `"0s"`.
-  - Standardized em dashes to hyphens in module docstrings, batch prefix formatting, and status updates.
-  - Expanded automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` and `test_progress_panel_time_formatting` in `tests/test_gui.py`.
-  - Verified with full test suite: 32 passed, 0 failures in 4.97s.
-- [x] **QueuePanel Item Cards Pointer Affordance, About Dialog Return Dismissal, and Browser Launch Guards** (2026-10-20)
-  - Configured pointer hand cursor (`cursor="hand2"`) across item cards (`card`), name labels (`name_label`), and status labels (`info_label`) in `QueuePanel`.
-  - Added `<Return>` key binding on About dialog to dismiss alongside `<Escape>`.
-  - Guarded About dialog `grab_set()` and `webbrowser.open_new_tab()` during automated test runs (`"PYTEST_CURRENT_TEST" in os.environ` or `HEADLESS`).
-  - Added automated unit test verification in `tests/test_gui.py` (`test_queue_panel_item_tooltip_integration` and `test_toolbar_and_tooltip`).
-  - Verified with full test suite: 32 passed, 0 failures in 8.53s.
-- [x] **SettingsPanel Option Menus, Radio Buttons, Checkboxes, and Slider Pointer Affordances, Upscale Shortcut Hint, and Dash Standardization** (2026-10-14)
-  - Configured pointer hand cursor (`cursor="hand2"`) across category radio buttons (`_category_radios`), model/scale/tile/alpha/format option menus (`_model_dropdown`, `_scale_dropdown`, `_tile_dropdown`, `_alpha_dropdown`, `_ext_dropdown`), face enhancement checkbox (`_face_check`), FP32 precision checkbox (`_fp32_check`), and denoise strength slider (`_denoise_slider`).
-  - Added keyboard shortcut cues to tooltips: `(Return)` on primary upscale button (`_upscale_btn`) and `(Ctrl+Shift+O)` on open output folder button (`_open_folder_btn`).
-  - Standardized all em dashes in comments and headers to hyphens (`-`).
-  - Expanded automated unit test `test_settings_panel_action_buttons_and_open_folder` in `tests/test_gui.py` validating cursors on all option menus, radio buttons, checkboxes, slider, and shortcut cues in tooltips.
-  - Verified with full test suite: 32 passed, 0 failures in 5.85s.
-
-- [x] **Process All Shortcuts, F1 Help, Status Bar Tooltips, and Headless File Explorer Guards** (2026-10-14)
-  - Added `<Control-p>`, `<Control-P>`, and `<Control-Return>` keyboard shortcuts triggering batch upscale (`_process_all`) with active text-entry focus protection.
-  - Added `<Control-Shift-O>` and `<Control-Shift-o>` keyboard shortcuts to open destination folder directly from anywhere in the app.
-  - Added standard `<F1>` shortcut to open the About dialog.
-  - Attached descriptive `ToolTip` instances to status bar labels (`_status_text` and `_gpu_label`) with clean shutdown disposal in `_on_close()`.
-  - Added shortcut key hints to button tooltips in `Toolbar` (`_output_btn`, `_about_btn`) and `QueuePanel` (`_add_files_btn`, `_process_all_btn`).
-  - Added headless automated execution guards to `_open_file_in_explorer` in `QueuePanel` and `_open_output_folder` in `RealESRGANApp` to prevent spawning external file manager processes during test runs.
-  - Added automated unit test coverage `test_queue_and_toolbar_shortcuts_and_explorer_guards` and `test_app_shortcuts_and_status_bar_tooltips` in `tests/test_gui.py`.
-  - Verified with full test suite: 32 passed with 0 errors.
-
-- [x] **PreviewCanvas Video Controls Hand Cursors, Tooltips, and Lifecycle Disposal** (2026-10-06)
-  - Configured pointer hand cursor (`cursor="hand2"`) across video playback controls (`_timeline_slider`, `_prev_btn`, `_play_btn`, `_next_btn`) in `gui/widgets/preview_canvas.py`.
-  - Added descriptive `ToolTip` instances for seeking timeline, stepping backward 1 frame, stepping forward 1 frame, and dynamic play/pause state feedback ("Play Video (Space)" vs "Pause Video (Space)").
-  - Updated `destroy()` lifecycle to cleanly dispose video control tooltips alongside existing zoom tooltips.
-  - Added automated unit test coverage `test_preview_canvas_video_controls_cursors_and_tooltips` in `tests/test_gui.py`.
-  - Verified with full test suite: 30 passed with 0 errors.
-
-- [x] **SettingsPanel Action Button Cursors, Tooltips, and Quick Open Output Folder Action** (2026-10-03)
-  - Configured pointer hand cursor (`cursor="hand2"`) across action buttons (`_browse_btn`, `_open_folder_btn`, `_download_btn`, `_reset_btn`, and `_upscale_btn`) in `gui/widgets/settings_panel.py`.
-  - Added dedicated quick-access "↗" button (`_open_folder_btn`) in the destination folder group with descriptive tooltip to open the current output directory directly in the OS file explorer.
-  - Implemented `_open_output_folder_in_os()` with cross-platform OS folder opening and headless automated execution guards to prevent spawning external file manager processes during test runs.
-  - Added descriptive tooltip to the primary upscale action button (`_upscale_btn`).
-  - Added automated unit test coverage `test_settings_panel_action_buttons_and_open_folder` in `tests/test_gui.py`.
-  - Verified with full test suite: 32 passed, 3 skipped, 0 failures.
-
-- [x] **ProgressPanel Cancel Button Hand Cursor, Tooltip Lifecycle, and State Restoration** (2026-10-03)
-  - Configured pointer hand cursor (`cursor="hand2"`) and attached descriptive `ToolTip` ("Cancel the currently active processing operation") to `_cancel_btn` in `gui/widgets/progress_bar.py`.
-  - Implemented clean widget destruction lifecycle (`destroy()`) safely disposing tooltip popup instances.
-  - Ensured cancel button state (`state="normal"`) is automatically restored whenever a new operation or batch starts (`start()`) or when the progress bar is reset to idle (`reset()`).
-  - Added automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` in `tests/test_gui.py`.
-  - Verified with full test suite: 28 passed, 0 failures in 3.74s.
-
-- [x] **Toolbar Button Attributes, Hand Cursors, Tooltips Lifecycle, and About Dialog Dismissal** (2026-10-03)
-  - Exposed all toolbar action buttons as instance attributes (`_open_btn`, `_save_btn`, `_output_btn`, `_about_btn`).
-  - Added pointer hand cursor (`cursor="hand2"`) across all toolbar and About dialog action buttons.
-  - Implemented clean tooltip tracking (`_tooltips`) and disposal lifecycle (`destroy()`).
-  - Added `<Escape>` key binding to cleanly dismiss the About dialog and added tooltips to dialog buttons.
-  - Expanded unit test coverage `test_toolbar_and_tooltip` in `tests/test_gui.py`.
-  - Verified with full test suite: 27 passed, 0 failures in 3.61s.
-- [x] **QueuePanel Empty State Visual Placeholder, Action Button Attributes, Hand Cursors, and Tooltips** (2026-10-02)
-  - Added an empty state placeholder ("📂 Queue is empty / Click '+ Add Files' or drag images here") displayed when no files are in the queue.
-  - Exposed bottom action buttons as instance attributes (`_add_files_btn`, `_clear_all_btn`) and attached ergonomic tooltips to all three actions (`_add_files_btn`, `_process_all_btn`, `_clear_all_btn`).
-  - Added pointer hand cursor (`cursor="hand2"`) across all bottom action buttons.
-  - Added clean tooltip lifecycle management (`_button_tooltips`) ensuring button tooltips are disposed when `QueuePanel` is destroyed without interfering with dynamic item tooltip rebuilding.
-  - Added automated unit test coverage `test_queue_panel_empty_state_and_button_tooltips` in `tests/test_gui.py`.
-  - Verified with full test suite: 32 passed, 1 skipped, 0 failures in 12.46s.
-- [x] **DropZone Keyboard Navigation, Focus Ring, Hover Affordance, and Tooltips** (2026-10-02)
-  - Added full keyboard accessibility to `DropZone`: configured canvas focus traversal, active focus ring (`#3b82f6`) on `<FocusIn>` / `<FocusOut>`, and keyboard file dialog activation via `<Return>` and `<space>`.
-  - Added subtle hover highlight border (`#666666`) and pointer hand cursor (`cursor="hand2"`) across the drop frame and child labels.
-  - Attached descriptive `ToolTip` ("Click to browse images or videos, or drag and drop files directly onto this zone") to the drop zone container and child labels with clean `destroy()` lifecycle disposal.
-  - Added unit test coverage `test_drop_zone_keyboard_focus_and_tooltips` in `tests/test_gui.py`.
-  - Verified with full headless test suite: 29 passed, 3 skipped, 0 failures in 4.46s.
-- [x] **Interactive Zoom Overlay Controls & Focus-Guarded Slider Navigation in PreviewCanvas** (2026-09-26)
-  - Replaced static zoom label with interactive zoom overlay bar (`_zoom_frame`) featuring zoom out (`-`), reset/fit (`100%`), and zoom in (`+`) buttons with accessible `ToolTip` bindings (`Ctrl+-`, `Ctrl+0`, `Ctrl++`).
-  - Added smart text input focus guard `_is_text_entry_focused()` to `PreviewCanvas` preventing `<Left>`, `<Right>`, and `<space>` from intercepting keystrokes when the user is typing or navigating inside settings entries or text boxes.
-  - Wired spacebar shortcut `<space>` to toggle video play/pause when a video is loaded in `PreviewCanvas`.
-  - Implemented clean widget destruction lifecycle (`destroy()`) that stops active video threads and disposes child tooltip popups.
-  - Added unit test coverage `test_preview_canvas_zoom_controls_and_input_guards` in `tests/test_gui.py`.
-  - Verified with full headless test suite: 25 passed in 3.38s with 0 errors.
-- [x] **SettingsPanel Reset to Defaults, Return Key Commit, and Comprehensive Tooltips** (2026-09-25)
-  - Added "↺ Reset to Defaults" action button in `gui/widgets/settings_panel.py` and implemented `reset_to_defaults()` restoring model category, model selection, scaling factor, tile geometry, padding, face enhancement, precision, alpha upsampling, output format, suffix, and output directory back to default values.
-  - Bound `<Return>` key on text entries (`tile_pad`, `pre_pad`, `suffix`, `output_folder`) to immediately commit typed changes and notify subscribers without requiring mouse click-away focus loss.
-  - Enriched all controls (model category, model dropdown, download button, scale, tile size, padding, face restoration, denoise slider, precision, alpha channel, format, suffix, destination folder, and browse button) with descriptive, accessible `ToolTip` affordances.
-  - Implemented clean tooltip destruction lifecycle (`destroy()`) to prevent lingering hover timers.
-  - Corrected `setup.cfg` pytest configuration from greedy `addopts=tests/` to standard `testpaths = tests`, and cleansed line ending corruptions and sync duplicates in `.gitignore`.
-  - Added automated unit test coverage `test_settings_panel_reset_to_defaults_and_tooltips` in `tests/test_gui.py`.
-  - Verified with full headless test suite: 24 passed in 3.87s.
-- [x] **Estimated Time Remaining (ETA) & Batch Progress in ProgressPanel** (2026-09-08)
-  - Enhanced `ProgressPanel` with multi-item batch tracking (`_batch_total`, `_batch_current`, `_item_durations`), monotonic overall progress bar calculation across all queued items, and intelligent ETA estimation based on completed item average processing speed.
-  - Formatted time durations cleanly across ranges: seconds (`12s`), minutes (`1m 05s`, `2m`), and hours (`1h 01m`).
-  - Added `MsgType.BATCH_COMPLETE` to `UpscaleController` and emitted completion signal with item totals once batch completes.
-  - Hardened batch lifecycle in `gui/app.py`: prevented premature completion callbacks on intermediate items, maintained cancel button visibility until batch finished or cancelled, and kept persistent item progress counters `[X/Y]`.
-  - Added unit and headless GUI integration tests (`test_batch_complete_emission`, `test_progress_panel_time_formatting`, `test_progress_panel_batch_progress_and_eta`) in `tests/test_gui.py`.
-  - Verified with full headless test suite: 28 passed, 1 skipped, 0 failures in 11.58s.
-- [x] **Keyboard Navigation in QueuePanel** (2026-09-08)
-  - Added keyboard bindings for `<Up>`, `<Down>`, `<Delete>`, and `<BackSpace>` to `QueuePanel` allowing intuitive item selection and deletion without mouse reliance.
-  - Implemented smart text input focus guard (`_is_text_entry_focused`) to ensure navigation keys never intercept text typing in active entries or spinboxes.
-  - Added click focus integration (`_set_panel_focus`) on item cards and labels.
-  - Added comprehensive automated test `test_queue_panel_keyboard_navigation` in `tests/test_gui.py`.
-  - Verified with headless test suite: 25 passed, 1 skipped, 0 failures in 8.33s.
-- [x] **Fix App Startup Failure & Harden main.py Launch Pipeline** (2026-09-07)
-  - Resolved startup crash (`AttributeError: module 'torch' has no attribute 'set_num_threads'`): cleared corrupted/conflicting PyTorch packages and OneDrive `-GALAXY` sync conflict files from `.venv\Lib\site-packages`.
-  - Reinstalled clean PyTorch 2.5.1 with CUDA 12.1 acceleration (`torch==2.5.1+cu121`, `torchvision==0.20.1+cu121`) and `pytest`.
-  - Created `tests/conftest.py` with global `torchvision.transforms.functional_tensor` compatibility patch for `basicsr`.
-  - Hardened `main.py`: initialized logging early before heavy imports to capture startup tracebacks, guarded PyTorch/OpenCV thread setup, cleanly handled `KeyboardInterrupt` to avoid console traceback spam, and added GUI error modal fallback on unexpected crashes.
-  - Verified with full test suite: 14 passed, 1 skipped, 0 failures in 68s.
-- [x] **Headless Test Suite & Cross-Platform Windows GUI/UX Hardening**
-  - Added comprehensive headless test suite `tests/test_gui.py` covering `Config`, `ImageUtils`, `ModelManager`, `UpscaleJob`, `UpscaleController`, and CustomTkinter widgets (`SettingsPanel`, `ProgressPanel`, `QueuePanel`).
-  - Fixed Windows path backslash matching in `tests/test_dataset.py`.
-  - Added CUDA availability skips for GPU-only tests in `tests/test_model.py` and pretrained weight checks in `tests/test_utils.py`.
-  - Hardened window geometry persistence in `gui/app.py` against multi-monitor setups with negative coordinates.
-  - Added video file handling and preview integrations in `preview_canvas.py` and `app.py`.
-  - Ensured all tests execute non-interactively with 100% pass/skip rate (12 passed, 3 skipped, 0 failures).
-- [x] **Batch Cancellation & Queue Context Menu Hardening** (2026-09-07)
-  - Added queue context menu actions (Open File, Show in File Explorer, Copy Path, Reset Status to Queued) in `gui/widgets/queue_panel.py`.
-  - Added padding and denoise strength settings persistence in `gui/widgets/settings_panel.py`.
-  - Refactored headless test suite fixture `ctk_root` with class-scoped reuse and per-test child widget cleanup to prevent Windows Tcl interpreter reinitialization crashes (`invalid command name "tcl_findLibrary"`).
-  - Added test coverage for batch execution cancellation (`test_batch_progress_and_cancellation`) and queue context menu status reset (`test_queue_panel_context_menu_and_status_reset`).
-  - Verified with full test suite: 20 passed, 1 skipped, 0 failures.
-
-- [x] **Drag-and-Drop Visual Indicator & Direct Queue Drop** (2026-09-07)
-  - Added visual drag indicator border (`#3b82f6`) and drop banner (`⬇ Drop files here to add`) to `QueuePanel` when files are dragged over the queue.
-  - Implemented `set_drag_highlight()`, `_on_drag_enter()`, `_on_drag_leave()`, and `_on_dnd_drop()` with safe OS path parsing and image/video format validation.
-  - Connected `on_files_dropped` callback to `app._on_files_received` so dropping onto `QueuePanel` adds files to the queue and updates application state.
-  - Added `pythonpath=.` to `setup.cfg` for seamless test module resolution.
-  - Added automated test `test_queue_panel_drag_and_drop_visual_indicator` verifying drag enter, highlight activation, banner packing, drag leave, and drop event parsing.
-  - Verified with full test suite: 21 passed, 1 skipped, 0 failures.
-- [x] Add thumbnail preview tooltip on hover over completed queue items (2026-09-07)
-  - Created reusable `ToolTip` and `ThumbnailToolTip` in `gui/widgets/tooltip.py` with 350ms ergonomic hover delay filter, automatic cancel on leave/click, and screen edge bound checking.
-  - Added thumbnail rendering and lazy caching for completed upscaled results (capped at 150px) and source items via `PIL` and `ImageTk.PhotoImage`.
-  - Added upscale metadata (dimensions and file size) to completed preview tooltips, and diagnostics formatting for error items.
-  - Unified `Toolbar` tooltip usage by importing `ToolTip` from `gui.widgets.tooltip`.
-  - Added robust tooltip lifecycle management (`_cleanup_tooltips()`, `destroy()`) in `QueuePanel` to cleanly destroy popup windows and cancel pending timers during item clearing, rebuilding, or window destruction.
-  - Added automated unit test coverage in `tests/test_gui.py` (`test_tooltip_lifecycle`, `test_thumbnail_tooltip_completed_and_error`, `test_queue_panel_item_tooltip_integration`).
-  - Verified with headless test suite: 19 passed, 0 failures in 5.02s.
-
-## Backlog
-<!-- Prioritized list of identified issues and ergonomics tasks -->
-
+# GUI & UX Maintenance Log
+
+## In Progress
+
+## Blocked / Needs Review
+
+## Completed
+- [x] **Toolbar About Dialog State Helpers, Button Attributes, and Shortcut Tooltips** (2026-10-26)
+  - Added `is_about_open()` and `close_about()` methods on `Toolbar` in `gui/widgets/toolbar.py`.
+  - Exposed `_close_btn`, `_gh_btn`, and `_upstream_btn` on About dialog instance for inspection and testing.
+  - Updated close button tooltip to explicitly document Return alongside Escape (`Dismiss dialog (Esc / Return)`).
+  - Expanded automated unit test `test_toolbar_and_tooltip` in `tests/test_gui.py`.
+  - Verified with automated tests: 1 passed in 2.72s with 0 errors.
+- [x] **Toolbar About Dialog Tooltip Tracking, Clean Lifecycle Disposal, and Unit Tests** (2026-10-25)
+  - Attached and tracked tooltip instances (`_about_tooltips`) on About dialog buttons (GitHub link, upstream link, and close button) in `gui/widgets/toolbar.py`.
+  - Added `<Destroy>` event binding and `destroy()` disposal loop ensuring all child tooltips are cleanly released when the About dialog or toolbar is closed.
+  - Expanded automated unit test `test_toolbar_and_tooltip` in `tests/test_gui.py` asserting tooltip tracking and clean disposal.
+  - Verified with automated tests: 2 passed in 2.05s with 0 errors.
+- [x] **PreviewCanvas Zoom Controls Pointer Cursors, Time Label Tooltip, and Lifecycle Disposal** (2026-10-25)
+  - Configured pointer hand cursor (`cursor="hand2"`) across zoom out (`_zoom_out_btn`), zoom in (`_zoom_in_btn`), and fit-to-canvas zoom reset (`_zoom_label`) buttons in `gui/widgets/preview_canvas.py`.
+  - Attached descriptive `ToolTip` instance (`_tip_time`) to playback time label (`_time_label`) indicating current video playback time and total duration.
+  - Added `_tip_time` to `destroy()` disposal loop for clean widget and tooltip lifecycle cleanup.
+  - Expanded automated unit tests `test_preview_canvas_zoom_controls_and_input_guards` and `test_preview_canvas_video_controls_cursors_and_tooltips` in `tests/test_gui.py` asserting pointer cursors on zoom controls and tooltip text on time label.
+  - Verified with automated tests: 2 passed in 0.77s with 0 errors.
+- [x] **ProgressPanel ETA and Percentage Label Tooltips, Automatic Disposal, and Test Coverage** (2026-10-25)
+  - Attached descriptive `ToolTip` instances to `_eta_label` ("Estimated remaining processing time") and `_pct_label` ("Current operation completion percentage") in `gui/widgets/progress_bar.py` with automatic disposal on `destroy()`.
+  - Expanded automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` in `tests/test_gui.py` asserting `_eta_tooltip` and `_pct_tooltip` presence, text, and inclusion in `_tooltips` list.
+  - Verified with full test suite: 32 passed, 0 failures in 9.41s.
+- [x] **DropZone Tooltip Disposal Lifecycle, ToolTip Hide Alias, and Repository-Wide Hyphen Standardization** (2026-10-22)
+  - Enhanced `DropZone.destroy()` in `gui/widgets/drop_zone.py` to invoke `self._tooltip.destroy()` ensuring tooltip bindings and pending timers are cleanly released upon widget destruction.
+  - Added `hide = hide_tip` alias to `ToolTip` in `gui/widgets/tooltip.py` for API consistency and backwards compatibility.
+  - Standardized em dashes and en dashes to hyphens across all GUI docstrings, comments, and config modules (`app.py`, `model_manager.py`, `upscale_controller.py`, `config.py`, `image_utils.py`, `video_utils.py`, `drop_zone.py`, `preview_canvas.py`, `queue_panel.py`, `toolbar.py`).
+  - Expanded automated unit test `test_drop_zone_keyboard_focus_and_tooltips` in `tests/test_gui.py` asserting clean tooltip destruction and widget unbinding.
+  - Verified with full test suite: 32 passed, 0 failures in 4.86s.
+- [x] **ProgressPanel Status and Progress Bar Tooltips, Robust Time Formatting, and Hyphen Standardization** (2026-10-22)
+  - Attached descriptive `ToolTip` instances to `_status_label` ("Current operation or batch processing status") and `_bar` ("Progress of current operation or batch") with automatic disposal on `destroy()`.
+  - Hardened `_fmt_time()` against invalid/non-numeric/negative input values with safe float coercion and fallback to `"0s"`.
+  - Standardized em dashes to hyphens in module docstrings, batch prefix formatting, and status updates.
+  - Expanded automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` and `test_progress_panel_time_formatting` in `tests/test_gui.py`.
+  - Verified with full test suite: 32 passed, 0 failures in 4.97s.
+- [x] **QueuePanel Item Cards Pointer Affordance, About Dialog Return Dismissal, and Browser Launch Guards** (2026-10-20)
+  - Configured pointer hand cursor (`cursor="hand2"`) across item cards (`card`), name labels (`name_label`), and status labels (`info_label`) in `QueuePanel`.
+  - Added `<Return>` key binding on About dialog to dismiss alongside `<Escape>`.
+  - Guarded About dialog `grab_set()` and `webbrowser.open_new_tab()` during automated test runs (`"PYTEST_CURRENT_TEST" in os.environ` or `HEADLESS`).
+  - Added automated unit test verification in `tests/test_gui.py` (`test_queue_panel_item_tooltip_integration` and `test_toolbar_and_tooltip`).
+  - Verified with full test suite: 32 passed, 0 failures in 8.53s.
+- [x] **SettingsPanel Option Menus, Radio Buttons, Checkboxes, and Slider Pointer Affordances, Upscale Shortcut Hint, and Dash Standardization** (2026-10-14)
+  - Configured pointer hand cursor (`cursor="hand2"`) across category radio buttons (`_category_radios`), model/scale/tile/alpha/format option menus (`_model_dropdown`, `_scale_dropdown`, `_tile_dropdown`, `_alpha_dropdown`, `_ext_dropdown`), face enhancement checkbox (`_face_check`), FP32 precision checkbox (`_fp32_check`), and denoise strength slider (`_denoise_slider`).
+  - Added keyboard shortcut cues to tooltips: `(Return)` on primary upscale button (`_upscale_btn`) and `(Ctrl+Shift+O)` on open output folder button (`_open_folder_btn`).
+  - Standardized all em dashes in comments and headers to hyphens (`-`).
+  - Expanded automated unit test `test_settings_panel_action_buttons_and_open_folder` in `tests/test_gui.py` validating cursors on all option menus, radio buttons, checkboxes, slider, and shortcut cues in tooltips.
+  - Verified with full test suite: 32 passed, 0 failures in 5.85s.
+
+- [x] **Process All Shortcuts, F1 Help, Status Bar Tooltips, and Headless File Explorer Guards** (2026-10-14)
+  - Added `<Control-p>`, `<Control-P>`, and `<Control-Return>` keyboard shortcuts triggering batch upscale (`_process_all`) with active text-entry focus protection.
+  - Added `<Control-Shift-O>` and `<Control-Shift-o>` keyboard shortcuts to open destination folder directly from anywhere in the app.
+  - Added standard `<F1>` shortcut to open the About dialog.
+  - Attached descriptive `ToolTip` instances to status bar labels (`_status_text` and `_gpu_label`) with clean shutdown disposal in `_on_close()`.
+  - Added shortcut key hints to button tooltips in `Toolbar` (`_output_btn`, `_about_btn`) and `QueuePanel` (`_add_files_btn`, `_process_all_btn`).
+  - Added headless automated execution guards to `_open_file_in_explorer` in `QueuePanel` and `_open_output_folder` in `RealESRGANApp` to prevent spawning external file manager processes during test runs.
+  - Added automated unit test coverage `test_queue_and_toolbar_shortcuts_and_explorer_guards` and `test_app_shortcuts_and_status_bar_tooltips` in `tests/test_gui.py`.
+  - Verified with full test suite: 32 passed with 0 errors.
+
+- [x] **PreviewCanvas Video Controls Hand Cursors, Tooltips, and Lifecycle Disposal** (2026-10-06)
+  - Configured pointer hand cursor (`cursor="hand2"`) across video playback controls (`_timeline_slider`, `_prev_btn`, `_play_btn`, `_next_btn`) in `gui/widgets/preview_canvas.py`.
+  - Added descriptive `ToolTip` instances for seeking timeline, stepping backward 1 frame, stepping forward 1 frame, and dynamic play/pause state feedback ("Play Video (Space)" vs "Pause Video (Space)").
+  - Updated `destroy()` lifecycle to cleanly dispose video control tooltips alongside existing zoom tooltips.
+  - Added automated unit test coverage `test_preview_canvas_video_controls_cursors_and_tooltips` in `tests/test_gui.py`.
+  - Verified with full test suite: 30 passed with 0 errors.
+
+- [x] **SettingsPanel Action Button Cursors, Tooltips, and Quick Open Output Folder Action** (2026-10-03)
+  - Configured pointer hand cursor (`cursor="hand2"`) across action buttons (`_browse_btn`, `_open_folder_btn`, `_download_btn`, `_reset_btn`, and `_upscale_btn`) in `gui/widgets/settings_panel.py`.
+  - Added dedicated quick-access "↗" button (`_open_folder_btn`) in the destination folder group with descriptive tooltip to open the current output directory directly in the OS file explorer.
+  - Implemented `_open_output_folder_in_os()` with cross-platform OS folder opening and headless automated execution guards to prevent spawning external file manager processes during test runs.
+  - Added descriptive tooltip to the primary upscale action button (`_upscale_btn`).
+  - Added automated unit test coverage `test_settings_panel_action_buttons_and_open_folder` in `tests/test_gui.py`.
+  - Verified with full test suite: 32 passed, 3 skipped, 0 failures.
+
+- [x] **ProgressPanel Cancel Button Hand Cursor, Tooltip Lifecycle, and State Restoration** (2026-10-03)
+  - Configured pointer hand cursor (`cursor="hand2"`) and attached descriptive `ToolTip` ("Cancel the currently active processing operation") to `_cancel_btn` in `gui/widgets/progress_bar.py`.
+  - Implemented clean widget destruction lifecycle (`destroy()`) safely disposing tooltip popup instances.
+  - Ensured cancel button state (`state="normal"`) is automatically restored whenever a new operation or batch starts (`start()`) or when the progress bar is reset to idle (`reset()`).
+  - Added automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` in `tests/test_gui.py`.
+  - Verified with full test suite: 28 passed, 0 failures in 3.74s.
+
+- [x] **Toolbar Button Attributes, Hand Cursors, Tooltips Lifecycle, and About Dialog Dismissal** (2026-10-03)
+  - Exposed all toolbar action buttons as instance attributes (`_open_btn`, `_save_btn`, `_output_btn`, `_about_btn`).
+  - Added pointer hand cursor (`cursor="hand2"`) across all toolbar and About dialog action buttons.
+  - Implemented clean tooltip tracking (`_tooltips`) and disposal lifecycle (`destroy()`).
+  - Added `<Escape>` key binding to cleanly dismiss the About dialog and added tooltips to dialog buttons.
+  - Expanded unit test coverage `test_toolbar_and_tooltip` in `tests/test_gui.py`.
+  - Verified with full test suite: 27 passed, 0 failures in 3.61s.
+- [x] **QueuePanel Empty State Visual Placeholder, Action Button Attributes, Hand Cursors, and Tooltips** (2026-10-02)
+  - Added an empty state placeholder ("📂 Queue is empty / Click '+ Add Files' or drag images here") displayed when no files are in the queue.
+  - Exposed bottom action buttons as instance attributes (`_add_files_btn`, `_clear_all_btn`) and attached ergonomic tooltips to all three actions (`_add_files_btn`, `_process_all_btn`, `_clear_all_btn`).
+  - Added pointer hand cursor (`cursor="hand2"`) across all bottom action buttons.
+  - Added clean tooltip lifecycle management (`_button_tooltips`) ensuring button tooltips are disposed when `QueuePanel` is destroyed without interfering with dynamic item tooltip rebuilding.
+  - Added automated unit test coverage `test_queue_panel_empty_state_and_button_tooltips` in `tests/test_gui.py`.
+  - Verified with full test suite: 32 passed, 1 skipped, 0 failures in 12.46s.
+- [x] **DropZone Keyboard Navigation, Focus Ring, Hover Affordance, and Tooltips** (2026-10-02)
+  - Added full keyboard accessibility to `DropZone`: configured canvas focus traversal, active focus ring (`#3b82f6`) on `<FocusIn>` / `<FocusOut>`, and keyboard file dialog activation via `<Return>` and `<space>`.
+  - Added subtle hover highlight border (`#666666`) and pointer hand cursor (`cursor="hand2"`) across the drop frame and child labels.
+  - Attached descriptive `ToolTip` ("Click to browse images or videos, or drag and drop files directly onto this zone") to the drop zone container and child labels with clean `destroy()` lifecycle disposal.
+  - Added unit test coverage `test_drop_zone_keyboard_focus_and_tooltips` in `tests/test_gui.py`.
+  - Verified with full headless test suite: 29 passed, 3 skipped, 0 failures in 4.46s.
+- [x] **Interactive Zoom Overlay Controls & Focus-Guarded Slider Navigation in PreviewCanvas** (2026-09-26)
+  - Replaced static zoom label with interactive zoom overlay bar (`_zoom_frame`) featuring zoom out (`-`), reset/fit (`100%`), and zoom in (`+`) buttons with accessible `ToolTip` bindings (`Ctrl+-`, `Ctrl+0`, `Ctrl++`).
+  - Added smart text input focus guard `_is_text_entry_focused()` to `PreviewCanvas` preventing `<Left>`, `<Right>`, and `<space>` from intercepting keystrokes when the user is typing or navigating inside settings entries or text boxes.
+  - Wired spacebar shortcut `<space>` to toggle video play/pause when a video is loaded in `PreviewCanvas`.
+  - Implemented clean widget destruction lifecycle (`destroy()`) that stops active video threads and disposes child tooltip popups.
+  - Added unit test coverage `test_preview_canvas_zoom_controls_and_input_guards` in `tests/test_gui.py`.
+  - Verified with full headless test suite: 25 passed in 3.38s with 0 errors.
+- [x] **SettingsPanel Reset to Defaults, Return Key Commit, and Comprehensive Tooltips** (2026-09-25)
+  - Added "↺ Reset to Defaults" action button in `gui/widgets/settings_panel.py` and implemented `reset_to_defaults()` restoring model category, model selection, scaling factor, tile geometry, padding, face enhancement, precision, alpha upsampling, output format, suffix, and output directory back to default values.
+  - Bound `<Return>` key on text entries (`tile_pad`, `pre_pad`, `suffix`, `output_folder`) to immediately commit typed changes and notify subscribers without requiring mouse click-away focus loss.
+  - Enriched all controls (model category, model dropdown, download button, scale, tile size, padding, face restoration, denoise slider, precision, alpha channel, format, suffix, destination folder, and browse button) with descriptive, accessible `ToolTip` affordances.
+  - Implemented clean tooltip destruction lifecycle (`destroy()`) to prevent lingering hover timers.
+  - Corrected `setup.cfg` pytest configuration from greedy `addopts=tests/` to standard `testpaths = tests`, and cleansed line ending corruptions and sync duplicates in `.gitignore`.
+  - Added automated unit test coverage `test_settings_panel_reset_to_defaults_and_tooltips` in `tests/test_gui.py`.
+  - Verified with full headless test suite: 24 passed in 3.87s.
+- [x] **Estimated Time Remaining (ETA) & Batch Progress in ProgressPanel** (2026-09-08)
+  - Enhanced `ProgressPanel` with multi-item batch tracking (`_batch_total`, `_batch_current`, `_item_durations`), monotonic overall progress bar calculation across all queued items, and intelligent ETA estimation based on completed item average processing speed.
+  - Formatted time durations cleanly across ranges: seconds (`12s`), minutes (`1m 05s`, `2m`), and hours (`1h 01m`).
+  - Added `MsgType.BATCH_COMPLETE` to `UpscaleController` and emitted completion signal with item totals once batch completes.
+  - Hardened batch lifecycle in `gui/app.py`: prevented premature completion callbacks on intermediate items, maintained cancel button visibility until batch finished or cancelled, and kept persistent item progress counters `[X/Y]`.
+  - Added unit and headless GUI integration tests (`test_batch_complete_emission`, `test_progress_panel_time_formatting`, `test_progress_panel_batch_progress_and_eta`) in `tests/test_gui.py`.
+  - Verified with full headless test suite: 28 passed, 1 skipped, 0 failures in 11.58s.
+- [x] **Keyboard Navigation in QueuePanel** (2026-09-08)
+  - Added keyboard bindings for `<Up>`, `<Down>`, `<Delete>`, and `<BackSpace>` to `QueuePanel` allowing intuitive item selection and deletion without mouse reliance.
+  - Implemented smart text input focus guard (`_is_text_entry_focused`) to ensure navigation keys never intercept text typing in active entries or spinboxes.
+  - Added click focus integration (`_set_panel_focus`) on item cards and labels.
+  - Added comprehensive automated test `test_queue_panel_keyboard_navigation` in `tests/test_gui.py`.
+  - Verified with headless test suite: 25 passed, 1 skipped, 0 failures in 8.33s.
+- [x] **Fix App Startup Failure & Harden main.py Launch Pipeline** (2026-09-07)
+  - Resolved startup crash (`AttributeError: module 'torch' has no attribute 'set_num_threads'`): cleared corrupted/conflicting PyTorch packages and OneDrive `-GALAXY` sync conflict files from `.venv\Lib\site-packages`.
+  - Reinstalled clean PyTorch 2.5.1 with CUDA 12.1 acceleration (`torch==2.5.1+cu121`, `torchvision==0.20.1+cu121`) and `pytest`.
+  - Created `tests/conftest.py` with global `torchvision.transforms.functional_tensor` compatibility patch for `basicsr`.
+  - Hardened `main.py`: initialized logging early before heavy imports to capture startup tracebacks, guarded PyTorch/OpenCV thread setup, cleanly handled `KeyboardInterrupt` to avoid console traceback spam, and added GUI error modal fallback on unexpected crashes.
+  - Verified with full test suite: 14 passed, 1 skipped, 0 failures in 68s.
+- [x] **Headless Test Suite & Cross-Platform Windows GUI/UX Hardening**
+  - Added comprehensive headless test suite `tests/test_gui.py` covering `Config`, `ImageUtils`, `ModelManager`, `UpscaleJob`, `UpscaleController`, and CustomTkinter widgets (`SettingsPanel`, `ProgressPanel`, `QueuePanel`).
+  - Fixed Windows path backslash matching in `tests/test_dataset.py`.
+  - Added CUDA availability skips for GPU-only tests in `tests/test_model.py` and pretrained weight checks in `tests/test_utils.py`.
+  - Hardened window geometry persistence in `gui/app.py` against multi-monitor setups with negative coordinates.
+  - Added video file handling and preview integrations in `preview_canvas.py` and `app.py`.
+  - Ensured all tests execute non-interactively with 100% pass/skip rate (12 passed, 3 skipped, 0 failures).
+- [x] **Batch Cancellation & Queue Context Menu Hardening** (2026-09-07)
+  - Added queue context menu actions (Open File, Show in File Explorer, Copy Path, Reset Status to Queued) in `gui/widgets/queue_panel.py`.
+  - Added padding and denoise strength settings persistence in `gui/widgets/settings_panel.py`.
+  - Refactored headless test suite fixture `ctk_root` with class-scoped reuse and per-test child widget cleanup to prevent Windows Tcl interpreter reinitialization crashes (`invalid command name "tcl_findLibrary"`).
+  - Added test coverage for batch execution cancellation (`test_batch_progress_and_cancellation`) and queue context menu status reset (`test_queue_panel_context_menu_and_status_reset`).
+  - Verified with full test suite: 20 passed, 1 skipped, 0 failures.
+
+- [x] **Drag-and-Drop Visual Indicator & Direct Queue Drop** (2026-09-07)
+  - Added visual drag indicator border (`#3b82f6`) and drop banner (`⬇ Drop files here to add`) to `QueuePanel` when files are dragged over the queue.
+  - Implemented `set_drag_highlight()`, `_on_drag_enter()`, `_on_drag_leave()`, and `_on_dnd_drop()` with safe OS path parsing and image/video format validation.
+  - Connected `on_files_dropped` callback to `app._on_files_received` so dropping onto `QueuePanel` adds files to the queue and updates application state.
+  - Added `pythonpath=.` to `setup.cfg` for seamless test module resolution.
+  - Added automated test `test_queue_panel_drag_and_drop_visual_indicator` verifying drag enter, highlight activation, banner packing, drag leave, and drop event parsing.
+  - Verified with full test suite: 21 passed, 1 skipped, 0 failures.
+- [x] Add thumbnail preview tooltip on hover over completed queue items (2026-09-07)
+  - Created reusable `ToolTip` and `ThumbnailToolTip` in `gui/widgets/tooltip.py` with 350ms ergonomic hover delay filter, automatic cancel on leave/click, and screen edge bound checking.
+  - Added thumbnail rendering and lazy caching for completed upscaled results (capped at 150px) and source items via `PIL` and `ImageTk.PhotoImage`.
+  - Added upscale metadata (dimensions and file size) to completed preview tooltips, and diagnostics formatting for error items.
+  - Unified `Toolbar` tooltip usage by importing `ToolTip` from `gui.widgets.tooltip`.
+  - Added robust tooltip lifecycle management (`_cleanup_tooltips()`, `destroy()`) in `QueuePanel` to cleanly destroy popup windows and cancel pending timers during item clearing, rebuilding, or window destruction.
+  - Added automated unit test coverage in `tests/test_gui.py` (`test_tooltip_lifecycle`, `test_thumbnail_tooltip_completed_and_error`, `test_queue_panel_item_tooltip_integration`).
+  - Verified with headless test suite: 19 passed, 0 failures in 5.02s.
+
+## Backlog
+<!-- Prioritized list of identified issues and ergonomics tasks -->
+

@@ -353,13 +353,19 @@ class TestGUIWidgetsHeadless:
         toolbar.set_save_enabled(False)
         assert toolbar._save_btn.cget("state") == "disabled"
 
-        # About dialog creation and escape dismissal
+        # About dialog creation, query, button attributes, and close helper
+        assert not toolbar.is_about_open()
         toolbar._show_about()
+        assert toolbar.is_about_open()
         assert toolbar._about_dialog is not None
         assert toolbar._about_dialog.winfo_exists()
+        assert hasattr(toolbar._about_dialog, "_close_btn")
+        assert hasattr(toolbar._about_dialog, "_gh_btn")
+        assert hasattr(toolbar._about_dialog, "_upstream_btn")
         assert toolbar._about_dialog.bind("<Return>") is not None
         assert toolbar._about_dialog.bind("<Escape>") is not None
-        toolbar._about_dialog.destroy()
+        toolbar.close_about()
+        assert not toolbar.is_about_open()
 
         # Clean destruction
         toolbar.destroy()
