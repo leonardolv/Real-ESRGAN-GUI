@@ -5,6 +5,12 @@
 ## Blocked / Needs Review
 
 ## Completed
+- [x] **PreviewCanvas Zoom Controls Pointer Cursors, Time Label Tooltip, and Lifecycle Disposal** (2026-10-25)
+  - Configured pointer hand cursor (`cursor="hand2"`) across zoom out (`_zoom_out_btn`), zoom in (`_zoom_in_btn`), and fit-to-canvas zoom reset (`_zoom_label`) buttons in `gui/widgets/preview_canvas.py`.
+  - Attached descriptive `ToolTip` instance (`_tip_time`) to playback time label (`_time_label`) indicating current video playback time and total duration.
+  - Added `_tip_time` to `destroy()` disposal loop for clean widget and tooltip lifecycle cleanup.
+  - Expanded automated unit tests `test_preview_canvas_zoom_controls_and_input_guards` and `test_preview_canvas_video_controls_cursors_and_tooltips` in `tests/test_gui.py` asserting pointer cursors on zoom controls and tooltip text on time label.
+  - Verified with automated tests: 2 passed in 0.77s with 0 errors.
 - [x] **ProgressPanel ETA and Percentage Label Tooltips, Automatic Disposal, and Test Coverage** (2026-10-25)
   - Attached descriptive `ToolTip` instances to `_eta_label` ("Estimated remaining processing time") and `_pct_label` ("Current operation completion percentage") in `gui/widgets/progress_bar.py` with automatic disposal on `destroy()`.
   - Expanded automated unit test `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` in `tests/test_gui.py` asserting `_eta_tooltip` and `_pct_tooltip` presence, text, and inclusion in `_tooltips` list.

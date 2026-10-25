@@ -674,6 +674,9 @@ class TestGUIWidgetsHeadless:
         assert hasattr(canvas, "_zoom_out_btn")
         assert hasattr(canvas, "_zoom_in_btn")
         assert hasattr(canvas, "_zoom_label")
+        assert canvas._zoom_out_btn.cget("cursor") == "hand2"
+        assert canvas._zoom_in_btn.cget("cursor") == "hand2"
+        assert canvas._zoom_label.cget("cursor") == "hand2"
         assert canvas._zoom == 1.0
         assert canvas._zoom_label.cget("text") == "100%"
 
@@ -737,6 +740,10 @@ class TestGUIWidgetsHeadless:
         assert "play" in canvas._tip_play._get_text().lower()
         canvas._is_paused = False
         assert "pause" in canvas._tip_play._get_text().lower()
+
+        # Check time label tooltip
+        assert hasattr(canvas, "_tip_time")
+        assert "playback time" in canvas._tip_time._get_text().lower()
 
         # Clean destruction
         canvas.destroy()

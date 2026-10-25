@@ -78,6 +78,7 @@ class PreviewCanvas(ctk.CTkFrame):
             font=ctk.CTkFont(size=14, weight="bold"),
             fg_color="transparent",
             hover_color="#2b2b2b",
+            cursor="hand2",
             command=lambda: self._zoom_step(-1),
         )
         self._zoom_out_btn.pack(side="left", padx=(2, 0), pady=2)
@@ -92,6 +93,7 @@ class PreviewCanvas(ctk.CTkFrame):
             text_color="#a0a0a0",
             fg_color="transparent",
             hover_color="#2b2b2b",
+            cursor="hand2",
             command=self._fit_to_canvas,
         )
         self._zoom_label.pack(side="left", padx=1, pady=2)
@@ -105,6 +107,7 @@ class PreviewCanvas(ctk.CTkFrame):
             font=ctk.CTkFont(size=14, weight="bold"),
             fg_color="transparent",
             hover_color="#2b2b2b",
+            cursor="hand2",
             command=lambda: self._zoom_step(1),
         )
         self._zoom_in_btn.pack(side="left", padx=(0, 2), pady=2)
@@ -171,6 +174,7 @@ class PreviewCanvas(ctk.CTkFrame):
 
         self._time_label = ctk.CTkLabel(btns_frame, text="0:00 / 0:00", text_color="#a0a0a0")
         self._time_label.pack(side="right", padx=5)
+        self._tip_time = ToolTip(self._time_label, "Current video playback time and total duration")
 
         # Bind events
         self._canvas.bind("<Configure>", self._on_resize)
@@ -698,6 +702,7 @@ class PreviewCanvas(ctk.CTkFrame):
             "_tip_prev",
             "_tip_play",
             "_tip_next",
+            "_tip_time",
         ):
             tip = getattr(self, tip_attr, None)
             if tip is not None and hasattr(tip, "destroy"):
