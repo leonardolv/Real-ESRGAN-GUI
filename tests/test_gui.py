@@ -648,15 +648,31 @@ class TestGUIWidgetsHeadless:
         assert "cancel" in progress._cancel_tooltip.text.lower()
         assert len(progress._tooltips) >= 5
 
+        # Verify public properties and initial query helpers
+        assert progress.status_label is progress._status_label
+        assert progress.eta_label is progress._eta_label
+        assert progress.percent_label is progress._pct_label
+        assert progress.progress_bar is progress._bar
+        assert progress.cancel_button is progress._cancel_btn
+        assert progress.is_active() is False
+        assert progress.is_cancelling() is False
+        assert progress.current_percent() == 0.0
+        assert progress.batch_info() == (1, 1)
+        assert progress.status_text() == "Ready"
+
         # Start with callback
-        progress.start(cancel_callback=lambda: cancelled.append(True), batch_total=1)
+        progress.start(cancel_callback=lambda: cancelled.append(True), batch_total=2)
         assert progress._cancel_btn.cget("state") == "normal"
+        assert progress.is_active() is True
+        assert progress.batch_info() == (1, 2)
 
         # Trigger cancel
         progress._on_cancel()
         assert cancelled == [True]
         assert progress._cancel_btn.cget("state") == "disabled"
         assert "Cancelling" in progress._status_label.cget("text")
+        assert progress.is_cancelling() is True
+        assert "Cancelling" in progress.status_text()
 
         # Reset restores normal state
         progress.reset()

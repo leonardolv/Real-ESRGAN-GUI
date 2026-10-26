@@ -3,6 +3,8 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-10-26: Enhanced ProgressPanel with public child widget properties and operational state query helpers. All 32 GUI tests passed.
+
 - 2026-10-26: Enhanced DropZone with focus/drag state queries, child label properties, and tooltip accessor. All 32 GUI tests passed.
 
 - 2026-10-26: Enhanced Toolbar About dialog query and close helpers, button attributes, and shortcut tooltips. All 32 GUI tests passed.
@@ -28,6 +30,8 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 <!-- format: [UTC ISO 8601] [agent] task. Add <!-- RESUME: where to continue --> if unfinished -->
 
 ## Completed
+
+- [2026-10-26T06:33:00Z] [Antigravity] ProgressPanel widget properties, operational state queries, and unit tests. Added status_label, eta_label, percent_label, progress_bar, and cancel_button properties to ProgressPanel; added is_active(), is_cancelling(), current_percent(), batch_info(), status_text(), eta_text(), and percent_text() query helpers. Expanded test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle in tests/test_gui.py. Files changed: gui/widgets/progress_bar.py, tests/test_gui.py, GUI_UX_TASK_LOG.md, AGENT_TASK_LOG.md.
 
 - [2026-10-26T02:32:00Z] [Antigravity] DropZone focus, drag state query helpers, child label properties, tooltip text accessor, and unit tests. Added is_focused(), is_dragging(), and tooltip_text() public query helpers to DropZone; exposed icon_label, title_label, subtitle_label, and formats_label properties. Expanded test_drop_zone_keyboard_focus_and_tooltips in tests/test_gui.py asserting state queries, tooltip text, and label properties. Files changed: gui/widgets/drop_zone.py, tests/test_gui.py, GUI_UX_TASK_LOG.md, AGENT_TASK_LOG.md.
 

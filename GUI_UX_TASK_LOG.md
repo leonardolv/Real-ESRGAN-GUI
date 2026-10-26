@@ -12,6 +12,17 @@
 
 ## Completed
 
+### Task: ProgressPanel widget properties, operational state queries, and unit tests
+- **Completed**: 2026-10-26
+- **Changes**:
+  - `gui/widgets/progress_bar.py`:
+    - Exposed public widget properties (`status_label`, `eta_label`, `percent_label`, `progress_bar`, `cancel_button`).
+    - Added operational state query helpers (`is_active()`, `is_cancelling()`, `current_percent()`, `batch_info()`, `status_text()`, `eta_text()`, `percent_text()`).
+  - `tests/test_gui.py`:
+    - Expanded `test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle` testing property accessors, active state, cancel state, and batch progress.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (32 passed in 4.90s, 0 errors).
+- **Status**: Completed
+
 - [x] **DropZone Focus and Drag State Query Helpers, Child Label Properties, Tooltip Text Accessor, and Unit Tests** (2026-10-26)
   - Added `is_focused()`, `is_dragging()`, and `tooltip_text()` public query helpers to `DropZone` in `gui/widgets/drop_zone.py`.
   - Exposed `icon_label`, `title_label`, `subtitle_label`, and `formats_label` properties on `DropZone` for inspection and accessibility validation.

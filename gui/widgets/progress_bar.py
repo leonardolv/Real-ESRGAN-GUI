@@ -97,6 +97,54 @@ class ProgressPanel(ctk.CTkFrame):
         self._cancel_callback: Optional[Callable[[], None]] = None
 
 
+    @property
+    def status_label(self) -> ctk.CTkLabel:
+        return self._status_label
+
+    @property
+    def eta_label(self) -> ctk.CTkLabel:
+        return self._eta_label
+
+    @property
+    def percent_label(self) -> ctk.CTkLabel:
+        return self._pct_label
+
+    @property
+    def progress_bar(self) -> ctk.CTkProgressBar:
+        return self._bar
+
+    @property
+    def cancel_button(self) -> ctk.CTkButton:
+        return self._cancel_btn
+
+    def is_active(self) -> bool:
+        """Return True if an upscale operation is currently active."""
+        return self._start_time is not None
+
+    def is_cancelling(self) -> bool:
+        """Return True if cancellation has been requested."""
+        return self._status_label.cget("text") == "Cancelling..."
+
+    def current_percent(self) -> float:
+        """Return current progress percentage."""
+        return float(self._last_percent)
+
+    def batch_info(self) -> tuple[int, int]:
+        """Return (current_item_index, total_batch_items)."""
+        return (int(self._batch_current), int(self._batch_total))
+
+    def status_text(self) -> str:
+        """Return current status label text."""
+        return str(self._status_label.cget("text"))
+
+    def eta_text(self) -> str:
+        """Return current ETA label text."""
+        return str(self._eta_label.cget("text"))
+
+    def percent_text(self) -> str:
+        """Return current percentage label text."""
+        return str(self._pct_label.cget("text"))
+
     # ------------------------------------------------------------------ #
     #  Public API                                                         #
     # ------------------------------------------------------------------ #
