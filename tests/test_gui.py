@@ -763,14 +763,24 @@ class TestGUIWidgetsHeadless:
 
         assert dz.cget("cursor") == "hand2"
         assert dz._tooltip is not None
+        assert "drag and drop" in dz.tooltip_text().lower()
+
+        # Check child label properties
+        assert dz.icon_label is dz._icon_label
+        assert dz.title_label is dz._title_label
+        assert dz.subtitle_label is dz._subtitle_label
+        assert dz.formats_label is dz._formats_label
 
         # Focus in / out
+        assert not dz.is_focused()
         dz._on_focus_in()
         assert dz._is_focused is True
+        assert dz.is_focused() is True
         assert dz.cget("border_color") == "#3b82f6"
 
         dz._on_focus_out()
         assert dz._is_focused is False
+        assert dz.is_focused() is False
         assert dz.cget("border_color") == "#444444"
 
         # Hover in / out
@@ -788,12 +798,15 @@ class TestGUIWidgetsHeadless:
         assert clicked["count"] == 1
 
         # Drag enter / leave
+        assert not dz.is_dragging()
         dz._on_drag_enter(None)
         assert dz._is_dragging is True
+        assert dz.is_dragging() is True
         assert dz.cget("border_color") == "#3b82f6"
 
         dz._on_drag_leave(None)
         assert dz._is_dragging is False
+        assert dz.is_dragging() is False
         assert dz.cget("border_color") == "#444444"
 
         tt = dz._tooltip

@@ -233,6 +233,38 @@ class DropZone(ctk.CTkFrame):
         self.configure(border_color=border)
         self._icon_label.configure(text="📁")
 
+    def is_focused(self) -> bool:
+        """Return True if the drop zone currently has keyboard focus."""
+        return bool(self._is_focused)
+
+    def is_dragging(self) -> bool:
+        """Return True if a file drag operation is actively hovering over this zone."""
+        return bool(self._is_dragging)
+
+    def tooltip_text(self) -> str:
+        """Return the text configured on the drop zone tooltip."""
+        return str(self._tooltip.text) if self._tooltip else ""
+
+    @property
+    def icon_label(self) -> ctk.CTkLabel:
+        """Return the icon label widget."""
+        return self._icon_label
+
+    @property
+    def title_label(self) -> ctk.CTkLabel:
+        """Return the primary title label widget."""
+        return self._title_label
+
+    @property
+    def subtitle_label(self) -> ctk.CTkLabel:
+        """Return the secondary subtitle browse label widget."""
+        return self._subtitle_label
+
+    @property
+    def formats_label(self) -> ctk.CTkLabel:
+        """Return the supported formats hint label widget."""
+        return self._formats_label
+
     def destroy(self) -> None:
         """Clean up tooltip timers and window on widget destruction."""
         if hasattr(self, "_tooltip") and self._tooltip:
