@@ -12,6 +12,17 @@
 
 ## Completed
 
+### Task: SettingsPanel widget properties, configuration query helpers, and unit tests
+- **Completed**: 2026-11-04
+- **Changes**:
+  - `gui/widgets/settings_panel.py`:
+    - Exposed public widget properties on `SettingsPanel`: `upscale_button`, `reset_button`, `model_dropdown`, `category_radios`, `download_button`, `browse_button`, `open_folder_button`, `scale_dropdown`, `face_enhance_switch`, `denoise_slider`, `extension_dropdown`, and `tile_dropdown`.
+    - Added ergonomic query helpers: `current_category()`, `current_model()`, `current_scale()`, `is_face_enhance_enabled()`, `is_denoise_enabled()`, `denoise_strength()`, `output_extension()`, and `is_upscale_enabled()`.
+  - `tests/test_gui.py`:
+    - Added unit test `test_settings_panel_properties_and_query_helpers` verifying widget property accessors, default category/model/scale retrieval, switch states, and upscale button enabled state toggles.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (34 passed in 5.20s, 0 errors).
+- **Status**: Completed
+
 ### Task: QueuePanel widget properties, item and drag queries, and unit tests
 - **Completed**: 2026-11-04
 - **Changes**:

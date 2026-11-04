@@ -27,10 +27,16 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 ## Needs human
 
 ## In Progress
-
 <!-- format: [UTC ISO 8601] [agent] task. Add <!-- RESUME: where to continue --> if unfinished -->
 
 ## Completed
+
+### 2026-11-04 UTC - SettingsPanel Widget Properties, Configuration Query Helpers, and Unit Tests
+Status: **done** (Antigravity)
+- `gui/widgets/settings_panel.py`: Exposed public widget properties on `SettingsPanel` (`upscale_button`, `reset_button`, `model_dropdown`, `category_radios`, `download_button`, `browse_button`, `open_folder_button`, `scale_dropdown`, `face_enhance_switch`, `denoise_slider`, `extension_dropdown`, and `tile_dropdown`); added ergonomic query helpers (`current_category()`, `current_model()`, `current_scale()`, `is_face_enhance_enabled()`, `is_denoise_enabled()`, `denoise_strength()`, `output_extension()`, and `is_upscale_enabled()`).
+- `tests/test_gui.py`: Added unit test `test_settings_panel_properties_and_query_helpers` verifying widget property accessors, default category/model/scale retrieval, switch states, and upscale button enabled state toggles.
+- Validation: Verified headlessly with `python -m pytest tests/test_gui.py -v` (34 passed in 5.20s, 0 errors).
+
 
 - [2026-10-26T06:33:00Z] [Antigravity] ProgressPanel widget properties, operational state queries, and unit tests. Added status_label, eta_label, percent_label, progress_bar, and cancel_button properties to ProgressPanel; added is_active(), is_cancelling(), current_percent(), batch_info(), status_text(), eta_text(), and percent_text() query helpers. Expanded test_progress_panel_cancel_button_cursor_tooltip_and_lifecycle in tests/test_gui.py. Files changed: gui/widgets/progress_bar.py, tests/test_gui.py, GUI_UX_TASK_LOG.md, AGENT_TASK_LOG.md.
 

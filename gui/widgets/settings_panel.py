@@ -690,3 +690,111 @@ class SettingsPanel(ctk.CTkScrollableFrame):
                 pass
         self._tooltips.clear()
         super().destroy()
+    # ================================================================== #
+    #  Widget Properties and Ergonomic Query Helpers                     #
+    # ================================================================== #
+
+    @property
+    def upscale_button(self) -> Optional[ctk.CTkButton]:
+        """Return the primary upscale button if created."""
+        return getattr(self, "_upscale_btn", None)
+
+    @property
+    def reset_button(self) -> Optional[ctk.CTkButton]:
+        """Return the reset-to-defaults button if created."""
+        return getattr(self, "_reset_btn", None)
+
+    @property
+    def model_dropdown(self) -> Optional[ctk.CTkOptionMenu]:
+        """Return the model selector dropdown widget."""
+        return getattr(self, "_model_dropdown", None)
+
+    @property
+    def category_radios(self) -> List[ctk.CTkRadioButton]:
+        """Return list of category radio buttons."""
+        return list(self._category_radios)
+
+    @property
+    def download_button(self) -> Optional[ctk.CTkButton]:
+        """Return the model download action button."""
+        return getattr(self, "_download_btn", None)
+
+    @property
+    def browse_button(self) -> Optional[ctk.CTkButton]:
+        """Return the output folder browse button."""
+        return getattr(self, "_browse_btn", None)
+
+    @property
+    def open_folder_button(self) -> Optional[ctk.CTkButton]:
+        """Return the open output folder button."""
+        return getattr(self, "_open_folder_btn", None)
+
+    @property
+    def scale_dropdown(self) -> Optional[ctk.CTkOptionMenu]:
+        """Return the output scale factor dropdown."""
+        return getattr(self, "_scale_dropdown", None)
+
+    @property
+    def face_enhance_switch(self) -> Optional[ctk.CTkCheckBox]:
+        """Return the face enhancement checkbox/switch."""
+        return getattr(self, "_face_check", None)
+
+    @property
+    def denoise_slider(self) -> Optional[ctk.CTkSlider]:
+        """Return the denoise strength slider."""
+        return getattr(self, "_denoise_slider", None)
+
+    @property
+    def extension_dropdown(self) -> Optional[ctk.CTkOptionMenu]:
+        """Return the output format extension dropdown."""
+        return getattr(self, "_ext_dropdown", None)
+
+    @property
+    def tile_dropdown(self) -> Optional[ctk.CTkOptionMenu]:
+        """Return the tile size dropdown."""
+        return getattr(self, "_tile_dropdown", None)
+
+    def current_category(self) -> str:
+        """Return the currently selected model category name."""
+        return str(self._category_var.get())
+
+    def current_model(self) -> str:
+        """Return the currently selected model display name."""
+        return str(self._model_var.get())
+
+    def current_scale(self) -> float:
+        """Return the currently selected scaling factor as float."""
+        try:
+            return float(self._scale_var.get())
+        except Exception:
+            return 4.0
+
+    def is_face_enhance_enabled(self) -> bool:
+        """Return True if GFPGAN face enhancement is enabled."""
+        return bool(self._face_var.get())
+
+    def is_denoise_enabled(self) -> bool:
+        """Return True if denoise controls are visible for current model."""
+        if hasattr(self, "_denoise_frame"):
+            try:
+                return bool(self._denoise_frame.winfo_viewable())
+            except Exception:
+                pass
+        return False
+
+    def denoise_strength(self) -> float:
+        """Return the active denoise strength value."""
+        try:
+            return float(self._denoise_var.get())
+        except Exception:
+            return 0.5
+
+    def output_extension(self) -> str:
+        """Return the selected output file extension ('auto', 'png', etc.)."""
+        return str(self._ext_var.get())
+
+    def is_upscale_enabled(self) -> bool:
+        """Return True if upscale button exists and is enabled for processing."""
+        btn = self.upscale_button
+        return bool(btn and btn.cget("state") == "normal")
+

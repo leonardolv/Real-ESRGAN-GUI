@@ -990,6 +990,44 @@ class TestGUIWidgetsHeadless:
             finally:
                 app._on_close()
 
+    def test_settings_panel_properties_and_query_helpers(self, ctk_root):
+        """Test SettingsPanel public widget properties and ergonomic query helpers."""
+        mm = ModelManager()
+        settings = SettingsPanel(ctk_root, model_manager=mm)
+        settings.pack()
+        settings.add_upscale_button(lambda: None)
+
+        # Widget properties exist
+        assert settings.upscale_button is not None
+        assert settings.reset_button is not None
+        assert settings.model_dropdown is not None
+        assert len(settings.category_radios) >= 2
+        assert settings.download_button is not None
+        assert settings.browse_button is not None
+        assert settings.open_folder_button is not None
+        assert settings.scale_dropdown is not None
+        assert settings.face_enhance_switch is not None
+        assert settings.denoise_slider is not None
+        assert settings.extension_dropdown is not None
+        assert settings.tile_dropdown is not None
+
+        # Query helpers
+        assert settings.current_category() == "General"
+        assert settings.current_model() != ""
+        assert settings.current_scale() in (2.0, 4.0, 8.0)
+        assert settings.is_face_enhance_enabled() is False
+        assert isinstance(settings.is_denoise_enabled(), bool)
+        assert isinstance(settings.denoise_strength(), float)
+        assert settings.output_extension() == "auto"
+        assert settings.is_upscale_enabled() is True
+
+        # Toggle upscale enabled
+        settings.set_upscale_button_state(False)
+        assert settings.is_upscale_enabled() is False
+        settings.set_upscale_button_state(True)
+        assert settings.is_upscale_enabled() is True
+
+
 
 
 
