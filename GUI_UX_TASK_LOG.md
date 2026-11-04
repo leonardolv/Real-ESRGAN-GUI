@@ -12,6 +12,17 @@
 
 ## Completed
 
+### Task: Toolbar widget properties, Save query helper, and unit tests
+- **Completed**: 2026-11-04
+- **Changes**:
+  - `gui/widgets/toolbar.py`:
+    - Exposed public widget properties on `Toolbar`: `open_button`, `save_button`, `output_button`, and `about_button`.
+    - Added ergonomic query helper: `is_save_enabled()` returning boolean state.
+  - `tests/test_gui.py`:
+    - Expanded unit test `test_toolbar_and_tooltip` asserting widget property accessors and save enabled state queries.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (34 passed in 6.53s, 0 errors).
+- **Status**: Completed
+
 ### Task: SettingsPanel widget properties, configuration query helpers, and unit tests
 - **Completed**: 2026-11-04
 - **Changes**:

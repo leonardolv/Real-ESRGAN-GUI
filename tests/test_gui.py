@@ -345,9 +345,17 @@ class TestGUIWidgetsHeadless:
         # Tooltips tracking
         assert len(toolbar._tooltips) >= 4
 
+        # Property accessors and save query
+        assert toolbar.open_button is toolbar._open_btn
+        assert toolbar.save_button is toolbar._save_btn
+        assert toolbar.output_button is toolbar._output_btn
+        assert toolbar.about_button is toolbar._about_btn
+        assert not toolbar.is_save_enabled()
+
         # Save enabled/disabled and cursor state
         assert toolbar._save_btn.cget("state") == "disabled"
         toolbar.set_save_enabled(True)
+        assert toolbar.is_save_enabled()
         assert toolbar._save_btn.cget("state") == "normal"
         assert toolbar._save_btn.cget("cursor") == "hand2"
         toolbar.set_save_enabled(False)

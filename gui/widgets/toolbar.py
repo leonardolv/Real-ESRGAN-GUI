@@ -92,6 +92,30 @@ class Toolbar(ctk.CTkFrame):
     #  Public                                                             #
     # ------------------------------------------------------------------ #
 
+    @property
+    def open_button(self) -> ctk.CTkButton:
+        """Return the Open file button."""
+        return self._open_btn
+
+    @property
+    def save_button(self) -> ctk.CTkButton:
+        """Return the Save As button."""
+        return self._save_btn
+
+    @property
+    def output_button(self) -> ctk.CTkButton:
+        """Return the Output Folder button."""
+        return self._output_btn
+
+    @property
+    def about_button(self) -> ctk.CTkButton:
+        """Return the About dialog button."""
+        return self._about_btn
+
+    def is_save_enabled(self) -> bool:
+        """Return True if the Save As action is currently enabled."""
+        return str(self._save_btn.cget("state")) == "normal"
+
     def set_save_enabled(self, enabled: bool) -> None:
         self._save_btn.configure(state="normal" if enabled else "disabled")
 

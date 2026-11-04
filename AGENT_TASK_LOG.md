@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-04: Enhanced Toolbar with public child widget properties and is_save_enabled query helper. All 34 GUI tests passed.
 - 2026-11-04: Enhanced QueuePanel with public child widget properties and operational state query helpers. All 33 GUI tests passed.
 - 2026-10-26: Enhanced ProgressPanel with public child widget properties and operational state query helpers. All 32 GUI tests passed.
 
@@ -27,9 +28,16 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 ## Needs human
 
 ## In Progress
+
 <!-- format: [UTC ISO 8601] [agent] task. Add <!-- RESUME: where to continue --> if unfinished -->
 
 ## Completed
+
+### 2026-11-04 UTC - Toolbar Widget Properties, Save Query Helper, and Unit Tests
+Status: **done** (Antigravity)
+- `gui/widgets/toolbar.py`: Exposed public widget properties on `Toolbar` (`open_button`, `save_button`, `output_button`, and `about_button`); added ergonomic query helper `is_save_enabled()`.
+- `tests/test_gui.py`: Expanded unit test `test_toolbar_and_tooltip` verifying widget property accessors and save action enabled status query.
+- Validation: Verified headlessly with `python -m pytest tests/test_gui.py -v` (34 passed in 6.53s, 0 errors).
 
 ### 2026-11-04 UTC - SettingsPanel Widget Properties, Configuration Query Helpers, and Unit Tests
 Status: **done** (Antigravity)
