@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-04: Enhanced QueuePanel with public child widget properties and operational state query helpers. All 33 GUI tests passed.
 - 2026-10-26: Enhanced ProgressPanel with public child widget properties and operational state query helpers. All 32 GUI tests passed.
 
 - 2026-10-26: Enhanced DropZone with focus/drag state queries, child label properties, and tooltip accessor. All 32 GUI tests passed.

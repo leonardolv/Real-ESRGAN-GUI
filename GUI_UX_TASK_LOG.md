@@ -12,6 +12,17 @@
 
 ## Completed
 
+### Task: QueuePanel widget properties, item and drag queries, and unit tests
+- **Completed**: 2026-11-04
+- **Changes**:
+  - `gui/widgets/queue_panel.py`:
+    - Exposed public widget properties (`count_label`, `drop_banner`, `drop_banner_label`, `list_frame`, `add_files_button`, `process_all_button`, `clear_all_button`).
+    - Added ergonomic query helpers (`item_count()`, `is_empty()`, `selected_index()`, `selected_item()`, `is_drag_active()`, `button_tooltips()`).
+  - `tests/test_gui.py`:
+    - Added unit test `test_queue_panel_properties_and_query_helpers` verifying property accessors, empty/populated item counts, selection retrieval, drag highlight state, and button tooltips.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (33 passed in 5.25s, 0 errors).
+- **Status**: Completed
+
 ### Task: ProgressPanel widget properties, operational state queries, and unit tests
 - **Completed**: 2026-10-26
 - **Changes**:

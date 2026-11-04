@@ -645,3 +645,69 @@ class QueuePanel(ctk.CTkFrame):
         self.remove(self._selected_idx)
         return "break"
 
+
+
+    # ------------------------------------------------------------------ #
+    #  Public Properties & Query Helpers                                 #
+    # ------------------------------------------------------------------ #
+
+    @property
+    def count_label(self) -> ctk.CTkLabel:
+        """Return the queue count label widget."""
+        return self._count_label
+
+    @property
+    def drop_banner(self) -> ctk.CTkFrame:
+        """Return the drop banner frame widget."""
+        return self._drop_banner
+
+    @property
+    def drop_banner_label(self) -> ctk.CTkLabel:
+        """Return the drop banner label widget."""
+        return self._drop_banner_label
+
+    @property
+    def list_frame(self) -> ctk.CTkScrollableFrame:
+        """Return the scrollable list container."""
+        return self._list_frame
+
+    @property
+    def add_files_button(self) -> ctk.CTkButton:
+        """Return the + Add Files action button."""
+        return self._add_files_btn
+
+    @property
+    def process_all_button(self) -> ctk.CTkButton:
+        """Return the Process All action button."""
+        return self._process_all_btn
+
+    @property
+    def clear_all_button(self) -> ctk.CTkButton:
+        """Return the Clear All action button."""
+        return self._clear_all_btn
+
+    def item_count(self) -> int:
+        """Return the number of files currently in the queue."""
+        return len(self._items)
+
+    def is_empty(self) -> bool:
+        """Return True if the queue is empty."""
+        return len(self._items) == 0
+
+    def selected_index(self) -> int:
+        """Return the currently selected item index or -1 if none."""
+        return self._selected_idx
+
+    def selected_item(self) -> Optional[QueueItem]:
+        """Return the currently selected QueueItem or None."""
+        if 0 <= self._selected_idx < len(self._items):
+            return self._items[self._selected_idx]
+        return None
+
+    def is_drag_active(self) -> bool:
+        """Return True if a drag-over interaction is currently active."""
+        return bool(self._is_drag_active)
+
+    def button_tooltips(self) -> List[ToolTip]:
+        """Return list of active tooltips on panel buttons."""
+        return list(self._button_tooltips)

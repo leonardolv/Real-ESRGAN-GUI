@@ -864,6 +864,52 @@ class TestGUIWidgetsHeadless:
 
         queue.destroy()
 
+    def test_queue_panel_properties_and_query_helpers(self, ctk_root, tmp_path):
+        queue = QueuePanel(ctk_root)
+        queue.pack()
+
+        # Check property exposure
+        assert queue.count_label is queue._count_label
+        assert queue.drop_banner is queue._drop_banner
+        assert queue.drop_banner_label is queue._drop_banner_label
+        assert queue.list_frame is queue._list_frame
+        assert queue.add_files_button is queue._add_files_btn
+        assert queue.process_all_button is queue._process_all_btn
+        assert queue.clear_all_button is queue._clear_all_btn
+
+        # Initial state queries
+        assert queue.item_count() == 0
+        assert queue.is_empty() is True
+        assert queue.selected_index() == -1
+        assert queue.selected_item() is None
+        assert queue.is_drag_active() is False
+        assert len(queue.button_tooltips()) == 3
+
+        # Add files and query
+        img1 = tmp_path / "panel_test1.png"
+        img2 = tmp_path / "panel_test2.png"
+        Image.new('RGB', (10, 10)).save(img1)
+        Image.new('RGB', (10, 10)).save(img2)
+        queue.add_files([str(img1), str(img2)])
+
+        assert queue.item_count() == 2
+        assert queue.is_empty() is False
+
+        # Selection queries
+        queue.select(1)
+        assert queue.selected_index() == 1
+        sel = queue.selected_item()
+        assert sel is not None
+        assert sel.path == str(img2)
+
+        # Drag state
+        queue.set_drag_highlight(True)
+        assert queue.is_drag_active() is True
+        queue.set_drag_highlight(False)
+        assert queue.is_drag_active() is False
+
+        queue.destroy()
+
     def test_queue_and_toolbar_shortcuts_and_explorer_guards(self, ctk_root, tmp_path):
         from unittest.mock import patch
 
