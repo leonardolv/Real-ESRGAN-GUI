@@ -12,6 +12,17 @@
 
 ## Completed
 
+### Task: PreviewCanvas widget properties, playback and zoom state query helpers, and unit tests
+- **Completed**: 2026-11-04
+- **Changes**:
+  - `gui/widgets/preview_canvas.py`:
+    - Exposed public widget properties on `PreviewCanvas`: `canvas`, `zoom_frame`, `zoom_out_button`, `zoom_label`, `zoom_in_button`, `controls_frame`, `timeline_slider`, `prev_button`, `play_button`, `next_button`, and `time_label`.
+    - Added ergonomic query helpers: `has_input()`, `has_output()`, `is_video()`, `is_paused()`, `slider_position()`, `current_frame()`, `total_frames()`, `time_text()`, `zoom_percent_text()`, and `button_tooltips()`.
+  - `tests/test_gui.py`:
+    - Added unit test `test_preview_canvas_properties_and_query_helpers` verifying widget property accessors, initial query states, tooltips dictionary, input/output image loading, and clear lifecycle.
+- **Verification**: Verified headlessly with `python -m pytest tests/ -v` (38 passed, 3 skipped in 20.71s, 0 errors).
+- **Status**: Completed
+
 ### Task: Toolbar widget properties, Save query helper, and unit tests
 - **Completed**: 2026-11-04
 - **Changes**:

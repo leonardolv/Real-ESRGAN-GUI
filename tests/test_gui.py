@@ -1035,6 +1035,69 @@ class TestGUIWidgetsHeadless:
         settings.set_upscale_button_state(True)
         assert settings.is_upscale_enabled() is True
 
+    def test_preview_canvas_properties_and_query_helpers(self, ctk_root):
+        """Test PreviewCanvas public widget properties, query helpers, and operational state."""
+        canvas = PreviewCanvas(ctk_root)
+        canvas.pack()
+
+        # Widget properties exist
+        assert canvas.canvas is not None
+        assert canvas.zoom_frame is not None
+        assert canvas.zoom_out_button is not None
+        assert canvas.zoom_label is not None
+        assert canvas.zoom_in_button is not None
+        assert canvas.controls_frame is not None
+        assert canvas.timeline_slider is not None
+        assert canvas.prev_button is not None
+        assert canvas.play_button is not None
+        assert canvas.next_button is not None
+        assert canvas.time_label is not None
+
+        # Initial state query helpers
+        assert canvas.has_input() is False
+        assert canvas.has_output() is False
+        assert canvas.is_video() is False
+        assert canvas.is_paused() is True
+        assert canvas.slider_position() == 0.5
+        assert canvas.current_frame() == 0
+        assert canvas.total_frames() == 0
+        assert canvas.time_text() == "0:00 / 0:00"
+        assert "100" in canvas.zoom_percent_text()
+
+        # Tooltips dictionary query
+        tips = canvas.button_tooltips()
+        assert "zoom_out" in tips and "Ctrl+-" in tips["zoom_out"]
+        assert "zoom_fit" in tips and "Ctrl+0" in tips["zoom_fit"]
+        assert "zoom_in" in tips and "Ctrl++" in tips["zoom_in"]
+        assert "timeline" in tips
+        assert "prev" in tips
+        assert "play" in tips
+        assert "next" in tips
+        assert "time" in tips
+
+        # Load input image
+        img_in = Image.new("RGB", (100, 100), color="blue")
+        canvas.set_input_image(img_in)
+        assert canvas.has_input() is True
+        assert canvas.has_output() is False
+        assert canvas.is_video() is False
+
+        # Load output image
+        img_out = Image.new("RGB", (200, 200), color="red")
+        canvas.set_output_image(img_out)
+        assert canvas.has_input() is True
+        assert canvas.has_output() is True
+        assert canvas.slider_position() == 0.5
+
+        # Clear canvas
+        canvas.clear()
+        assert canvas.has_input() is False
+        assert canvas.has_output() is False
+        assert canvas.is_video() is False
+        assert canvas.get_zoom() == 1.0
+
+        canvas.destroy()
+
 
 
 

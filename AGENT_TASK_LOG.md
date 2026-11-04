@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-04: Enhanced PreviewCanvas with public widget properties, playback and zoom state query helpers, and button tooltips dictionary. All 38 tests passed (3 skipped).
 - 2026-11-04: Enhanced Toolbar with public child widget properties and is_save_enabled query helper. All 34 GUI tests passed.
 - 2026-11-04: Enhanced QueuePanel with public child widget properties and operational state query helpers. All 33 GUI tests passed.
 - 2026-10-26: Enhanced ProgressPanel with public child widget properties and operational state query helpers. All 32 GUI tests passed.
@@ -32,6 +33,13 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 <!-- format: [UTC ISO 8601] [agent] task. Add <!-- RESUME: where to continue --> if unfinished -->
 
 ## Completed
+
+### 2026-11-04 UTC - PreviewCanvas Widget Properties, Playback and Zoom State Query Helpers, and Unit Tests
+Status: **done** (Antigravity)
+- `gui/widgets/preview_canvas.py`: Exposed public widget properties on `PreviewCanvas` (`canvas`, `zoom_frame`, `zoom_out_button`, `zoom_label`, `zoom_in_button`, `controls_frame`, `timeline_slider`, `prev_button`, `play_button`, `next_button`, and `time_label`); added ergonomic query helpers (`has_input()`, `has_output()`, `is_video()`, `is_paused()`, `slider_position()`, `current_frame()`, `total_frames()`, `time_text()`, `zoom_percent_text()`, and `button_tooltips()`).
+- `tests/test_gui.py`: Added unit test `test_preview_canvas_properties_and_query_helpers` asserting widget properties, initial query states, tooltips dictionary, input/output image loading, and clear lifecycle.
+- Validation: Verified headlessly with `python -m pytest tests/ -v` (38 passed, 3 skipped in 20.71s, 0 errors).
+
 
 ### 2026-11-04 UTC - Toolbar Widget Properties, Save Query Helper, and Unit Tests
 Status: **done** (Antigravity)

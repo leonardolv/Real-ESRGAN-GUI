@@ -8,7 +8,7 @@ States:
 """
 
 import tkinter as tk
-from typing import Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 import customtkinter as ctk
@@ -690,6 +690,119 @@ class PreviewCanvas(ctk.CTkFrame):
 
     def _on_resize(self, event) -> None:
         self._render()
+
+    # ------------------------------------------------------------------ #
+    #  Public Properties & Query Helpers                                 #
+    # ------------------------------------------------------------------ #
+
+    @property
+    def canvas(self) -> tk.Canvas:
+        """Return the underlying rendering canvas widget."""
+        return self._canvas
+
+    @property
+    def zoom_frame(self) -> ctk.CTkFrame:
+        """Return the zoom controls container frame."""
+        return self._zoom_frame
+
+    @property
+    def zoom_out_button(self) -> ctk.CTkButton:
+        """Return the zoom out action button."""
+        return self._zoom_out_btn
+
+    @property
+    def zoom_label(self) -> ctk.CTkButton:
+        """Return the fit-to-canvas / zoom percentage label button."""
+        return self._zoom_label
+
+    @property
+    def zoom_in_button(self) -> ctk.CTkButton:
+        """Return the zoom in action button."""
+        return self._zoom_in_btn
+
+    @property
+    def controls_frame(self) -> ctk.CTkFrame:
+        """Return the video playback controls container frame."""
+        return self._controls_frame
+
+    @property
+    def timeline_slider(self) -> ctk.CTkSlider:
+        """Return the video timeline seek slider."""
+        return self._timeline_slider
+
+    @property
+    def prev_button(self) -> ctk.CTkButton:
+        """Return the step backward video action button."""
+        return self._prev_btn
+
+    @property
+    def play_button(self) -> ctk.CTkButton:
+        """Return the play / pause toggle video action button."""
+        return self._play_btn
+
+    @property
+    def next_button(self) -> ctk.CTkButton:
+        """Return the step forward video action button."""
+        return self._next_btn
+
+    @property
+    def time_label(self) -> ctk.CTkLabel:
+        """Return the playback time display label."""
+        return self._time_label
+
+    def has_input(self) -> bool:
+        """Return True if an input image or video stream is currently loaded."""
+        return self._input_image is not None or self._input_video_cap is not None
+
+    def has_output(self) -> bool:
+        """Return True if an output image or video stream is currently loaded."""
+        return bool(self._has_output)
+
+    def is_video(self) -> bool:
+        """Return True if the current loaded media is a video."""
+        return bool(self._is_video)
+
+    def is_paused(self) -> bool:
+        """Return True if video playback is currently paused."""
+        return bool(self._is_paused)
+
+    def slider_position(self) -> float:
+        """Return the current before/after comparison slider position (0.0 to 1.0)."""
+        return float(self._slider_pos)
+
+    def current_frame(self) -> int:
+        """Return the current frame index for video playback."""
+        return int(self._current_frame)
+
+    def total_frames(self) -> int:
+        """Return the total frame count for the loaded video."""
+        return int(self._total_frames)
+
+    def time_text(self) -> str:
+        """Return the formatted time text currently shown on the time label."""
+        return str(self._time_label.cget("text"))
+
+    def zoom_percent_text(self) -> str:
+        """Return the percentage text currently displayed on the zoom button."""
+        return str(self._zoom_label.cget("text"))
+
+    def button_tooltips(self) -> Dict[str, str]:
+        """Return dictionary mapping control names to their resolved tooltip text."""
+        tips: Dict[str, str] = {}
+        for name, tip_attr in (
+            ("zoom_out", "_tip_zoom_out"),
+            ("zoom_fit", "_tip_zoom_fit"),
+            ("zoom_in", "_tip_zoom_in"),
+            ("timeline", "_tip_timeline"),
+            ("prev", "_tip_prev"),
+            ("play", "_tip_play"),
+            ("next", "_tip_next"),
+            ("time", "_tip_time"),
+        ):
+            tip = getattr(self, tip_attr, None)
+            if tip is not None and hasattr(tip, "_get_text"):
+                tips[name] = tip._get_text()
+        return tips
 
     def destroy(self) -> None:
         """Clean up video captures and child tooltips on widget destruction."""
