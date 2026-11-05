@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-05: Enhanced RealESRGANApp with public status widget properties, operational state query helpers, and unit tests. All 39 tests passed (3 skipped).
 - 2026-11-04: Enhanced PreviewCanvas with public widget properties, playback and zoom state query helpers, and button tooltips dictionary. All 38 tests passed (3 skipped).
 - 2026-11-04: Enhanced Toolbar with public child widget properties and is_save_enabled query helper. All 34 GUI tests passed.
 - 2026-11-04: Enhanced QueuePanel with public child widget properties and operational state query helpers. All 33 GUI tests passed.
@@ -30,9 +31,14 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 ## In Progress
 
-<!-- format: [UTC ISO 8601] [agent] task. Add <!-- RESUME: where to continue --> if unfinished -->
 
 ## Completed
+
+### 2026-11-05 UTC - RealESRGANApp Status Properties, Operational Query Helpers, and Unit Tests
+Status: **done** (Antigravity)
+- `gui/app.py`: Exposed public status bar properties on `RealESRGANApp` (`status_label`, `gpu_label`, `status_tooltip`, `gpu_tooltip`); added ergonomic operational query helpers (`status_message()`, `gpu_info_text()`, `is_batch_mode()`, `is_upscaling()`, `queue_count()`, and `has_queue_items()`).
+- `tests/test_gui.py`: Added unit test `test_real_esrgan_app_properties_and_query_helpers` verifying property accessors, default status message and GPU text, batch and upscaling states, queue counting helpers, and dynamic state updates.
+- Validation: Verified headlessly with `python -m pytest tests/ -v` (39 passed, 3 skipped in 9.59s, 0 errors).
 
 ### 2026-11-04 UTC - PreviewCanvas Widget Properties, Playback and Zoom State Query Helpers, and Unit Tests
 Status: **done** (Antigravity)

@@ -956,6 +956,55 @@ class TestGUIWidgetsHeadless:
 
         toolbar.destroy()
 
+
+    def test_real_esrgan_app_properties_and_query_helpers(self, monkeypatch):
+        """Test RealESRGANApp public status widget properties and operational query helpers."""
+        from unittest.mock import MagicMock, patch
+        from gui.app import RealESRGANApp
+
+        with patch("gui.app.ModelManager"), \
+             patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX",
+                "total_vram_gb": 8.0,
+                "used_vram_gb": 2.0,
+                "device": "cuda",
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
+
+            app = RealESRGANApp()
+            app.withdraw()
+            try:
+                # Property accessors
+                assert app.status_label is not None
+                assert app.gpu_label is not None
+                assert app.status_tooltip is not None
+                assert app.gpu_tooltip is not None
+
+                # Query helpers
+                assert "Ready" in app.status_message()
+                assert "NVIDIA" in app.gpu_info_text()
+                assert app.is_batch_mode() is False
+                assert app.is_upscaling() is False
+                assert app.queue_count() == 0
+                assert app.has_queue_items() is False
+
+                # Changing states reflected in helpers
+                mock_ctrl.is_busy = True
+                assert app.is_upscaling() is True
+                mock_ctrl.is_busy = False
+
+                app._is_batch = True
+                assert app.is_batch_mode() is True
+                app._is_batch = False
+
+                app.status_label.configure(text="Processing test image...")
+                assert app.status_message() == "Processing test image..."
+            finally:
+                app._on_close()
+
     def test_app_shortcuts_and_status_bar_tooltips(self, monkeypatch):
         from unittest.mock import MagicMock, patch
         from gui.app import RealESRGANApp

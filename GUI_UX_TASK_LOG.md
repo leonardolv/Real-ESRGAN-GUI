@@ -4,6 +4,9 @@
 
 ## In Progress
 
+### Task: RealESRGANApp status properties, operational query helpers, and unit tests
+- **Started**: 2026-11-05T02:26:00Z
+- **Goal**: Expose public status bar widget properties (status_label, gpu_label, status_tooltip, gpu_tooltip) and operational query helpers (status_message, gpu_info_text, is_batch_mode, is_upscaling, queue_count, has_queue_items) on RealESRGANApp, and add unit test coverage.
 
 
 ## Blocked / Needs Review
@@ -11,6 +14,17 @@
 
 
 ## Completed
+
+### Task: RealESRGANApp status properties, operational query helpers, and unit tests
+- **Completed**: 2026-11-05
+- **Changes**:
+  - `gui/app.py`:
+    - Exposed public status bar properties on `RealESRGANApp`: `status_label`, `gpu_label`, `status_tooltip`, and `gpu_tooltip`.
+    - Added ergonomic operational query helpers: `status_message()`, `gpu_info_text()`, `is_batch_mode()`, `is_upscaling()`, `queue_count()`, and `has_queue_items()`.
+  - `tests/test_gui.py`:
+    - Added unit test `test_real_esrgan_app_properties_and_query_helpers` verifying property accessors, default messages, GPU readout, batch/upscaling state tracking, queue counts, and dynamic label updates.
+- **Verification**: Verified headlessly with `python -m pytest tests/ -v` (39 passed, 3 skipped in 9.59s, 0 errors).
+- **Status**: Completed
 
 ### Task: PreviewCanvas widget properties, playback and zoom state query helpers, and unit tests
 - **Completed**: 2026-11-04

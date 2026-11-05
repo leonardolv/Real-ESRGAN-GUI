@@ -715,3 +715,52 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         else:
             text = gpu["name"]
         self._gpu_label.configure(text=text)
+
+    # ================================================================== #
+    #  Public properties and query helpers                                #
+    # ================================================================== #
+
+    @property
+    def status_label(self) -> ctk.CTkLabel:
+        """The left-aligned status text label in the status bar."""
+        return self._status_text
+
+    @property
+    def gpu_label(self) -> ctk.CTkLabel:
+        """The right-aligned GPU info label in the status bar."""
+        return self._gpu_label
+
+    @property
+    def status_tooltip(self) -> Optional[ToolTip]:
+        """The tooltip attached to the status text label."""
+        return getattr(self, "_status_tooltip", None)
+
+    @property
+    def gpu_tooltip(self) -> Optional[ToolTip]:
+        """The tooltip attached to the GPU info label."""
+        return getattr(self, "_gpu_tooltip", None)
+
+    def status_message(self) -> str:
+        """Return the current message displayed in the status bar."""
+        return self._status_text.cget("text")
+
+    def gpu_info_text(self) -> str:
+        """Return the current text displayed in the GPU info label."""
+        return self._gpu_label.cget("text")
+
+    def is_batch_mode(self) -> bool:
+        """Check whether batch processing mode is active."""
+        return bool(self._is_batch)
+
+    def is_upscaling(self) -> bool:
+        """Check whether upscaling controller is currently busy."""
+        return bool(self.upscale_ctrl.is_busy)
+
+    def queue_count(self) -> int:
+        """Return the number of items currently in the queue."""
+        return self.queue_panel.item_count()
+
+    def has_queue_items(self) -> bool:
+        """Check whether there are any items in the queue."""
+        return not self.queue_panel.is_empty()
+
