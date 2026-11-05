@@ -4,16 +4,23 @@
 
 ## In Progress
 
-### Task: RealESRGANApp status properties, operational query helpers, and unit tests
-- **Started**: 2026-11-05T02:26:00Z
-- **Goal**: Expose public status bar widget properties (status_label, gpu_label, status_tooltip, gpu_tooltip) and operational query helpers (status_message, gpu_info_text, is_batch_mode, is_upscaling, queue_count, has_queue_items) on RealESRGANApp, and add unit test coverage.
-
 
 ## Blocked / Needs Review
 
 
 
 ## Completed
+
+### Task: RealESRGANApp panel properties, drop zone visibility, and queue query helpers
+- **Completed**: 2026-11-05
+- **Changes**:
+  - `gui/app.py`:
+    - Exposed public widget properties on `RealESRGANApp`: `upscale_button`, `toolbar_widget`, `queue_widget`, `settings_widget`, `preview_widget`, `progress_widget`, and `drop_zone_widget`.
+    - Added ergonomic query helpers: `is_drop_zone_visible()`, `selected_queue_item()`, `selected_queue_index()`, and `can_start_upscale()`.
+  - `tests/test_gui.py`:
+    - Added unit test `test_real_esrgan_app_panel_properties_and_operational_helpers` verifying panel property accessors, drop zone visibility transitions, empty and populated queue queries, and upscale readiness predicates.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (37 passed in 7.69s, 0 errors).
+- **Status**: Completed
 
 ### Task: RealESRGANApp status properties, operational query helpers, and unit tests
 - **Completed**: 2026-11-05

@@ -16,7 +16,7 @@ import tkinter as tk
 import tkinter.filedialog
 import tkinter.messagebox
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import customtkinter as ctk
 from PIL import Image
@@ -764,3 +764,53 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         """Check whether there are any items in the queue."""
         return not self.queue_panel.is_empty()
 
+    @property
+    def upscale_button(self) -> ctk.CTkButton:
+        """The main Upscale button in the settings panel."""
+        return self._upscale_btn
+
+    @property
+    def toolbar_widget(self) -> Toolbar:
+        """The top toolbar widget."""
+        return self.toolbar
+
+    @property
+    def queue_widget(self) -> QueuePanel:
+        """The queue panel widget."""
+        return self.queue_panel
+
+    @property
+    def settings_widget(self) -> SettingsPanel:
+        """The settings panel widget."""
+        return self.settings_panel
+
+    @property
+    def preview_widget(self) -> PreviewCanvas:
+        """The central preview canvas widget."""
+        return self.preview
+
+    @property
+    def progress_widget(self) -> ProgressPanel:
+        """The progress bar panel widget."""
+        return self.progress
+
+    @property
+    def drop_zone_widget(self) -> DropZone:
+        """The drop zone overlay widget."""
+        return self.drop_zone
+
+    def is_drop_zone_visible(self) -> bool:
+        """Check whether the drop zone overlay is currently placed."""
+        return bool(self.drop_zone.place_info())
+
+    def selected_queue_item(self) -> Optional[Any]:
+        """Return the currently selected queue item, if any."""
+        return self.queue_panel.get_selected()
+
+    def selected_queue_index(self) -> int:
+        """Return the index of the currently selected queue item, or -1."""
+        return self.queue_panel.get_selected_index()
+
+    def can_start_upscale(self) -> bool:
+        """Check whether an upscale operation can currently be started."""
+        return (self.queue_panel.get_selected() is not None) and (not self.upscale_ctrl.is_busy)

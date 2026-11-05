@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-05: Enhanced RealESRGANApp with panel widget properties, drop zone visibility checks, and queue query helpers. All 37 GUI tests passed.
 - 2026-11-05: Enhanced RealESRGANApp with public status widget properties, operational state query helpers, and unit tests. All 39 tests passed (3 skipped).
 - 2026-11-04: Enhanced PreviewCanvas with public widget properties, playback and zoom state query helpers, and button tooltips dictionary. All 38 tests passed (3 skipped).
 - 2026-11-04: Enhanced Toolbar with public child widget properties and is_save_enabled query helper. All 34 GUI tests passed.
@@ -33,6 +34,12 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-05 UTC - RealESRGANApp Panel Properties, Drop Zone Visibility, and Queue Query Helpers
+Status: **done** (Antigravity)
+- `gui/app.py`: Exposed public widget properties on `RealESRGANApp` (`upscale_button`, `toolbar_widget`, `queue_widget`, `settings_widget`, `preview_widget`, `progress_widget`, `drop_zone_widget`); added ergonomic query helpers (`is_drop_zone_visible()`, `selected_queue_item()`, `selected_queue_index()`, `can_start_upscale()`).
+- `tests/test_gui.py`: Added unit test `test_real_esrgan_app_panel_properties_and_operational_helpers` verifying panel property accessors, drop zone visibility transitions, empty and populated queue queries, and upscale readiness predicates.
+- Validation: Verified headlessly with `python -m pytest tests/test_gui.py -v` (37 passed in 7.69s, 0 errors).
 
 ### 2026-11-05 UTC - RealESRGANApp Status Properties, Operational Query Helpers, and Unit Tests
 Status: **done** (Antigravity)

@@ -1005,6 +1005,73 @@ class TestGUIWidgetsHeadless:
             finally:
                 app._on_close()
 
+    def test_real_esrgan_app_panel_properties_and_operational_helpers(self, tmp_path):
+        """Test RealESRGANApp panel properties, drop zone visibility, and queue query helpers."""
+        from unittest.mock import MagicMock, patch
+        from gui.app import RealESRGANApp
+
+        with patch("gui.app.ModelManager"), \
+             patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX",
+                "total_vram_gb": 8.0,
+                "used_vram_gb": 2.0,
+                "device": "cuda",
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
+
+            app = RealESRGANApp()
+            app.withdraw()
+            try:
+                # Panel and widget properties
+                assert app.upscale_button is not None
+                assert app.toolbar_widget is not None
+                assert app.queue_widget is not None
+                assert app.settings_widget is not None
+                assert app.preview_widget is not None
+                assert app.progress_widget is not None
+                assert app.drop_zone_widget is not None
+
+                # Drop zone visibility state
+                assert app.is_drop_zone_visible() is True
+                app._hide_drop_zone()
+                assert app.is_drop_zone_visible() is False
+                app._show_drop_zone()
+                assert app.is_drop_zone_visible() is True
+
+                # Queue queries when empty
+                assert app.selected_queue_item() is None
+                assert app.selected_queue_index() == -1
+                assert app.can_start_upscale() is False
+
+                # Add dummy image file to queue
+                img_path = tmp_path / "test_item.png"
+                img = Image.new("RGB", (64, 64), color="green")
+                img.save(img_path)
+
+                app._on_files_received([str(img_path)])
+                assert app.queue_count() == 1
+                assert app.has_queue_items() is True
+                assert app.is_drop_zone_visible() is False
+
+                # Select the added item
+                app.queue_widget.select(0)
+                assert app.selected_queue_index() == 0
+                item = app.selected_queue_item()
+                assert item is not None
+                assert item.filename == "test_item.png"
+                assert app.can_start_upscale() is True
+
+                # When upscale controller is busy, cannot start upscale
+                mock_ctrl.is_busy = True
+                assert app.can_start_upscale() is False
+                mock_ctrl.is_busy = False
+                assert app.can_start_upscale() is True
+            finally:
+                app._on_close()
+
     def test_app_shortcuts_and_status_bar_tooltips(self, monkeypatch):
         from unittest.mock import MagicMock, patch
         from gui.app import RealESRGANApp
