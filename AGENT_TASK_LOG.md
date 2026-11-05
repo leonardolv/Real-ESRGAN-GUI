@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-05: Added Toolbar button texts accessor, RealESRGANApp settings query helpers, and unit tests. All 38 GUI tests passed.
 - 2026-11-05: Enhanced RealESRGANApp with panel widget properties, drop zone visibility checks, and queue query helpers. All 37 GUI tests passed.
 - 2026-11-05: Enhanced RealESRGANApp with public status widget properties, operational state query helpers, and unit tests. All 39 tests passed (3 skipped).
 - 2026-11-04: Enhanced PreviewCanvas with public widget properties, playback and zoom state query helpers, and button tooltips dictionary. All 38 tests passed (3 skipped).
@@ -34,6 +35,13 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-05 UTC - Toolbar Button Texts Accessor, RealESRGANApp Settings Query Helpers, and Unit Tests
+Status: **done** (Antigravity)
+- gui/widgets/toolbar.py: Added get_button_texts() -> dict[str, str] to expose current button labels for inspection and localization.
+- gui/app.py: Added public ergonomic settings query helpers on RealESRGANApp: selected_model(), selected_category(), selected_scale(), output_directory(), is_face_enhance_enabled(), and is_denoise_enabled(). Sanitized CPU fallback status bar label to ASCII text.
+- 	ests/test_gui.py: Added unit test 	est_toolbar_button_texts_and_app_settings_query_helpers verifying toolbar button labels and app settings query accessors.
+- Validation: Verified headlessly with python -m pytest tests/test_gui.py -v (38 passed in 7.71s, 0 errors).
 
 ### 2026-11-05 UTC - RealESRGANApp Panel Properties, Drop Zone Visibility, and Queue Query Helpers
 Status: **done** (Antigravity)

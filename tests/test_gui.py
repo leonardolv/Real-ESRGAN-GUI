@@ -1214,11 +1214,47 @@ class TestGUIWidgetsHeadless:
 
         canvas.destroy()
 
+    def test_toolbar_button_texts_and_app_settings_query_helpers(self, monkeypatch):
+        """Test toolbar button texts dictionary and app settings query accessors."""
+        from unittest.mock import MagicMock, patch
+        from gui.app import RealESRGANApp
 
+        with patch("gui.app.ModelManager"), patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX 3080",
+                "device": "cuda:0",
+                "used_vram_gb": 2.1,
+                "total_vram_gb": 10.0,
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
 
+            app = RealESRGANApp()
+            try:
+                tb = app.toolbar_widget
+                assert tb is not None
 
+                texts = tb.get_button_texts()
+                assert "open" in texts and len(texts["open"]) > 0
+                assert "save" in texts and len(texts["save"]) > 0
+                assert "output" in texts and len(texts["output"]) > 0
+                assert "about" in texts and len(texts["about"]) > 0
 
+                # Query helpers on RealESRGANApp
+                model = app.selected_model()
+                assert isinstance(model, str) and len(model) > 0
 
+                category = app.selected_category()
+                assert isinstance(category, str) and len(category) > 0
 
+                scale = app.selected_scale()
+                assert isinstance(scale, (int, float)) and scale > 0
 
+                out_dir = app.output_directory()
+                assert isinstance(out_dir, str)
 
+                assert isinstance(app.is_face_enhance_enabled(), bool)
+                assert isinstance(app.is_denoise_enabled(), bool)
+            finally:
+                app.destroy()

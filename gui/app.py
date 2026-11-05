@@ -201,7 +201,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         # Show CPU warning if no GPU
         if gpu["device"] == "cpu":
             self._status_text.configure(
-                text="⚠ No CUDA GPU - running in CPU mode (slower)",
+                text="Warning: No CUDA GPU - running in CPU mode (slower)",
                 text_color="#fbbf24",
             )
 
@@ -814,3 +814,27 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     def can_start_upscale(self) -> bool:
         """Check whether an upscale operation can currently be started."""
         return (self.queue_panel.get_selected() is not None) and (not self.upscale_ctrl.is_busy)
+
+    def selected_model(self) -> str:
+        """Return the display name of the currently selected model."""
+        return self.settings_panel.current_model()
+
+    def selected_category(self) -> str:
+        """Return the currently selected model category name."""
+        return self.settings_panel.current_category()
+
+    def selected_scale(self) -> float:
+        """Return the currently configured upscaling multiplier."""
+        return self.settings_panel.current_scale()
+
+    def output_directory(self) -> str:
+        """Return the configured target output directory path."""
+        return str(self.settings_panel.get_settings().get("output_folder", ""))
+
+    def is_face_enhance_enabled(self) -> bool:
+        """Return True if face enhancement is enabled in settings."""
+        return self.settings_panel.is_face_enhance_enabled()
+
+    def is_denoise_enabled(self) -> bool:
+        """Return True if denoising is enabled in settings."""
+        return self.settings_panel.is_denoise_enabled()

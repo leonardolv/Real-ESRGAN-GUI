@@ -11,6 +11,19 @@
 
 ## Completed
 
+### Task: Toolbar button texts accessor, RealESRGANApp settings query helpers, and unit tests
+- **Completed**: 2026-11-05
+- **Changes**:
+  - `gui/widgets/toolbar.py`:
+    - Added `get_button_texts() -> dict[str, str]` to expose current button labels for inspection and localization.
+  - `gui/app.py`:
+    - Added public ergonomic settings query helpers on `RealESRGANApp`: `selected_model()`, `selected_category()`, `selected_scale()`, `output_directory()`, `is_face_enhance_enabled()`, and `is_denoise_enabled()`.
+    - Sanitized CPU fallback status bar label to ASCII text.
+  - `tests/test_gui.py`:
+    - Added unit test `test_toolbar_button_texts_and_app_settings_query_helpers` verifying toolbar button labels and app settings query accessors.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (38 passed in 7.71s, 0 errors).
+- **Status**: Completed
+
 ### Task: RealESRGANApp panel properties, drop zone visibility, and queue query helpers
 - **Completed**: 2026-11-05
 - **Changes**:
