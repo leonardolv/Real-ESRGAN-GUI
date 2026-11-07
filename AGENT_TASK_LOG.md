@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-07: Hardened RealESRGANApp timer lifecycle with polling handle cancellation on destroy, normalized Tcl/Tk paths with forward slashes, and raised Windows stdio limit. All 41 tests passed (3 skipped).
 - 2026-11-05: Added Toolbar button texts accessor, RealESRGANApp settings query helpers, and unit tests. All 38 GUI tests passed.
 - 2026-11-05: Enhanced RealESRGANApp with panel widget properties, drop zone visibility checks, and queue query helpers. All 37 GUI tests passed.
 - 2026-11-05: Enhanced RealESRGANApp with public status widget properties, operational state query helpers, and unit tests. All 39 tests passed (3 skipped).
@@ -35,6 +36,12 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-07 UTC - Hardened RealESRGANApp Timer Lifecycle, Normalized Tcl/Tk Paths, and Raised Stdio Limit
+Status: **done** (Antigravity)
+- `gui/app.py`: Added `self._poll_id` tracking for the 50ms worker message polling loop, added window existence verification inside `_poll_worker` to prevent callbacks on destroyed widgets, and overrode `destroy()` to cleanly cancel `_poll_id` via `after_cancel()` upon shutdown.
+- `tests/conftest.py`: Normalized `TCL_LIBRARY` and `TK_LIBRARY` path strings with forward slashes to prevent Tcl's interpreter from wrapping paths in curly braces on Windows, and raised Windows C runtime stdio file descriptor limit to 2048 via `_setmaxstdio` to eliminate intermittent Tcl `fopen` read failures during test execution.
+- Validation: Verified headlessly with `python -m pytest tests/ -v` (41 passed, 3 skipped in 11.65s, 0 errors).
 
 ### 2026-11-05 UTC - Toolbar Button Texts Accessor, RealESRGANApp Settings Query Helpers, and Unit Tests
 Status: **done** (Antigravity)

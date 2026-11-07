@@ -101,6 +101,9 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         # ---- Window events ---- #
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
+        # ---- Polling handle ---- #
+        self._poll_id = None
+
         # ---- Start polling worker messages ---- #
         self._poll_worker()
 
@@ -373,8 +376,13 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
 
     def _poll_worker(self) -> None:
         """Poll the worker message queue (called every 50ms)."""
+        try:
+            if not self.winfo_exists():
+                return
+        except Exception:
+            return
         self.upscale_ctrl.poll()
-        self.after(50, self._poll_worker)
+        self._poll_id = self.after(50, self._poll_worker)
 
     def _on_worker_message(self, msg: WorkerMessage) -> None:
         """Handle messages from the upscale worker thread.
@@ -706,6 +714,16 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
                 pass
 
         self.destroy()
+
+    def destroy(self) -> None:
+        """Cleanly cancel timers and destroy window."""
+        if hasattr(self, "_poll_id") and self._poll_id is not None:
+            try:
+                self.after_cancel(self._poll_id)
+            except Exception:
+                pass
+            self._poll_id = None
+        super().destroy()
 
     def _update_gpu_info(self) -> None:
         """Refresh GPU VRAM usage in the status bar."""

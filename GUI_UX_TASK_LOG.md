@@ -11,6 +11,16 @@
 
 ## Completed
 
+### Task: Hardened RealESRGANApp timer lifecycle, normalized Tcl/Tk paths, and raised stdio limit
+- **Completed**: 2026-11-07
+- **Changes**:
+  - `gui/app.py`:
+    - Added `self._poll_id` tracking for the 50ms worker message polling loop, added window existence verification inside `_poll_worker` to prevent callbacks on destroyed widgets, and overrode `destroy()` to cleanly cancel `_poll_id` via `after_cancel()` upon shutdown.
+  - `tests/conftest.py`:
+    - Normalized `TCL_LIBRARY` and `TK_LIBRARY` path strings with forward slashes to prevent Tcl's interpreter from wrapping paths in curly braces on Windows, and raised Windows C runtime stdio file descriptor limit to 2048 via `_setmaxstdio` to eliminate intermittent Tcl `fopen` read failures during test execution.
+- **Verification**: Verified headlessly with `python -m pytest tests/ -v` (41 passed, 3 skipped in 11.65s, 0 errors).
+- **Status**: Completed
+
 ### Task: Toolbar button texts accessor, RealESRGANApp settings query helpers, and unit tests
 - **Completed**: 2026-11-05
 - **Changes**:
