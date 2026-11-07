@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-07: Added RealESRGANApp fullscreen, queue triggers, upscale actions, settings accessors, and unit tests. All 42 tests passed (3 skipped).
 - 2026-11-07: Hardened RealESRGANApp timer lifecycle with polling handle cancellation on destroy, normalized Tcl/Tk paths with forward slashes, and raised Windows stdio limit. All 41 tests passed (3 skipped).
 - 2026-11-05: Added Toolbar button texts accessor, RealESRGANApp settings query helpers, and unit tests. All 38 GUI tests passed.
 - 2026-11-05: Enhanced RealESRGANApp with panel widget properties, drop zone visibility checks, and queue query helpers. All 37 GUI tests passed.
@@ -36,6 +37,13 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-07 UTC - RealESRGANApp Fullscreen, Queue Triggers, Upscale Actions, Settings Accessors, and Unit Tests
+Status: **done** (Antigravity)
+- `gui/app.py`: Added fullscreen state query and toggle trigger (`is_fullscreen()`, `trigger_toggle_fullscreen()`); added queue action triggers (`trigger_delete_selected()`, `trigger_clear_queue()`); added upscale action triggers (`trigger_upscale()`, `trigger_process_all()`); exposed `denoise_strength()` and `output_extension()` settings accessors on `RealESRGANApp`; standardized GPU VRAM status bar text with standard hyphen.
+- `gui/widgets/queue_panel.py`: Added `add_item(item: QueueItem)` helper to directly append items and trigger selection.
+- `tests/test_gui.py`: Added unit test `test_real_esrgan_app_fullscreen_and_action_triggers` verifying fullscreen toggling, settings queries, empty and populated queue triggers, and batch processing actions.
+- Validation: Verified headlessly with `python -m pytest tests/ -v` (42 passed, 3 skipped in 14.96s, 0 errors).
 
 ### 2026-11-07 UTC - Hardened RealESRGANApp Timer Lifecycle, Normalized Tcl/Tk Paths, and Raised Stdio Limit
 Status: **done** (Antigravity)

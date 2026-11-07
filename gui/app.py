@@ -186,7 +186,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         gpu = self.upscale_ctrl.get_gpu_info()
         gpu_text = gpu["name"]
         if gpu["total_vram_gb"] > 0:
-            gpu_text += f"  ·  VRAM: {gpu['used_vram_gb']}/{gpu['total_vram_gb']} GB"
+            gpu_text += f" - VRAM: {gpu['used_vram_gb']}/{gpu['total_vram_gb']} GB"
 
         self._gpu_label = ctk.CTkLabel(
             status,
@@ -729,7 +729,7 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         """Refresh GPU VRAM usage in the status bar."""
         gpu = self.upscale_ctrl.get_gpu_info()
         if gpu["total_vram_gb"] > 0:
-            text = f"{gpu['name']}  ·  VRAM: {gpu['used_vram_gb']}/{gpu['total_vram_gb']} GB"
+            text = f"{gpu['name']} - VRAM: {gpu['used_vram_gb']}/{gpu['total_vram_gb']} GB"
         else:
             text = gpu["name"]
         self._gpu_label.configure(text=text)
@@ -856,3 +856,51 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     def is_denoise_enabled(self) -> bool:
         """Return True if denoising is enabled in settings."""
         return self.settings_panel.is_denoise_enabled()
+
+    def denoise_strength(self) -> float:
+        """Return the currently configured denoising strength (0.0 to 1.0)."""
+        return self.settings_panel.denoise_strength()
+
+    def output_extension(self) -> str:
+        """Return the currently selected output image extension (e.g. 'png')."""
+        return self.settings_panel.output_extension()
+
+    def is_fullscreen(self) -> bool:
+        """Check whether the application is currently in fullscreen mode."""
+        try:
+            return bool(self.attributes("-fullscreen"))
+        except Exception:
+            return False
+
+    def trigger_toggle_fullscreen(self) -> bool:
+        """Toggle fullscreen mode and return the new fullscreen state."""
+        self._toggle_fullscreen()
+        return self.is_fullscreen()
+
+    def trigger_delete_selected(self) -> bool:
+        """Delete the currently selected queue item if one is selected."""
+        if self.selected_queue_item() is not None:
+            self._delete_selected()
+            return True
+        return False
+
+    def trigger_clear_queue(self) -> bool:
+        """Clear all items from the queue if not currently busy."""
+        if self.has_queue_items() and not self.is_upscaling():
+            self.queue_panel.clear()
+            return True
+        return False
+
+    def trigger_upscale(self) -> bool:
+        """Trigger upscaling for the selected item if possible."""
+        if self.can_start_upscale():
+            self._start_upscale()
+            return True
+        return False
+
+    def trigger_process_all(self) -> bool:
+        """Trigger batch processing for all queue items if possible."""
+        if self.has_queue_items() and not self.is_upscaling():
+            self._process_all()
+            return True
+        return False

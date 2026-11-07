@@ -1258,3 +1258,76 @@ class TestGUIWidgetsHeadless:
                 assert isinstance(app.is_denoise_enabled(), bool)
             finally:
                 app.destroy()
+
+    def test_real_esrgan_app_fullscreen_and_action_triggers(self):
+        """Verify RealESRGANApp fullscreen, settings accessors, and action triggers."""
+        import gc
+        from gui.app import RealESRGANApp
+        from gui.widgets.queue_panel import QueueItem
+        from unittest.mock import patch, MagicMock
+
+        with patch("gui.app.ModelManager"), patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX 3080",
+                "device": "cuda:0",
+                "used_vram_gb": 2.1,
+                "total_vram_gb": 10.0,
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
+
+            app = RealESRGANApp()
+            app.withdraw()
+            try:
+                # Settings accessors
+                assert isinstance(app.denoise_strength(), (int, float))
+                assert isinstance(app.output_extension(), str)
+                assert len(app.output_extension()) > 0
+
+                # Fullscreen
+                initial_fs = app.is_fullscreen()
+                assert isinstance(initial_fs, bool)
+                new_fs = app.trigger_toggle_fullscreen()
+                assert new_fs != initial_fs
+                toggled_back = app.trigger_toggle_fullscreen()
+                assert toggled_back == initial_fs
+
+                # Triggers on empty queue
+                assert app.trigger_delete_selected() is False
+                assert app.trigger_clear_queue() is False
+                assert app.trigger_upscale() is False
+                assert app.trigger_process_all() is False
+
+                # Add items to queue
+                item1 = QueueItem(path="C:/dummy/test1.png")
+                item2 = QueueItem(path="C:/dummy/test2.png")
+                app.queue_panel.add_item(item1)
+                app.queue_panel.add_item(item2)
+                assert app.queue_count() == 2
+                assert app.has_queue_items() is True
+
+                # Select and delete item
+                app.queue_panel.select(0)
+                assert app.selected_queue_index() == 0
+                assert app.trigger_delete_selected() is True
+                assert app.queue_count() == 1
+
+                # Clear queue
+                assert app.trigger_clear_queue() is True
+                assert app.queue_count() == 0
+                assert app.has_queue_items() is False
+
+                # Test trigger_upscale and trigger_process_all when items present
+                app.queue_panel.add_item(item1)
+                app.queue_panel.select(0)
+                with patch.object(app, "_start_upscale") as mock_start:
+                    assert app.trigger_upscale() is True
+                    mock_start.assert_called_once()
+
+                with patch.object(app, "_process_all") as mock_batch:
+                    assert app.trigger_process_all() is True
+                    mock_batch.assert_called_once()
+            finally:
+                app._on_close()
+                gc.collect()

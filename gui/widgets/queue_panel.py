@@ -226,6 +226,13 @@ class QueuePanel(ctk.CTkFrame):
         if self._selected_idx < 0 and self._items:
             self.select(0)
 
+    def add_item(self, item: QueueItem) -> None:
+        """Add a single QueueItem directly to the queue."""
+        self._items.append(item)
+        self._rebuild_list()
+        if self._selected_idx < 0 and self._items:
+            self.select(0)
+
     def clear(self) -> None:
         """Remove all items from the queue."""
         self._items.clear()
