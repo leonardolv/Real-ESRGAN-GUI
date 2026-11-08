@@ -964,3 +964,31 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         """Set preview before/after slider position."""
         self.preview.set_slider_position(pos)
 
+    def progress_percent(self) -> float:
+        """Return current operation completion percentage (0.0 to 100.0)."""
+        return self.progress.current_percent()
+
+    def progress_status_text(self) -> str:
+        """Return current progress status label text."""
+        return self.progress.status_text()
+
+    def progress_eta_text(self) -> str:
+        """Return current ETA label text."""
+        return self.progress.eta_text()
+
+    def progress_percent_text(self) -> str:
+        """Return current completion percentage label text."""
+        return self.progress.percent_text()
+
+    def is_progress_active(self) -> bool:
+        """Return True if an upscale progress tracking operation is active."""
+        return self.progress.is_active()
+
+    def trigger_cancel_progress(self) -> bool:
+        """Programmatically request cancellation of current upscale operation."""
+        if self.upscale_ctrl.is_busy:
+            self.upscale_ctrl.cancel()
+            self.progress.trigger_cancel()
+            return True
+        return False
+

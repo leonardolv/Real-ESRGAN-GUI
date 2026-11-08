@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-08: Added ProgressPanel cancel trigger and RealESRGANApp progress query accessors and cancellation trigger; hardened Windows Tcl/Tk stdio file descriptor allocation with ucrtbase maxstdio and test garbage collection. All 41 tests passed.
 - 2026-11-08: Added SettingsPanel and PreviewCanvas ergonomic setters, triggers, and RealESRGANApp preview helpers. All 43 tests passed (3 skipped).
 - 2026-11-07: Added RealESRGANApp fullscreen, queue triggers, upscale actions, settings accessors, and unit tests. All 42 tests passed (3 skipped).
 - 2026-11-07: Hardened RealESRGANApp timer lifecycle with polling handle cancellation on destroy, normalized Tcl/Tk paths with forward slashes, and raised Windows stdio limit. All 41 tests passed (3 skipped).
@@ -38,6 +39,15 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-08 UTC - ProgressPanel Cancel Trigger and RealESRGANApp Progress Helpers
+Status: **done** (Antigravity)
+- tests/conftest.py: Configured ucrtbase _setmaxstdio(2048) alongside msvcrt to expand Windows C runtime file descriptor capacity for Tcl/Tk, and added autouse pytest fixture invoking gc.collect() to reclaim abandoned Tcl interpreters across tests.
+- gui/widgets/progress_bar.py: Added trigger_cancel() helper on ProgressPanel enabling programmatic cancellation triggers.
+- gui/app.py: Exposed progress state query helpers on RealESRGANApp (progress_percent(), progress_status_text(), progress_eta_text(), progress_percent_text(), is_progress_active()) and cancellation action trigger trigger_cancel_progress().
+- tests/test_gui.py: Added unit test test_progress_panel_cancel_trigger_and_app_progress_helpers asserting cancel triggers on ProgressPanel and progress state query and cancellation on RealESRGANApp.
+- Validation: Verified headlessly with python -m pytest tests/test_gui.py -v (41 passed in 17.43s, 0 errors).
+
 
 ### 2026-11-08 UTC - SettingsPanel and PreviewCanvas Ergonomic Setters, Triggers, and RealESRGANApp Preview Helpers
 Status: **done** (Antigravity)

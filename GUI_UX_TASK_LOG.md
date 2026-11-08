@@ -11,6 +11,22 @@
 
 ## Completed
 
+### Task: ProgressPanel cancel trigger, RealESRGANApp progress query accessors, and cancellation trigger
+- **Completed**: 2026-11-08
+- **Changes**:
+  - `tests/conftest.py`:
+    - Configured `ucrtbase` `_setmaxstdio(2048)` alongside `msvcrt` to expand Windows C runtime stdio file descriptor capacity for Tcl/Tk, and added autouse pytest fixture invoking `gc.collect()` to reclaim abandoned Tcl interpreters across tests.
+  - `gui/widgets/progress_bar.py`:
+    - Added `trigger_cancel() -> bool` on `ProgressPanel` enabling programmatic cancellation triggers.
+  - `gui/app.py`:
+    - Exposed progress state query helpers on `RealESRGANApp`: `progress_percent() -> float`, `progress_status_text() -> str`, `progress_eta_text() -> str`, `progress_percent_text() -> str`, `is_progress_active() -> bool`.
+    - Added cancellation action trigger `trigger_cancel_progress() -> bool`.
+  - `tests/test_gui.py`:
+    - Added unit test `test_progress_panel_cancel_trigger_and_app_progress_helpers` asserting cancel triggers on `ProgressPanel` and progress state queries and cancellation on `RealESRGANApp`.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (41 passed in 17.43s, 0 errors).
+- **Status**: Completed
+
+
 ### Task: SettingsPanel and PreviewCanvas ergonomic setters, triggers, and RealESRGANApp preview helpers
 - **Completed**: 2026-11-08
 - **Changes**:

@@ -1396,3 +1396,66 @@ class TestGUIWidgetsHeadless:
             finally:
                 app._on_close()
                 gc.collect()
+
+    def test_progress_panel_cancel_trigger_and_app_progress_helpers(self):
+        """Test ProgressPanel cancel trigger and RealESRGANApp progress accessors."""
+        import gc
+        from unittest.mock import MagicMock, patch
+        from gui.app import RealESRGANApp
+        from gui.widgets.progress_bar import ProgressPanel
+        import customtkinter as ctk
+
+        root = ctk.CTk()
+        root.withdraw()
+        try:
+            panel = ProgressPanel(root)
+            cancelled = []
+            panel.start(cancel_callback=lambda: cancelled.append(True), batch_total=2)
+            assert panel.is_active() is True
+            assert panel.is_cancelling() is False
+            assert panel.trigger_cancel() is True
+            assert len(cancelled) == 1
+            assert panel.is_cancelling() is True
+            assert panel.trigger_cancel() is False
+            panel.destroy()
+        finally:
+            root.destroy()
+            gc.collect()
+
+        with patch("gui.app.ModelManager"), \
+             patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX",
+                "total_vram_gb": 8.0,
+                "used_vram_gb": 2.0,
+                "device": "cuda",
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
+
+            app = RealESRGANApp()
+            app.withdraw()
+            try:
+                assert app.is_progress_active() is False
+                assert app.progress_percent() == 0.0
+                assert app.progress_status_text() == "Ready"
+                assert app.progress_eta_text() == ""
+                assert app.progress_percent_text() == ""
+
+                # Simulate progress update
+                app.progress.start(batch_total=1)
+                assert app.is_progress_active() is True
+                app.progress.update_progress(50.0, "Upscaling image...")
+                assert app.progress_percent() == 50.0
+                assert "Upscaling" in app.progress_status_text()
+                assert "50%" in app.progress_percent_text()
+
+                # Trigger cancel
+                assert app.trigger_cancel_progress() is False  # not busy
+                mock_ctrl.is_busy = True
+                assert app.trigger_cancel_progress() is True
+                mock_ctrl.cancel.assert_called_once()
+            finally:
+                app._on_close()
+                gc.collect()

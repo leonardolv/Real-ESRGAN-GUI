@@ -1,5 +1,6 @@
 """Pytest configuration and global patches."""
 
+import gc
 import os
 import sys
 
@@ -14,11 +15,23 @@ if os.path.isdir(tk_dir):
 
 # Increase stdio file descriptor limit on Windows to prevent C fopen exhaustions during repeated Tcl/Tk loads
 if sys.platform == "win32":
-    try:
-        import ctypes
-        ctypes.cdll.msvcrt._setmaxstdio(2048)
-    except Exception:
-        pass
+    for lib_name in ("ucrtbase", "msvcrt"):
+        try:
+            import ctypes
+            lib = ctypes.CDLL(lib_name)
+            lib._setmaxstdio(2048)
+        except Exception:
+            pass
+
+try:
+    import pytest
+
+    @pytest.fixture(autouse=True)
+    def _cleanup_tk():
+        yield
+        gc.collect()
+except ImportError:
+    pass
 
 # Patch torchvision for basicsr compatibility on newer PyTorch/Torchvision versions
 try:

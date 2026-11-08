@@ -145,6 +145,13 @@ class ProgressPanel(ctk.CTkFrame):
         """Return current percentage label text."""
         return str(self._pct_label.cget("text"))
 
+    def trigger_cancel(self) -> bool:
+        """Trigger cancellation programmatically if active."""
+        if self.is_active() and not self.is_cancelling():
+            self._on_cancel()
+            return True
+        return False
+
     # ------------------------------------------------------------------ #
     #  Public API                                                         #
     # ------------------------------------------------------------------ #
