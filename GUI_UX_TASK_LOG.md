@@ -11,6 +11,22 @@
 
 ## Completed
 
+### Task: QueuePanel item reordering, context menu actions, keyboard navigation, triggers, and RealESRGANApp queue helpers
+- **Completed**: 2026-11-08
+- **Changes**:
+  - `gui/widgets/queue_panel.py`:
+    - Implemented item reordering methods: `move_up(idx: int) -> bool` and `move_down(idx: int) -> bool` with selection tracking and list rebuilding.
+    - Added "Move Up" and "Move Down" commands to right-click context menu when item is not at the top or bottom boundary.
+    - Added Alt+Up and Alt+Down keyboard navigation bindings (`_on_key_move_up`, `_on_key_move_down`) to reorder the selected queue item.
+    - Added ergonomic queries: `count_text() -> str`, `drop_banner_text() -> str`, `is_drop_banner_visible() -> bool`, `item_paths() -> List[str]`, `item_filenames() -> List[str]`, `item_status(idx: int) -> Optional[ItemStatus]`, and `is_item_video(idx: int) -> bool`.
+    - Added programmatic triggers: `trigger_add_files()`, `trigger_process_all()`, `trigger_clear_all()`, `trigger_select(idx: int)`, `trigger_remove(idx: int)`, `trigger_move_up(idx: int)`, and `trigger_move_down(idx: int)`.
+  - `gui/app.py`:
+    - Added forwarded queue helpers on `RealESRGANApp`: `queue_item_paths() -> List[str]`, `queue_item_filenames() -> List[str]`, `queue_count_text() -> str`, `trigger_select_queue_index(idx: int) -> bool`, `trigger_remove_queue_index(idx: int) -> bool`, `trigger_move_queue_item_up(idx: int) -> bool`, and `trigger_move_queue_item_down(idx: int) -> bool`.
+  - `tests/test_gui.py`:
+    - Added unit test `test_queue_panel_reordering_triggers_and_app_queue_helpers` testing item reordering, Alt+Up/Down shortcuts, context menu actions, triggers, and application queue helpers.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (43 passed in 28.58s, 0 errors).
+- **Status**: Completed
+
 ### Task: Toolbar and DropZone triggers, text inspection, and RealESRGANApp integration
 - **Completed**: 2026-11-08
 - **Changes**:

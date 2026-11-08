@@ -265,6 +265,30 @@ class QueuePanel(ctk.CTkFrame):
             if self._on_item_selected:
                 self._on_item_selected(self._items[idx])
 
+    def move_up(self, idx: int) -> bool:
+        """Move item at index one position up in the queue."""
+        if 0 < idx < len(self._items):
+            self._items[idx - 1], self._items[idx] = self._items[idx], self._items[idx - 1]
+            if self._selected_idx == idx:
+                self._selected_idx = idx - 1
+            elif self._selected_idx == idx - 1:
+                self._selected_idx = idx
+            self._rebuild_list()
+            return True
+        return False
+
+    def move_down(self, idx: int) -> bool:
+        """Move item at index one position down in the queue."""
+        if 0 <= idx < len(self._items) - 1:
+            self._items[idx + 1], self._items[idx] = self._items[idx], self._items[idx + 1]
+            if self._selected_idx == idx:
+                self._selected_idx = idx + 1
+            elif self._selected_idx == idx + 1:
+                self._selected_idx = idx
+            self._rebuild_list()
+            return True
+        return False
+
     def update_item_status(
         self, idx: int, status: ItemStatus, progress: float = 0, output_path: str = ""
     ) -> None:
@@ -482,6 +506,17 @@ class QueuePanel(ctk.CTkFrame):
                 command=lambda: self._open_file_in_explorer(item.output_path),
             )
 
+        if idx > 0:
+            menu.add_command(
+                label="Move Up",
+                command=lambda: self.move_up(idx),
+            )
+        if idx < len(self._items) - 1:
+            menu.add_command(
+                label="Move Down",
+                command=lambda: self.move_down(idx),
+            )
+
         menu.add_separator()
 
         if item.status in (ItemStatus.COMPLETED, ItemStatus.ERROR):
@@ -612,6 +647,8 @@ class QueuePanel(ctk.CTkFrame):
                 target.bind("<Down>", self._on_key_down, add="+")
                 target.bind("<Delete>", self._on_key_delete, add="+")
                 target.bind("<BackSpace>", self._on_key_delete, add="+")
+                target.bind("<Alt-Up>", self._on_key_move_up, add="+")
+                target.bind("<Alt-Down>", self._on_key_move_down, add="+")
             except Exception:
                 pass
 
@@ -650,6 +687,25 @@ class QueuePanel(ctk.CTkFrame):
         if self._is_text_entry_focused() or not self._items or self._selected_idx < 0:
             return None
         self.remove(self._selected_idx)
+        return "break"
+
+    def _on_key_move_up(self, event=None) -> Optional[str]:
+        """Move the currently selected item up in the queue."""
+        if self._is_text_entry_focused() or not self._items or self._selected_idx <= 0:
+            return None
+        self.move_up(self._selected_idx)
+        return "break"
+
+    def _on_key_move_down(self, event=None) -> Optional[str]:
+        """Move the currently selected item down in the queue."""
+        if (
+            self._is_text_entry_focused()
+            or not self._items
+            or self._selected_idx < 0
+            or self._selected_idx >= len(self._items) - 1
+        ):
+            return None
+        self.move_down(self._selected_idx)
         return "break"
 
 
@@ -718,3 +774,72 @@ class QueuePanel(ctk.CTkFrame):
     def button_tooltips(self) -> List[ToolTip]:
         """Return list of active tooltips on panel buttons."""
         return list(self._button_tooltips)
+
+    def count_text(self) -> str:
+        """Return text currently displayed in the queue count label."""
+        return self._count_label.cget("text")
+
+    def drop_banner_text(self) -> str:
+        """Return text currently displayed in the drop banner label."""
+        return self._drop_banner_label.cget("text")
+
+    def is_drop_banner_visible(self) -> bool:
+        """Return True if the drag-and-drop banner is currently displayed."""
+        try:
+            return bool(self._drop_banner.winfo_ismapped())
+        except Exception:
+            return False
+
+    def item_paths(self) -> List[str]:
+        """Return file paths of all items currently in the queue."""
+        return [item.path for item in self._items]
+
+    def item_filenames(self) -> List[str]:
+        """Return base filenames of all items currently in the queue."""
+        return [item.filename for item in self._items]
+
+    def item_status(self, idx: int) -> Optional[ItemStatus]:
+        """Return status enum of the item at index, or None."""
+        if 0 <= idx < len(self._items):
+            return self._items[idx].status
+        return None
+
+    def is_item_video(self, idx: int) -> bool:
+        """Return True if item at index is a video file."""
+        if 0 <= idx < len(self._items):
+            return bool(self._items[idx].is_video)
+        return False
+
+    def trigger_add_files(self) -> None:
+        """Programmatically trigger add files file dialog action."""
+        self._on_add_click()
+
+    def trigger_process_all(self) -> None:
+        """Programmatically trigger the process all action button."""
+        self._process_all_btn.invoke()
+
+    def trigger_clear_all(self) -> None:
+        """Programmatically trigger the clear all action button."""
+        self._clear_all_btn.invoke()
+
+    def trigger_select(self, idx: int) -> bool:
+        """Programmatically select item at index."""
+        if 0 <= idx < len(self._items):
+            self.select(idx)
+            return True
+        return False
+
+    def trigger_remove(self, idx: int) -> bool:
+        """Programmatically remove item at index."""
+        if 0 <= idx < len(self._items):
+            self.remove(idx)
+            return True
+        return False
+
+    def trigger_move_up(self, idx: int) -> bool:
+        """Programmatically move item at index one position up."""
+        return self.move_up(idx)
+
+    def trigger_move_down(self, idx: int) -> bool:
+        """Programmatically move item at index one position down."""
+        return self.move_down(idx)

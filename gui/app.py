@@ -1035,3 +1035,31 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     def trigger_drop_files(self, paths: List[str]) -> bool:
         """Simulate dropping files onto the application drop zone."""
         return self.drop_zone.trigger_drop_files(paths)
+
+    def queue_item_paths(self) -> List[str]:
+        """Return list of file paths in the processing queue."""
+        return self.queue_panel.item_paths()
+
+    def queue_item_filenames(self) -> List[str]:
+        """Return list of file names in the processing queue."""
+        return self.queue_panel.item_filenames()
+
+    def queue_count_text(self) -> str:
+        """Return the formatted count label text of the queue."""
+        return self.queue_panel.count_text()
+
+    def trigger_select_queue_index(self, idx: int) -> bool:
+        """Programmatically select item at queue index."""
+        return self.queue_panel.trigger_select(idx)
+
+    def trigger_remove_queue_index(self, idx: int) -> bool:
+        """Programmatically remove item at queue index."""
+        return self.queue_panel.trigger_remove(idx)
+
+    def trigger_move_queue_item_up(self, idx: int) -> bool:
+        """Programmatically move item at queue index one position up."""
+        return self.queue_panel.trigger_move_up(idx)
+
+    def trigger_move_queue_item_down(self, idx: int) -> bool:
+        """Programmatically move item at queue index one position down."""
+        return self.queue_panel.trigger_move_down(idx)

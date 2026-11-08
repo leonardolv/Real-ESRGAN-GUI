@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-08: Added QueuePanel item reordering (move_up, move_down), context menu actions, Alt+Up/Down keyboard navigation, programmatic triggers, and RealESRGANApp queue helper methods. All 43 tests passed.
 - 2026-11-08: Added ProgressPanel cancel trigger and RealESRGANApp progress query accessors and cancellation trigger; hardened Windows Tcl/Tk stdio file descriptor allocation with ucrtbase maxstdio and test garbage collection. All 41 tests passed.
 - 2026-11-08: Added SettingsPanel and PreviewCanvas ergonomic setters, triggers, and RealESRGANApp preview helpers. All 43 tests passed (3 skipped).
 - 2026-11-07: Added RealESRGANApp fullscreen, queue triggers, upscale actions, settings accessors, and unit tests. All 42 tests passed (3 skipped).
@@ -39,6 +40,13 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-08 UTC - QueuePanel Item Reordering, Context Menu, and App Helpers
+Status: **done** (Antigravity)
+- gui/widgets/queue_panel.py: Implemented item reordering methods move_up(idx) and move_down(idx), Alt+Up and Alt+Down keyboard navigation bindings, right-click context menu 'Move Up' and 'Move Down' commands, text queries (count_text, drop_banner_text, is_drop_banner_visible, item_paths, item_filenames, item_status, is_item_video), and programmatic triggers (trigger_add_files, trigger_process_all, trigger_clear_all, trigger_select, trigger_remove, trigger_move_up, trigger_move_down).
+- gui/app.py: Added forwarded queue helpers on RealESRGANApp (queue_item_paths, queue_item_filenames, queue_count_text, trigger_select_queue_index, trigger_remove_queue_index, trigger_move_queue_item_up, trigger_move_queue_item_down).
+- tests/test_gui.py: Added unit test test_queue_panel_reordering_triggers_and_app_queue_helpers verifying reordering, keyboard shortcuts, context menus, and application helper methods.
+- Validation: Verified headlessly with python -m pytest tests/test_gui.py -v (43 passed in 28.58s, 0 errors).
 
 ### 2026-11-08 UTC - ProgressPanel Cancel Trigger and RealESRGANApp Progress Helpers
 Status: **done** (Antigravity)

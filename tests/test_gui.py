@@ -1,3 +1,4 @@
+import gc
 import os
 import sys
 import tempfile
@@ -1004,6 +1005,7 @@ class TestGUIWidgetsHeadless:
                 assert app.status_message() == "Processing test image..."
             finally:
                 app._on_close()
+                gc.collect()
 
     def test_real_esrgan_app_panel_properties_and_operational_helpers(self, tmp_path):
         """Test RealESRGANApp panel properties, drop zone visibility, and queue query helpers."""
@@ -1231,6 +1233,7 @@ class TestGUIWidgetsHeadless:
             mock_ctrl_cls.return_value = mock_ctrl
 
             app = RealESRGANApp()
+            app.withdraw()
             try:
                 tb = app.toolbar_widget
                 assert tb is not None
@@ -1257,7 +1260,8 @@ class TestGUIWidgetsHeadless:
                 assert isinstance(app.is_face_enhance_enabled(), bool)
                 assert isinstance(app.is_denoise_enabled(), bool)
             finally:
-                app.destroy()
+                app._on_close()
+                gc.collect()
 
     def test_real_esrgan_app_fullscreen_and_action_triggers(self):
         """Verify RealESRGANApp fullscreen, settings accessors, and action triggers."""
@@ -1575,6 +1579,121 @@ class TestGUIWidgetsHeadless:
                 Path(test_sample).touch()
                 assert app.trigger_drop_files([test_sample]) is True
                 assert app.queue_count() == 1
+            finally:
+                app._on_close()
+                gc.collect()
+
+    def test_queue_panel_reordering_triggers_and_app_queue_helpers(self, ctk_root, tmp_path):
+        """Test QueuePanel item reordering (move_up, move_down), context menu, and app helpers."""
+        from unittest.mock import MagicMock, patch
+        from gui.widgets.queue_panel import QueuePanel, ItemStatus, QueueItem
+        from gui.app import RealESRGANApp
+        import gc
+
+        # 1. Direct QueuePanel reordering and trigger tests
+        panel = QueuePanel(ctk_root)
+        try:
+            assert panel.count_text() == "0 files"
+            assert panel.item_count() == 0
+            assert panel.item_paths() == []
+            assert panel.item_filenames() == []
+            assert panel.is_empty() is True
+
+            f1 = str(tmp_path / "img1.png")
+            f2 = str(tmp_path / "img2.png")
+            f3 = str(tmp_path / "img3.png")
+            Path(f1).touch()
+            Path(f2).touch()
+            Path(f3).touch()
+
+            panel.add_files([f1, f2, f3])
+            assert panel.item_count() == 3
+            assert panel.item_paths() == [f1, f2, f3]
+            assert panel.item_filenames() == ["img1.png", "img2.png", "img3.png"]
+            assert panel.count_text() == "3 files"
+            assert panel.item_status(0) == ItemStatus.QUEUED
+            assert panel.is_item_video(0) is False
+
+            # Selection triggers
+            assert panel.trigger_select(1) is True
+            assert panel.selected_index() == 1
+            assert panel.trigger_select(99) is False
+
+            # Move Up / Down
+            assert panel.trigger_move_up(0) is False  # Cannot move top item up
+            assert panel.trigger_move_up(1) is True
+            assert panel.item_filenames() == ["img2.png", "img1.png", "img3.png"]
+            assert panel.selected_index() == 0  # Selected index followed the item
+
+            assert panel.trigger_move_down(2) is False  # Cannot move bottom item down
+            assert panel.trigger_move_down(0) is True
+            assert panel.item_filenames() == ["img1.png", "img2.png", "img3.png"]
+            assert panel.selected_index() == 1
+
+            # Keyboard navigation handlers
+            assert panel._on_key_move_up() == "break"
+            assert panel.selected_index() == 0
+            assert panel._on_key_move_up() is None  # At top
+
+            assert panel._on_key_move_down() == "break"
+            assert panel.selected_index() == 1
+
+            # Removal trigger
+            assert panel.trigger_remove(1) is True
+            assert panel.item_count() == 2
+            assert panel.item_filenames() == ["img1.png", "img3.png"]
+
+            # Action triggers
+            panel.trigger_clear_all()
+            assert panel.is_empty() is True
+            assert panel.item_count() == 0
+        finally:
+            panel.destroy()
+            gc.collect()
+
+        # 2. RealESRGANApp queue integration helpers
+        with patch("gui.app.ModelManager"),              patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX",
+                "total_vram_gb": 8.0,
+                "used_vram_gb": 2.0,
+                "device": "cuda",
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
+
+            app = RealESRGANApp()
+            app.withdraw()
+            try:
+                p1 = str(tmp_path / "a.png")
+                p2 = str(tmp_path / "b.png")
+                Path(p1).touch()
+                Path(p2).touch()
+
+                app.trigger_drop_files([p1, p2])
+                assert app.queue_count() == 2
+                assert app.queue_count_text() == "2 files"
+                assert app.queue_item_filenames() == ["a.png", "b.png"]
+
+                # App selection & move triggers
+                assert app.trigger_select_queue_index(1) is True
+                assert app.selected_queue_index() == 1
+
+                assert app.trigger_move_queue_item_up(1) is True
+                assert app.queue_item_filenames() == ["b.png", "a.png"]
+                assert app.selected_queue_index() == 0
+
+                assert app.trigger_move_queue_item_down(0) is True
+                assert app.queue_item_filenames() == ["a.png", "b.png"]
+                assert app.selected_queue_index() == 1
+
+                assert app.trigger_remove_queue_index(0) is True
+                assert app.queue_count() == 1
+                assert app.queue_item_filenames() == ["b.png"]
+
+                assert app.trigger_clear_queue() is True
+                assert app.queue_count() == 0
             finally:
                 app._on_close()
                 gc.collect()
