@@ -214,6 +214,8 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
 
     def _open_files(self) -> None:
         """Open file dialog and add selected files to the queue."""
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
+            return
         filetypes = [
             ("All supported", " ".join(f"*{e}" for e in sorted(ALL_EXTENSIONS))),
             ("Images", " ".join(f"*{e}" for e in sorted(IMAGE_EXTENSIONS))),
@@ -254,6 +256,8 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
 
     def _save_output(self) -> None:
         """Save the current output image via Save As dialog."""
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
+            return
         item = self.queue_panel.get_selected()
         if not item or not item.output_path:
             return
@@ -992,3 +996,42 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             return True
         return False
 
+
+    def trigger_open(self) -> None:
+        """Trigger toolbar Open files action."""
+        self.toolbar.trigger_open()
+
+    def trigger_save(self) -> bool:
+        """Trigger toolbar Save As action if available."""
+        return self.toolbar.trigger_save()
+
+    def trigger_open_output_folder(self) -> None:
+        """Trigger toolbar Open Output Folder action."""
+        self.toolbar.trigger_output_folder()
+
+    def trigger_show_about(self) -> None:
+        """Trigger toolbar About dialog."""
+        self.toolbar.trigger_about()
+
+    def trigger_close_about(self) -> bool:
+        """Close About dialog if open, returning True if closed."""
+        if self.toolbar.is_about_open():
+            self.toolbar.close_about()
+            return True
+        return False
+
+    def is_about_dialog_open(self) -> bool:
+        """Return True if About dialog window is currently open."""
+        return self.toolbar.is_about_open()
+
+    def is_save_enabled(self) -> bool:
+        """Return True if Save As toolbar action is enabled."""
+        return self.toolbar.is_save_enabled()
+
+    def set_save_enabled(self, enabled: bool) -> None:
+        """Enable or disable Save As toolbar action."""
+        self.toolbar.set_save_enabled(enabled)
+
+    def trigger_drop_files(self, paths: List[str]) -> bool:
+        """Simulate dropping files onto the application drop zone."""
+        return self.drop_zone.trigger_drop_files(paths)

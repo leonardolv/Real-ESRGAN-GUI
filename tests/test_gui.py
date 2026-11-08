@@ -1459,3 +1459,122 @@ class TestGUIWidgetsHeadless:
             finally:
                 app._on_close()
                 gc.collect()
+
+    def test_toolbar_and_drop_zone_triggers_and_app_helpers(self, tmp_path):
+        """Test Toolbar and DropZone triggers, text inspection, and RealESRGANApp integration."""
+        import gc
+        from pathlib import Path
+        from unittest.mock import MagicMock, patch
+        from gui.app import RealESRGANApp
+        from gui.widgets.toolbar import Toolbar
+        from gui.widgets.drop_zone import DropZone
+        import customtkinter as ctk
+
+        root = ctk.CTk()
+        root.withdraw()
+        try:
+            # DropZone tests
+            dropped_files = []
+            dz = DropZone(root, on_files_dropped=lambda f: dropped_files.extend(f))
+            dz.pack()
+
+            assert "📁" in dz.icon_text()
+            assert "Drop images" in dz.title_text()
+            assert "browse" in dz.subtitle_text()
+            assert "Images:" in dz.formats_text()
+
+            # trigger_browse safely no-ops in headless mode
+            dz.trigger_browse()
+
+            # trigger_drop_files
+            test_img = str(tmp_path / "sample.png")
+            Path(test_img).touch()
+            assert dz.trigger_drop_files(["invalid_file.xyz"]) is False
+            assert len(dropped_files) == 0
+
+            assert dz.trigger_drop_files([test_img]) is True
+            assert len(dropped_files) == 1
+            assert dropped_files[0] == test_img
+
+            dz.destroy()
+
+            # Toolbar tests
+            opened = []
+            saved = []
+            output_opened = []
+            tb = Toolbar(
+                root,
+                on_open=lambda: opened.append(True),
+                on_save=lambda: saved.append(True),
+                on_open_output=lambda: output_opened.append(True),
+            )
+            tb.pack()
+
+            tb.trigger_open()
+            assert len(opened) == 1
+
+            assert tb.is_save_enabled() is False
+            assert tb.trigger_save() is False
+            tb.set_save_enabled(True)
+            assert tb.is_save_enabled() is True
+            assert tb.trigger_save() is True
+            assert len(saved) == 1
+
+            tb.trigger_output_folder()
+            assert len(output_opened) == 1
+
+            assert tb.is_about_open() is False
+            assert tb.about_dialog is None
+            tb.trigger_about()
+            assert tb.is_about_open() is True
+            assert tb.about_dialog is not None
+            tb.close_about()
+            assert tb.is_about_open() is False
+
+            tb.destroy()
+        finally:
+            root.destroy()
+            gc.collect()
+
+        # RealESRGANApp integration
+        with patch("gui.app.ModelManager"), \
+             patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX",
+                "total_vram_gb": 8.0,
+                "used_vram_gb": 2.0,
+                "device": "cuda",
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
+
+            app = RealESRGANApp()
+            app.withdraw()
+            try:
+                # Toolbar triggers
+                app.trigger_open()
+                app.trigger_open_output_folder()
+
+                assert app.is_save_enabled() is False
+                assert app.trigger_save() is False
+                app.set_save_enabled(True)
+                assert app.is_save_enabled() is True
+                app.set_save_enabled(False)
+
+                # About dialog triggers
+                assert app.is_about_dialog_open() is False
+                assert app.trigger_close_about() is False
+                app.trigger_show_about()
+                assert app.is_about_dialog_open() is True
+                assert app.trigger_close_about() is True
+                assert app.is_about_dialog_open() is False
+
+                # Drop files trigger
+                test_sample = str(tmp_path / "app_drop.png")
+                Path(test_sample).touch()
+                assert app.trigger_drop_files([test_sample]) is True
+                assert app.queue_count() == 1
+            finally:
+                app._on_close()
+                gc.collect()

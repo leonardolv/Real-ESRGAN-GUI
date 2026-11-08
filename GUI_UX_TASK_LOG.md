@@ -11,6 +11,25 @@
 
 ## Completed
 
+### Task: Toolbar and DropZone triggers, text inspection, and RealESRGANApp integration
+- **Completed**: 2026-11-08
+- **Changes**:
+  - `gui/widgets/toolbar.py`:
+    - Exposed `about_dialog -> Optional[ctk.CTkToplevel]` property.
+    - Added programmatic action triggers: `trigger_open() -> None`, `trigger_save() -> bool`, `trigger_output_folder() -> None`, and `trigger_about() -> None`.
+  - `gui/widgets/drop_zone.py`:
+    - Added headless dialog execution guard in `_on_click` preventing blocking modal popups during test execution.
+    - Added ergonomic text inspection helpers: `icon_text() -> str`, `title_text() -> str`, `subtitle_text() -> str`, and `formats_text() -> str`.
+    - Added programmatic action triggers: `trigger_browse() -> None` and `trigger_drop_files(paths: List[str]) -> bool`.
+  - `gui/app.py`:
+    - Added headless dialog execution guards in `_open_files` and `_save_output`.
+    - Added forwarded toolbar and drop zone helpers on `RealESRGANApp`: `trigger_open() -> None`, `trigger_save() -> bool`, `trigger_open_output_folder() -> None`, `trigger_show_about() -> None`, `trigger_close_about() -> bool`, `is_about_dialog_open() -> bool`, `is_save_enabled() -> bool`, `set_save_enabled(enabled: bool) -> None`, and `trigger_drop_files(paths: List[str]) -> bool`.
+  - `tests/test_gui.py`:
+    - Added unit test `test_toolbar_and_drop_zone_triggers_and_app_helpers` verifying toolbar and drop zone triggers, text inspection, and application integration.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (42 passed in 18.60s, 0 errors).
+- **Status**: Completed
+
+
 ### Task: ProgressPanel cancel trigger, RealESRGANApp progress query accessors, and cancellation trigger
 - **Completed**: 2026-11-08
 - **Changes**:

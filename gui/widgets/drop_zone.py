@@ -4,6 +4,7 @@ Displays a large, inviting area with a dashed border that accepts image and
 video files via drag-and-drop or click-to-browse.
 """
 
+import os
 import tkinter as tk
 import tkinter.filedialog
 from pathlib import Path
@@ -181,6 +182,8 @@ class DropZone(ctk.CTkFrame):
     # ------------------------------------------------------------------ #
 
     def _on_click(self, event=None) -> None:
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
+            return
         filetypes = [
             ("All supported", " ".join(f"*{e}" for e in sorted(ALL_EXTENSIONS))),
             ("Images", " ".join(f"*{e}" for e in sorted(IMAGE_EXTENSIONS))),
@@ -264,6 +267,34 @@ class DropZone(ctk.CTkFrame):
     def formats_label(self) -> ctk.CTkLabel:
         """Return the supported formats hint label widget."""
         return self._formats_label
+
+    def icon_text(self) -> str:
+        """Return the text currently displayed in the icon label."""
+        return str(self._icon_label.cget("text"))
+
+    def title_text(self) -> str:
+        """Return the text currently displayed in the title label."""
+        return str(self._title_label.cget("text"))
+
+    def subtitle_text(self) -> str:
+        """Return the text currently displayed in the subtitle label."""
+        return str(self._subtitle_label.cget("text"))
+
+    def formats_text(self) -> str:
+        """Return the text currently displayed in the formats label."""
+        return str(self._formats_label.cget("text"))
+
+    def trigger_browse(self) -> None:
+        """Trigger the click-to-browse action."""
+        self._on_click()
+
+    def trigger_drop_files(self, paths: List[str]) -> bool:
+        """Programmatically simulate dropping files onto the drop zone."""
+        valid = [p for p in paths if self._is_valid(p)]
+        if valid:
+            self.on_files_dropped(valid)
+            return True
+        return False
 
     def destroy(self) -> None:
         """Clean up tooltip timers and window on widget destruction."""

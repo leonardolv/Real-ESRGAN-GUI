@@ -141,6 +141,32 @@ class Toolbar(ctk.CTkFrame):
                 pass
             self._about_dialog = None
 
+    @property
+    def about_dialog(self) -> Optional[ctk.CTkToplevel]:
+        """Return the active About dialog instance if currently open."""
+        if self._about_dialog and self._about_dialog.winfo_exists():
+            return self._about_dialog
+        return None
+
+    def trigger_open(self) -> None:
+        """Trigger the Open file action."""
+        self._on_open()
+
+    def trigger_save(self) -> bool:
+        """Trigger the Save As action if enabled, returning True if triggered."""
+        if self.is_save_enabled():
+            self._on_save()
+            return True
+        return False
+
+    def trigger_output_folder(self) -> None:
+        """Trigger the Open Output Folder action."""
+        self._on_open_output()
+
+    def trigger_about(self) -> None:
+        """Trigger the About dialog display."""
+        self._show_about()
+
     def destroy(self):
         """Clean up child tooltips and dialogs before destruction."""
         for tooltip in self._tooltips:
