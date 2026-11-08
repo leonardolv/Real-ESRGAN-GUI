@@ -797,4 +797,44 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         """Return True if upscale button exists and is enabled for processing."""
         btn = self.upscale_button
         return bool(btn and btn.cget("state") == "normal")
+    def select_category(self, cat: str) -> None:
+        """Programmatically select model category."""
+        self._category_var.set(cat)
+        self._on_category_changed()
+
+    def select_model(self, name: str) -> None:
+        """Programmatically select model by name."""
+        self._model_var.set(name)
+        self._on_model_changed(name)
+
+    def select_scale(self, scale: float | str) -> None:
+        """Programmatically select output scale factor."""
+        self._scale_var.set(str(scale))
+        if self._on_changed:
+            try:
+                self._on_changed("scale", float(scale))
+            except Exception:
+                pass
+
+    def set_face_enhance(self, enabled: bool) -> None:
+        """Programmatically enable or disable face enhancement."""
+        self._face_var.set(bool(enabled))
+        if self._on_changed:
+            self._on_changed("face_enhance", bool(enabled))
+
+    def set_denoise_strength(self, val: float) -> None:
+        """Programmatically set denoise strength value."""
+        self._denoise_var.set(float(val))
+        if self._on_changed:
+            self._on_changed("denoise_strength", float(val))
+
+    def select_extension(self, ext: str) -> None:
+        """Programmatically select output format extension."""
+        self._ext_var.set(str(ext))
+        if self._on_changed:
+            self._on_changed("output_ext", str(ext))
+
+    def trigger_reset_defaults(self) -> None:
+        """Trigger reset settings to defaults."""
+        self.reset_to_defaults()
 

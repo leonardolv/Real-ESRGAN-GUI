@@ -904,3 +904,63 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             self._process_all()
             return True
         return False
+    def select_model(self, name: str) -> None:
+        """Programmatically select upscaling model."""
+        self.settings_panel.select_model(name)
+
+    def select_category(self, cat: str) -> None:
+        """Programmatically select model category."""
+        self.settings_panel.select_category(cat)
+
+    def select_scale(self, scale: float | str) -> None:
+        """Programmatically select scaling factor."""
+        self.settings_panel.select_scale(scale)
+
+    def set_face_enhance(self, enabled: bool) -> None:
+        """Programmatically toggle face enhancement."""
+        self.settings_panel.set_face_enhance(enabled)
+
+    def set_denoise_strength(self, val: float) -> None:
+        """Programmatically set denoise strength."""
+        self.settings_panel.set_denoise_strength(val)
+
+    def select_output_extension(self, ext: str) -> None:
+        """Programmatically select output extension."""
+        self.settings_panel.select_extension(ext)
+
+    def trigger_reset_settings(self) -> None:
+        """Programmatically reset settings to defaults."""
+        self.settings_panel.trigger_reset_defaults()
+
+    def trigger_preview_zoom_in(self) -> None:
+        """Trigger preview canvas zoom in."""
+        self.preview.trigger_zoom_in()
+
+    def trigger_preview_zoom_out(self) -> None:
+        """Trigger preview canvas zoom out."""
+        self.preview.trigger_zoom_out()
+
+    def trigger_preview_zoom_fit(self) -> None:
+        """Trigger preview canvas fit/reset zoom."""
+        self.preview.trigger_zoom_fit()
+
+    def preview_zoom_percent_text(self) -> str:
+        """Return preview zoom percentage label text."""
+        return self.preview.zoom_percent_text()
+
+    def preview_has_input(self) -> bool:
+        """Return True if preview canvas has input image/video."""
+        return self.preview.has_input()
+
+    def preview_has_output(self) -> bool:
+        """Return True if preview canvas has output image/video."""
+        return self.preview.has_output()
+
+    def preview_slider_position(self) -> float:
+        """Return preview before/after slider position."""
+        return self.preview.slider_position()
+
+    def set_preview_slider_position(self, pos: float) -> None:
+        """Set preview before/after slider position."""
+        self.preview.set_slider_position(pos)
+

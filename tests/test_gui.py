@@ -1331,3 +1331,68 @@ class TestGUIWidgetsHeadless:
             finally:
                 app._on_close()
                 gc.collect()
+
+
+    def test_real_esrgan_settings_panel_and_preview_canvas_helpers(self):
+        """Test SettingsPanel setters, PreviewCanvas zoom/slider helpers, and App forwarded methods."""
+        import gc
+        from unittest.mock import patch, MagicMock
+        from gui.app import RealESRGANApp
+
+        with patch("gui.app.ModelManager"), patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX 3080",
+                "device": "cuda:0",
+                "used_vram_gb": 2.1,
+                "total_vram_gb": 10.0,
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
+
+            app = RealESRGANApp()
+            app.withdraw()
+            try:
+                # 1. Preview canvas zoom & slider helpers
+                assert app.preview_has_input() is False
+                assert app.preview_has_output() is False
+                assert app.preview_slider_position() == 0.5
+                assert "100%" in app.preview_zoom_percent_text()
+
+                app.trigger_preview_zoom_in()
+                app.trigger_preview_zoom_out()
+                app.trigger_preview_zoom_fit()
+                assert "100%" in app.preview_zoom_percent_text()
+
+                app.set_preview_slider_position(0.25)
+                assert app.preview_slider_position() == 0.25
+                app.set_preview_slider_position(0.8)
+                assert app.preview_slider_position() == 0.8
+
+                # 2. Settings setters on App
+                app.select_category("Anime")
+                assert app.selected_category() == "Anime"
+
+                app.select_category("General")
+                assert app.selected_category() == "General"
+
+                app.select_scale(2.0)
+                assert app.selected_scale() == 2.0
+
+                app.set_face_enhance(True)
+                assert app.is_face_enhance_enabled() is True
+                app.set_face_enhance(False)
+                assert app.is_face_enhance_enabled() is False
+
+                app.set_denoise_strength(0.75)
+                assert app.denoise_strength() == 0.75
+
+                app.select_output_extension("png")
+                assert app.output_extension() == "png"
+
+                # Reset settings
+                app.trigger_reset_settings()
+                assert app.selected_scale() == 4.0
+            finally:
+                app._on_close()
+                gc.collect()

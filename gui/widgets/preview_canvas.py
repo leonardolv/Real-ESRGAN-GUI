@@ -824,3 +824,21 @@ class PreviewCanvas(ctk.CTkFrame):
                 except Exception:
                     pass
         super().destroy()
+    def trigger_zoom_in(self) -> None:
+        """Trigger zoom step in."""
+        self._zoom_step(1)
+
+    def trigger_zoom_out(self) -> None:
+        """Trigger zoom step out."""
+        self._zoom_step(-1)
+
+    def trigger_zoom_fit(self) -> None:
+        """Trigger fit to canvas / zoom reset."""
+        self._fit_to_canvas()
+
+    def set_slider_position(self, pos: float) -> None:
+        """Set before/after slider position between 0.0 and 1.0 and redraw."""
+        self._slider_pos = max(0.0, min(1.0, float(pos)))
+        if self._has_output and self._input_image and self._output_image:
+            self._redraw()
+
