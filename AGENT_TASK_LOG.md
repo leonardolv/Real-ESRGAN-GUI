@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-08: Added SettingsPanel and PreviewCanvas ergonomic setters, triggers, and RealESRGANApp preview helpers. All 43 tests passed (3 skipped).
 - 2026-11-07: Added RealESRGANApp fullscreen, queue triggers, upscale actions, settings accessors, and unit tests. All 42 tests passed (3 skipped).
 - 2026-11-07: Hardened RealESRGANApp timer lifecycle with polling handle cancellation on destroy, normalized Tcl/Tk paths with forward slashes, and raised Windows stdio limit. All 41 tests passed (3 skipped).
 - 2026-11-05: Added Toolbar button texts accessor, RealESRGANApp settings query helpers, and unit tests. All 38 GUI tests passed.
@@ -37,6 +38,14 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-08 UTC - SettingsPanel and PreviewCanvas Ergonomic Setters, Triggers, and RealESRGANApp Preview Helpers
+Status: **done** (Antigravity)
+- gui/widgets/settings_panel.py: Added ergonomic setters and trigger (set_category(), set_scale(), set_face_enhance(), set_denoise_strength(), set_output_extension(), 	rigger_reset()).
+- gui/widgets/preview_canvas.py: Added ergonomic setters and triggers (set_slider_position(), 	rigger_zoom_in(), 	rigger_zoom_out(), 	rigger_zoom_fit()).
+- gui/app.py: Added settings setters and reset trigger (select_category(), select_scale(), set_face_enhance(), set_denoise_strength(), select_output_extension(), 	rigger_reset_settings()); added preview state accessors and triggers (preview_has_input(), preview_has_output(), preview_slider_position(), preview_zoom_percent_text(), 	rigger_preview_zoom_in(), 	rigger_preview_zoom_out(), 	rigger_preview_zoom_fit(), set_preview_slider_position()).
+- 	ests/test_gui.py: Added unit test 	est_real_esrgan_settings_panel_and_preview_canvas_helpers verifying preview canvas zoom & slider helpers and settings panel setters/reset triggers.
+- Validation: Verified headlessly with python -m pytest tests/ -v (43 passed, 3 skipped in 17.35s, 0 errors).
 
 ### 2026-11-07 UTC - RealESRGANApp Fullscreen, Queue Triggers, Upscale Actions, Settings Accessors, and Unit Tests
 Status: **done** (Antigravity)
