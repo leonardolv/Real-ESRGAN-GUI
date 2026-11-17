@@ -11,6 +11,19 @@
 
 ## Completed
 
+### Task: PreviewCanvas video playback triggers, slider nudge/toggle actions, and RealESRGANApp preview integration
+- **Completed**: 2026-11-17
+- **Changes**:
+  - gui/widgets/preview_canvas.py:
+    - Fixed typo in set_slider_position (self._redraw() -> self._render()).
+    - Added programmatic triggers for video playback and comparison slider navigation: 	rigger_toggle_pause(), 	rigger_step_backward(), 	rigger_step_forward(), 	rigger_seek(frame: int), 	rigger_nudge_slider_left(), 	rigger_nudge_slider_right(), and 	rigger_toggle_slider().
+  - gui/app.py:
+    - Added forwarded preview helpers on RealESRGANApp: 	rigger_preview_play_pause(), 	rigger_preview_step_backward(), 	rigger_preview_step_forward(), 	rigger_preview_nudge_slider_left(), 	rigger_preview_nudge_slider_right(), and 	rigger_preview_toggle_slider().
+  - 	ests/test_gui.py:
+    - Added unit test 	est_preview_canvas_playback_and_slider_triggers verifying preview playback triggers, comparison slider nudging/toggling, and RealESRGANApp forwarded helpers.
+- **Verification**: Verified headlessly with python -m pytest tests/test_gui.py -v (45 passed in 21.68s, 0 errors).
+- **Status**: Completed
+
 ### Task: SettingsPanel advanced setters/triggers, Toolbar About dialog triggers, and test config isolation
 - **Completed**: 2026-11-17
 - **Changes**:

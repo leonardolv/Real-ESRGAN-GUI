@@ -840,5 +840,33 @@ class PreviewCanvas(ctk.CTkFrame):
         """Set before/after slider position between 0.0 and 1.0 and redraw."""
         self._slider_pos = max(0.0, min(1.0, float(pos)))
         if self._has_output and self._input_image and self._output_image:
-            self._redraw()
+            self._render()
+
+    def trigger_toggle_pause(self) -> None:
+        """Trigger video play/pause toggle."""
+        self._toggle_pause()
+
+    def trigger_step_backward(self) -> None:
+        """Step one frame backward in video playback."""
+        self._step_backward()
+
+    def trigger_step_forward(self) -> None:
+        """Step one frame forward in video playback."""
+        self._step_forward()
+
+    def trigger_seek(self, frame: int) -> None:
+        """Seek video playback to specified frame index."""
+        self._on_timeline_seek(frame)
+
+    def trigger_nudge_slider_left(self) -> None:
+        """Nudge before/after comparison slider to the left."""
+        self._nudge_slider_left()
+
+    def trigger_nudge_slider_right(self) -> None:
+        """Nudge before/after comparison slider to the right."""
+        self._nudge_slider_right()
+
+    def trigger_toggle_slider(self) -> None:
+        """Toggle before/after comparison slider between 0.0 and 1.0."""
+        self._toggle_slider()
 

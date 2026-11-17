@@ -1830,3 +1830,56 @@ class TestGUIWidgetsHeadless:
             finally:
                 app._on_close()
                 gc.collect()
+
+
+def test_preview_canvas_playback_and_slider_triggers(tmp_path):
+    from unittest.mock import patch, MagicMock
+    from gui.app import RealESRGANApp
+    with patch("gui.app.ModelManager"), patch("gui.app.UpscaleController") as mock_ctrl_cls:
+        mock_ctrl = MagicMock()
+        mock_ctrl.get_gpu_info.return_value = {
+            "name": "NVIDIA GeForce RTX",
+            "total_vram_gb": 8.0,
+            "used_vram_gb": 2.0,
+            "device": "cuda",
+        }
+        mock_ctrl.is_busy = False
+        mock_ctrl_cls.return_value = mock_ctrl
+
+        app = RealESRGANApp()
+        app.withdraw()
+        try:
+            canvas = app.preview_widget
+            # Slider triggers
+            canvas.set_slider_position(0.5)
+            assert canvas.slider_position() == 0.5
+            assert app.preview_slider_position() == 0.5
+
+            app.set_preview_slider_position(0.75)
+            assert canvas.slider_position() == 0.75
+
+            # With output enabled, nudge slider
+            canvas._has_output = True
+            initial_pos = canvas.slider_position()
+            app.trigger_preview_nudge_slider_left()
+            assert canvas.slider_position() < initial_pos
+
+            app.trigger_preview_nudge_slider_right()
+            assert canvas.slider_position() == initial_pos
+
+            # Toggle slider trigger
+            canvas.set_slider_position(0.5)
+            app.trigger_preview_toggle_slider()
+            assert canvas.slider_position() == 0.02
+            app.trigger_preview_toggle_slider()
+            assert canvas.slider_position() == 0.5
+
+            # Video playback triggers (when idle/no video, they execute safely without crashing)
+            app.trigger_preview_play_pause()
+            app.trigger_preview_step_backward()
+            app.trigger_preview_step_forward()
+            canvas.trigger_seek(0)
+        finally:
+            app._on_close()
+            gc.collect()
+

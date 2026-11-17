@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-17: Added PreviewCanvas video playback triggers, comparison slider nudge and toggle triggers, set_slider_position render fix, and RealESRGANApp preview helpers. All 45 tests passed.
 - 2026-11-17: Added SettingsPanel advanced setters and triggers, Toolbar About dialog triggers, headless browser/folder dialog guards, and conftest config isolation. All 44 tests passed.
 - 2026-11-08: Added QueuePanel item reordering (move_up, move_down), context menu actions, Alt+Up/Down keyboard navigation, programmatic triggers, and RealESRGANApp queue helper methods. All 43 tests passed.
 - 2026-11-08: Added ProgressPanel cancel trigger and RealESRGANApp progress query accessors and cancellation trigger; hardened Windows Tcl/Tk stdio file descriptor allocation with ucrtbase maxstdio and test garbage collection. All 41 tests passed.
@@ -41,6 +42,13 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-17 UTC - PreviewCanvas Video Playback Triggers, Slider Nudge/Toggle Actions, and RealESRGANApp Preview Integration
+Status: **done** (Antigravity)
+- gui/widgets/preview_canvas.py: Fixed typo in set_slider_position (_redraw -> _render); added programmatic triggers for video playback and comparison slider navigation (trigger_toggle_pause, trigger_step_backward, trigger_step_forward, trigger_seek, trigger_nudge_slider_left, trigger_nudge_slider_right, trigger_toggle_slider).
+- gui/app.py: Added forwarded preview helpers on RealESRGANApp (trigger_preview_play_pause, trigger_preview_step_backward, trigger_preview_step_forward, trigger_preview_nudge_slider_left, trigger_preview_nudge_slider_right, trigger_preview_toggle_slider).
+- tests/test_gui.py: Added unit test test_preview_canvas_playback_and_slider_triggers verifying preview playback triggers, comparison slider nudging/toggling, and RealESRGANApp forwarded helpers.
+- Validation: Verified headlessly with python -m pytest tests/test_gui.py -v (45 passed in 21.68s, 0 errors).
 
 ### 2026-11-17 UTC - SettingsPanel Advanced Setters and Triggers, About Dialog Actions, and Test Isolation
 Status: **done** (Antigravity)

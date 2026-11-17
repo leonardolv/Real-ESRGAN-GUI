@@ -1095,3 +1095,27 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     def trigger_about_close(self) -> bool:
         """Trigger clicking Close in About dialog if open."""
         return self.toolbar.trigger_about_close()
+
+    def trigger_preview_play_pause(self) -> None:
+        """Trigger play/pause in preview canvas."""
+        self.preview.trigger_toggle_pause()
+
+    def trigger_preview_step_backward(self) -> None:
+        """Step one frame backward in preview canvas."""
+        self.preview.trigger_step_backward()
+
+    def trigger_preview_step_forward(self) -> None:
+        """Step one frame forward in preview canvas."""
+        self.preview.trigger_step_forward()
+
+    def trigger_preview_nudge_slider_left(self) -> None:
+        """Nudge preview comparison slider left."""
+        self.preview.trigger_nudge_slider_left()
+
+    def trigger_preview_nudge_slider_right(self) -> None:
+        """Nudge preview comparison slider right."""
+        self.preview.trigger_nudge_slider_right()
+
+    def trigger_preview_toggle_slider(self) -> None:
+        """Toggle preview comparison slider between 0.0 and 1.0."""
+        self.preview.trigger_toggle_slider()
