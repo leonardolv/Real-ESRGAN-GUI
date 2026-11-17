@@ -531,6 +531,8 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         threading.Thread(target=_dl, daemon=True).start()
 
     def _browse_output_folder(self) -> None:
+        if "PYTEST_CURRENT_TEST" in os.environ or os.environ.get("HEADLESS") or os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+            return
         import tkinter.filedialog as fd
         folder = fd.askdirectory(title="Select output folder")
         if folder:
@@ -837,4 +839,89 @@ class SettingsPanel(ctk.CTkScrollableFrame):
     def trigger_reset_defaults(self) -> None:
         """Trigger reset settings to defaults."""
         self.reset_to_defaults()
+
+    def tile_size(self) -> int:
+        """Return the currently selected tile size in pixels (0 for un-tiled)."""
+        tile_str = self._tile_var.get()
+        try:
+            return int(tile_str.split()[0]) if tile_str else 0
+        except (ValueError, IndexError):
+            return 0
+
+    def set_tile_size(self, tile: int) -> None:
+        """Programmatically set the tile size."""
+        val = f"{tile} (no tile)" if tile == 0 else str(tile)
+        self._tile_var.set(val)
+        self._on_tile_changed(val)
+
+    def tile_padding(self) -> int:
+        """Return the current tile padding in pixels."""
+        try:
+            return int(self._tile_pad_var.get() or 10)
+        except ValueError:
+            return 10
+
+    def set_tile_padding(self, pad: int) -> None:
+        """Programmatically set tile padding in pixels."""
+        self._tile_pad_var.set(str(pad))
+        self._emit_int("tile_pad", self._tile_pad_var, 10)
+
+    def pre_padding(self) -> int:
+        """Return the current pre-padding in pixels."""
+        try:
+            return int(self._pre_pad_var.get() or 0)
+        except ValueError:
+            return 0
+
+    def set_pre_padding(self, pad: int) -> None:
+        """Programmatically set pre-padding in pixels."""
+        self._pre_pad_var.set(str(pad))
+        self._emit_int("pre_pad", self._pre_pad_var, 0)
+
+    def output_folder(self) -> str:
+        """Return the current output folder path."""
+        return str(self._output_dir_var.get())
+
+    def set_output_folder(self, path: str) -> None:
+        """Programmatically set the output folder path."""
+        self._output_dir_var.set(path)
+        self._emit("output_folder", path)
+
+    def suffix(self) -> str:
+        """Return the filename suffix."""
+        return str(self._suffix_var.get())
+
+    def set_suffix(self, suf: str) -> None:
+        """Programmatically set the filename suffix."""
+        self._suffix_var.set(suf)
+        self._emit("suffix", suf)
+
+    def is_fp32_enabled(self) -> bool:
+        """Return True if 32-bit floating point precision is enabled."""
+        return bool(self._fp32_var.get())
+
+    def set_fp32_enabled(self, enabled: bool) -> None:
+        """Programmatically enable or disable fp32 mode."""
+        self._fp32_var.set(bool(enabled))
+        self._emit("fp32", bool(enabled))
+
+    def trigger_browse_output_folder(self) -> None:
+        """Programmatically trigger output folder browsing."""
+        self._browse_output_folder()
+
+    def trigger_open_output_folder(self) -> None:
+        """Programmatically trigger opening output folder in file manager."""
+        self._open_output_folder_in_os()
+
+    def trigger_download_model(self) -> None:
+        """Programmatically trigger downloading the selected model."""
+        self._on_download_model()
+
+    def trigger_upscale(self) -> bool:
+        """Programmatically trigger upscale action if enabled."""
+        if self.is_upscale_enabled():
+            if hasattr(self, "_upscale_btn") and self._upscale_btn:
+                self._upscale_btn.invoke()
+                return True
+        return False
 

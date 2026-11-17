@@ -167,6 +167,27 @@ class Toolbar(ctk.CTkFrame):
         """Trigger the About dialog display."""
         self._show_about()
 
+    def trigger_about_github(self) -> bool:
+        """Trigger clicking the GitHub repository button in the About dialog if open."""
+        if self._about_dialog and self._about_dialog.winfo_exists() and hasattr(self._about_dialog, "_gh_btn"):
+            self._about_dialog._gh_btn.invoke()
+            return True
+        return False
+
+    def trigger_about_upstream(self) -> bool:
+        """Trigger clicking the Upstream repository button in the About dialog if open."""
+        if self._about_dialog and self._about_dialog.winfo_exists() and hasattr(self._about_dialog, "_upstream_btn"):
+            self._about_dialog._upstream_btn.invoke()
+            return True
+        return False
+
+    def trigger_about_close(self) -> bool:
+        """Trigger clicking the Close button in the About dialog if open."""
+        if self._about_dialog and self._about_dialog.winfo_exists() and hasattr(self._about_dialog, "_close_btn"):
+            self._about_dialog._close_btn.invoke()
+            return True
+        return False
+
     def destroy(self):
         """Clean up child tooltips and dialogs before destruction."""
         for tooltip in self._tooltips:
@@ -209,7 +230,7 @@ class Toolbar(ctk.CTkFrame):
         dialog.bind("<Return>", lambda e: dialog.destroy())
 
         def _safe_open_url(url: str) -> None:
-            if not ("PYTEST_CURRENT_TEST" in os.environ or os.environ.get("HEADLESS")):
+            if not ("PYTEST_CURRENT_TEST" in os.environ or os.environ.get("HEADLESS") or os.environ.get("QT_QPA_PLATFORM") == "offscreen"):
                 webbrowser.open_new_tab(url)
 
         ctk.CTkLabel(

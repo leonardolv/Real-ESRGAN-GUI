@@ -27,6 +27,18 @@ try:
     import pytest
 
     @pytest.fixture(autouse=True)
+    def _isolate_config(tmp_path):
+        from gui.utils import config as config_mod
+        old = config_mod.CONFIG_FILE
+        config_mod.CONFIG_FILE = tmp_path / "isolated_config.json"
+        if os.path.isdir(tcl_dir):
+            os.environ["TCL_LIBRARY"] = tcl_dir
+        if os.path.isdir(tk_dir):
+            os.environ["TK_LIBRARY"] = tk_dir
+        yield
+        config_mod.CONFIG_FILE = old
+
+    @pytest.fixture(autouse=True)
     def _cleanup_tk():
         yield
         gc.collect()

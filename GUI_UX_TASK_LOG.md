@@ -11,6 +11,25 @@
 
 ## Completed
 
+### Task: SettingsPanel advanced setters/triggers, Toolbar About dialog triggers, and test config isolation
+- **Completed**: 2026-11-17
+- **Changes**:
+  - `tests/conftest.py`:
+    - Added autouse `_isolate_config` fixture isolating config file to test-specific temporary paths, preventing pollution of user configuration and preserving `TCL_LIBRARY` / `TK_LIBRARY` environment variables.
+  - `gui/widgets/toolbar.py`:
+    - Added headless execution guards in `_safe_open_url` preventing web browser launches in offscreen runs.
+    - Added programmatic triggers for About dialog actions: `trigger_about_github() -> bool`, `trigger_about_upstream() -> bool`, and `trigger_about_close() -> bool`.
+  - `gui/widgets/settings_panel.py`:
+    - Added headless execution guard in `_browse_output_folder` preventing blocking modal folder dialogues.
+    - Added ergonomic query and setter helpers: `tile_size() -> int`, `set_tile_size(tile: int) -> None`, `tile_padding() -> int`, `set_tile_padding(pad: int) -> None`, `pre_padding() -> int`, `set_pre_padding(pad: int) -> None`, `output_folder() -> str`, `set_output_folder(path: str) -> None`, `suffix() -> str`, `set_suffix(suf: str) -> None`, `is_fp32_enabled() -> bool`, `set_fp32_enabled(enabled: bool) -> None`.
+    - Added programmatic action triggers: `trigger_browse_output_folder() -> None`, `trigger_open_output_folder() -> None`, `trigger_download_model() -> None`, and `trigger_upscale() -> bool`.
+  - `gui/app.py`:
+    - Added forwarded helpers on `RealESRGANApp`: `tile_size() -> int`, `set_tile_size(tile: int) -> None`, `output_folder() -> str`, `set_output_folder(path: str) -> None`, `trigger_browse_output_folder() -> None`, `trigger_about_github() -> bool`, `trigger_about_upstream() -> bool`, and `trigger_about_close() -> bool`.
+  - `tests/test_gui.py`:
+    - Added unit test `test_settings_panel_advanced_setters_and_about_dialog_triggers` verifying all new setters, triggers, and application helpers.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (44 passed in 20.04s, 0 errors).
+- **Status**: Completed
+
 ### Task: QueuePanel item reordering, context menu actions, keyboard navigation, triggers, and RealESRGANApp queue helpers
 - **Completed**: 2026-11-08
 - **Changes**:

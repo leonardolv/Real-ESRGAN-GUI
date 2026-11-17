@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-17: Added SettingsPanel advanced setters and triggers, Toolbar About dialog triggers, headless browser/folder dialog guards, and conftest config isolation. All 44 tests passed.
 - 2026-11-08: Added QueuePanel item reordering (move_up, move_down), context menu actions, Alt+Up/Down keyboard navigation, programmatic triggers, and RealESRGANApp queue helper methods. All 43 tests passed.
 - 2026-11-08: Added ProgressPanel cancel trigger and RealESRGANApp progress query accessors and cancellation trigger; hardened Windows Tcl/Tk stdio file descriptor allocation with ucrtbase maxstdio and test garbage collection. All 41 tests passed.
 - 2026-11-08: Added SettingsPanel and PreviewCanvas ergonomic setters, triggers, and RealESRGANApp preview helpers. All 43 tests passed (3 skipped).
@@ -40,6 +41,15 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-17 UTC - SettingsPanel Advanced Setters and Triggers, About Dialog Actions, and Test Isolation
+Status: **done** (Antigravity)
+- tests/conftest.py: Added autouse _isolate_config fixture isolating config file to test-specific temporary paths, preventing pollution of user configuration and preserving TCL_LIBRARY / TK_LIBRARY environment variables.
+- gui/widgets/toolbar.py: Added headless execution guards in _safe_open_url preventing web browser launches in offscreen runs; added programmatic triggers for About dialog actions (trigger_about_github, trigger_about_upstream, trigger_about_close).
+- gui/widgets/settings_panel.py: Added headless execution guard in _browse_output_folder; added ergonomic query and setter helpers (tile_size, set_tile_size, tile_padding, set_tile_padding, pre_padding, set_pre_padding, output_folder, set_output_folder, suffix, set_suffix, is_fp32_enabled, set_fp32_enabled); added programmatic action triggers (trigger_browse_output_folder, trigger_open_output_folder, trigger_download_model, trigger_upscale).
+- gui/app.py: Added forwarded helpers on RealESRGANApp (tile_size, set_tile_size, output_folder, set_output_folder, trigger_browse_output_folder, trigger_about_github, trigger_about_upstream, trigger_about_close).
+- tests/test_gui.py: Added unit test test_settings_panel_advanced_setters_and_about_dialog_triggers verifying all new setters, triggers, and application helpers.
+- Validation: Verified headlessly with python -m pytest tests/test_gui.py -v (44 passed in 20.04s, 0 errors).
 
 ### 2026-11-08 UTC - QueuePanel Item Reordering, Context Menu, and App Helpers
 Status: **done** (Antigravity)

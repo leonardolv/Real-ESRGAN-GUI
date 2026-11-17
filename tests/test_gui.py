@@ -1697,3 +1697,136 @@ class TestGUIWidgetsHeadless:
             finally:
                 app._on_close()
                 gc.collect()
+
+    def test_settings_panel_advanced_setters_and_about_dialog_triggers(self, ctk_root, tmp_path):
+        """Test SettingsPanel advanced setters/triggers and About dialog action triggers."""
+        from unittest.mock import MagicMock, patch
+        from gui.widgets.settings_panel import SettingsPanel
+        from gui.widgets.toolbar import Toolbar
+        from gui.app import RealESRGANApp
+        from gui.controllers.model_manager import ModelManager
+        import gc
+
+        # 1. SettingsPanel advanced queries, setters, and triggers
+        mm = ModelManager()
+        sp = SettingsPanel(ctk_root, mm)
+        try:
+            # Tile size
+            assert sp.tile_size() == 256
+            sp.set_tile_size(512)
+            assert sp.tile_size() == 512
+            sp.set_tile_size(0)
+            assert sp.tile_size() == 0
+
+            # Tile padding & pre padding
+            assert sp.tile_padding() == 10
+            sp.set_tile_padding(20)
+            assert sp.tile_padding() == 20
+
+            assert sp.pre_padding() == 0
+            sp.set_pre_padding(5)
+            assert sp.pre_padding() == 5
+
+            # Output folder
+            sp.set_output_folder(str(tmp_path))
+            assert sp.output_folder() == str(tmp_path)
+
+            # Suffix
+            assert sp.suffix() == "out"
+            sp.set_suffix("enhanced")
+            assert sp.suffix() == "enhanced"
+
+            # FP32 precision
+            assert sp.is_fp32_enabled() is False
+            sp.set_fp32_enabled(True)
+            assert sp.is_fp32_enabled() is True
+
+            # Headless triggers
+            sp.trigger_browse_output_folder()  # Headless guard prevents blocking popup
+            sp.trigger_open_output_folder()    # Headless guard prevents OS explorer spawn
+
+            # Upscale trigger
+            sp.add_upscale_button(lambda: None)
+            sp.set_upscale_button_state(True)
+            assert sp.is_upscale_enabled() is True
+            # Upscale trigger invokes upscale button callback
+            upscale_called = []
+            sp._upscale_btn.configure(command=lambda: upscale_called.append(True))
+            assert sp.trigger_upscale() is True
+            assert len(upscale_called) == 1
+
+            sp.set_upscale_button_state(False)
+            assert sp.is_upscale_enabled() is False
+            assert sp.trigger_upscale() is False
+        finally:
+            sp.destroy()
+            gc.collect()
+
+        # 2. Toolbar About dialog action triggers
+        tb = Toolbar(
+            ctk_root,
+            on_open=lambda: None,
+            on_save=lambda: None,
+            on_open_output=lambda: None,
+        )
+        try:
+            assert tb.is_about_open() is False
+            assert tb.trigger_about_github() is False
+            assert tb.trigger_about_upstream() is False
+            assert tb.trigger_about_close() is False
+
+            tb.trigger_about()
+            assert tb.is_about_open() is True
+            assert tb.about_dialog is not None
+
+            # Test triggers with mocked browser open
+            with patch("webbrowser.open_new_tab") as mock_browser:
+                assert tb.trigger_about_github() is True
+                assert tb.trigger_about_upstream() is True
+
+            # Trigger close button
+            assert tb.trigger_about_close() is True
+            assert tb.is_about_open() is False
+        finally:
+            tb.destroy()
+            gc.collect()
+
+        # 3. RealESRGANApp integration helpers
+        with patch("gui.app.ModelManager"), patch("gui.app.UpscaleController") as mock_ctrl_cls:
+            mock_ctrl = MagicMock()
+            mock_ctrl.get_gpu_info.return_value = {
+                "name": "NVIDIA GeForce RTX",
+                "total_vram_gb": 8.0,
+                "used_vram_gb": 2.0,
+                "device": "cuda",
+            }
+            mock_ctrl.is_busy = False
+            mock_ctrl_cls.return_value = mock_ctrl
+
+            app = RealESRGANApp()
+            app.withdraw()
+            try:
+                # App tile size and output folder
+                app.set_tile_size(128)
+                assert app.tile_size() == 128
+
+                custom_out = str(tmp_path / "app_out")
+                app.set_output_folder(custom_out)
+                assert app.output_folder() == custom_out
+                app.trigger_browse_output_folder()
+
+                # App about triggers
+                assert app.is_about_dialog_open() is False
+                assert app.trigger_about_github() is False
+                app.trigger_show_about()
+                assert app.is_about_dialog_open() is True
+
+                with patch("webbrowser.open_new_tab"):
+                    assert app.trigger_about_github() is True
+                    assert app.trigger_about_upstream() is True
+
+                assert app.trigger_about_close() is True
+                assert app.is_about_dialog_open() is False
+            finally:
+                app._on_close()
+                gc.collect()

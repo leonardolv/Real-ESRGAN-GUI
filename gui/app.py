@@ -1063,3 +1063,35 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     def trigger_move_queue_item_down(self, idx: int) -> bool:
         """Programmatically move item at queue index one position down."""
         return self.queue_panel.trigger_move_down(idx)
+
+    def tile_size(self) -> int:
+        """Return current tile size setting."""
+        return self.settings_panel.tile_size()
+
+    def set_tile_size(self, tile: int) -> None:
+        """Set tile size setting."""
+        self.settings_panel.set_tile_size(tile)
+
+    def output_folder(self) -> str:
+        """Return current output folder setting."""
+        return self.settings_panel.output_folder()
+
+    def set_output_folder(self, path: str) -> None:
+        """Set output folder setting."""
+        self.settings_panel.set_output_folder(path)
+
+    def trigger_browse_output_folder(self) -> None:
+        """Trigger browse output folder in settings panel."""
+        self.settings_panel.trigger_browse_output_folder()
+
+    def trigger_about_github(self) -> bool:
+        """Trigger clicking GitHub link in About dialog if open."""
+        return self.toolbar.trigger_about_github()
+
+    def trigger_about_upstream(self) -> bool:
+        """Trigger clicking Upstream link in About dialog if open."""
+        return self.toolbar.trigger_about_upstream()
+
+    def trigger_about_close(self) -> bool:
+        """Trigger clicking Close in About dialog if open."""
+        return self.toolbar.trigger_about_close()
