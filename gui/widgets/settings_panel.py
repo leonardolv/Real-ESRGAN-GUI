@@ -756,6 +756,11 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         """Return the tile size dropdown."""
         return getattr(self, "_tile_dropdown", None)
 
+    @property
+    def alpha_dropdown(self) -> Optional[ctk.CTkOptionMenu]:
+        """Return the alpha channel upsampler dropdown."""
+        return getattr(self, "_alpha_dropdown", None)
+
     def current_category(self) -> str:
         """Return the currently selected model category name."""
         return str(self._category_var.get())
@@ -904,6 +909,15 @@ class SettingsPanel(ctk.CTkScrollableFrame):
         """Programmatically enable or disable fp32 mode."""
         self._fp32_var.set(bool(enabled))
         self._emit("fp32", bool(enabled))
+
+    def alpha_upsampler(self) -> str:
+        """Return the currently selected alpha channel upsampler ('realesrgan' or 'bicubic')."""
+        return str(self._alpha_var.get())
+
+    def set_alpha_upsampler(self, upsampler: str) -> None:
+        """Programmatically set the alpha channel upsampler."""
+        self._alpha_var.set(str(upsampler))
+        self._emit("alpha_upsampler", str(upsampler))
 
     def trigger_browse_output_folder(self) -> None:
         """Programmatically trigger output folder browsing."""

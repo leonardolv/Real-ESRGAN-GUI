@@ -1883,3 +1883,88 @@ def test_preview_canvas_playback_and_slider_triggers(tmp_path):
             app._on_close()
             gc.collect()
 
+
+def test_advanced_settings_queue_status_and_app_file_save_triggers(tmp_path):
+    """Test alpha upsampler settings, queue item status queries/triggers, and app file open/save triggers."""
+    from unittest.mock import MagicMock, patch
+    from gui.app import RealESRGANApp
+    from gui.widgets.queue_panel import ItemStatus
+
+    with patch("gui.app.ModelManager"), \
+         patch("gui.app.UpscaleController") as mock_ctrl_cls:
+        mock_ctrl = MagicMock()
+        mock_ctrl.get_gpu_info.return_value = {
+            "name": "NVIDIA GeForce RTX",
+            "total_vram_gb": 8.0,
+            "used_vram_gb": 2.0,
+            "device": "cuda",
+        }
+        mock_ctrl.is_busy = False
+        mock_ctrl_cls.return_value = mock_ctrl
+
+        app = RealESRGANApp()
+        app.withdraw()
+        try:
+            # SettingsPanel alpha_dropdown and alpha_upsampler
+            assert app.settings_widget.alpha_dropdown is not None
+            assert app.alpha_upsampler() == "realesrgan"
+            app.set_alpha_upsampler("bicubic")
+            assert app.alpha_upsampler() == "bicubic"
+            assert app.settings_widget.alpha_upsampler() == "bicubic"
+
+            # Advanced settings helpers on app
+            assert app.suffix() == "out"
+            app.set_suffix("enhanced")
+            assert app.suffix() == "enhanced"
+
+            assert app.tile_padding() == 10
+            app.set_tile_padding(16)
+            assert app.tile_padding() == 16
+
+            assert app.pre_padding() == 0
+            app.set_pre_padding(8)
+            assert app.pre_padding() == 8
+
+            assert app.is_fp32_enabled() is False
+            app.set_fp32_enabled(True)
+            assert app.is_fp32_enabled() is True
+
+            # Ingest image using trigger_open_files
+            test_img = tmp_path / "sample_test.png"
+            Image.new("RGB", (64, 64), color="cyan").save(test_img)
+            app.trigger_open_files([str(test_img)])
+
+            assert app.queue_count() == 1
+            queue = app.queue_widget
+            assert queue.is_item_queued(0) is True
+            assert queue.is_item_completed(0) is False
+            assert queue.is_item_error(0) is False
+            assert queue.is_item_processing(0) is False
+
+            # Update item status to completed
+            queue.update_item_status(0, ItemStatus.COMPLETED, 100)
+            assert queue.is_item_completed(0) is True
+            assert queue.is_item_queued(0) is False
+
+            # Programmatically reset queue status
+            assert app.trigger_reset_queue_item_status(0) is True
+            assert queue.is_item_queued(0) is True
+            assert queue.is_item_completed(0) is False
+
+            # Programmatically trigger explorer opening (headless-safe)
+            assert app.trigger_open_queue_item_in_explorer(0) is True
+
+            # Programmatically trigger save output
+            out_img = tmp_path / "sample_test_out.png"
+            Image.new("RGB", (128, 128), color="blue").save(out_img)
+            item = queue.get_selected()
+            assert item is not None
+            item.output_path = str(out_img)
+
+            saved_dest = tmp_path / "saved_export.png"
+            assert app.trigger_save_output(str(saved_dest)) is True
+            assert saved_dest.exists()
+        finally:
+            app._on_close()
+            gc.collect()
+

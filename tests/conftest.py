@@ -14,14 +14,17 @@ if os.path.isdir(tk_dir):
     os.environ["TK_LIBRARY"] = tk_dir
 
 # Increase stdio file descriptor limit on Windows to prevent C fopen exhaustions during repeated Tcl/Tk loads
-if sys.platform == "win32":
-    for lib_name in ("ucrtbase", "msvcrt"):
-        try:
-            import ctypes
-            lib = ctypes.CDLL(lib_name)
-            lib._setmaxstdio(2048)
-        except Exception:
-            pass
+def _apply_maxstdio():
+    if sys.platform == "win32":
+        for lib_name, limit in (("ucrtbase", 8192), ("msvcrt", 2048)):
+            try:
+                import ctypes
+                lib = ctypes.CDLL(lib_name)
+                lib._setmaxstdio(limit)
+            except Exception:
+                pass
+
+_apply_maxstdio()
 
 try:
     import pytest
@@ -35,6 +38,7 @@ try:
             os.environ["TCL_LIBRARY"] = tcl_dir
         if os.path.isdir(tk_dir):
             os.environ["TK_LIBRARY"] = tk_dir
+        _apply_maxstdio()
         yield
         config_mod.CONFIG_FILE = old
 

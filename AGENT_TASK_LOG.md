@@ -3,6 +3,7 @@
 Shared continuity file for automated maintenance runs. Multiple agents may work this file; always append, never overwrite another agent's entries. Agent should roll over to a new file weekly.
 
 ## Summary (update every run)
+- 2026-11-18: Added SettingsPanel alpha upsampler property & queries/setters, QueuePanel item status queries and reset/explorer triggers, RealESRGANApp programmatic open/save triggers & advanced settings helpers, and hardened Windows CRT stdio limits (8192 ucrtbase / 2048 msvcrt). All 46 tests passed.
 - 2026-11-17: Added PreviewCanvas video playback triggers, comparison slider nudge and toggle triggers, set_slider_position render fix, and RealESRGANApp preview helpers. All 45 tests passed.
 - 2026-11-17: Added SettingsPanel advanced setters and triggers, Toolbar About dialog triggers, headless browser/folder dialog guards, and conftest config isolation. All 44 tests passed.
 - 2026-11-08: Added QueuePanel item reordering (move_up, move_down), context menu actions, Alt+Up/Down keyboard navigation, programmatic triggers, and RealESRGANApp queue helper methods. All 43 tests passed.
@@ -42,6 +43,15 @@ Shared continuity file for automated maintenance runs. Multiple agents may work 
 
 
 ## Completed
+
+### 2026-11-18 UTC - SettingsPanel Alpha Upsampler, QueuePanel Status Queries/Triggers, and RealESRGANApp File/Save Triggers & Helpers
+Status: **done** (Antigravity)
+- tests/conftest.py: Hardened Windows C runtime stdio file descriptor limits across runtimes (8192 on ucrtbase, 2048 on msvcrt) and ensured re-application during config isolation, resolving intermittent Tcl fopen exhaustion.
+- gui/widgets/settings_panel.py: Exposed alpha_dropdown property; added alpha_upsampler() query and set_alpha_upsampler() setter.
+- gui/widgets/queue_panel.py: Added item status helpers (is_item_completed, is_item_error, is_item_queued, is_item_processing); added programmatic action triggers (trigger_reset_item_status, trigger_open_file_in_explorer).
+- gui/app.py: Enhanced _open_files and _save_output to accept optional target paths for headless/programmatic file ingestion and saving; added trigger_open_files and trigger_save_output action triggers; added trigger_reset_queue_item_status and trigger_open_queue_item_in_explorer triggers; added forwarded settings helpers (alpha_upsampler, set_alpha_upsampler, suffix, set_suffix, tile_padding, set_tile_padding, pre_padding, set_pre_padding, is_fp32_enabled, set_fp32_enabled).
+- tests/test_gui.py: Added unit test test_advanced_settings_queue_status_and_app_file_save_triggers verifying all new properties, queries, setters, and triggers.
+- Validation: Verified headlessly with python -m pytest tests/test_gui.py -v (46 passed in 23.29s, 0 errors).
 
 ### 2026-11-17 UTC - PreviewCanvas Video Playback Triggers, Slider Nudge/Toggle Actions, and RealESRGANApp Preview Integration
 Status: **done** (Antigravity)

@@ -212,8 +212,11 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     #  File operations                                                    #
     # ================================================================== #
 
-    def _open_files(self) -> None:
-        """Open file dialog and add selected files to the queue."""
+    def _open_files(self, paths: Optional[List[str]] = None) -> None:
+        """Open file dialog and add selected files to the queue, or ingest provided paths."""
+        if paths is not None:
+            self._on_files_received(list(paths))
+            return
         if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
             return
         filetypes = [
@@ -223,14 +226,14 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             ("All files", "*.*"),
         ]
         last_dir = self.config_store.get("last_input_folder") or ""
-        paths = tk.filedialog.askopenfilenames(
+        selected = tk.filedialog.askopenfilenames(
             title="Select files to upscale",
             filetypes=filetypes,
             initialdir=last_dir if last_dir else None,
         )
-        if paths:
-            self.config_store.set("last_input_folder", str(Path(paths[0]).parent))
-            self._on_files_received(list(paths))
+        if selected:
+            self.config_store.set("last_input_folder", str(Path(selected[0]).parent))
+            self._on_files_received(list(selected))
 
     def _on_files_received(self, paths: List[str]) -> None:
         """Handle files from drop zone or file dialog."""
@@ -254,13 +257,20 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
         for p in expanded:
             self.config_store.add_recent_file(p)
 
-    def _save_output(self) -> None:
-        """Save the current output image via Save As dialog."""
-        if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
-            return
+    def _save_output(self, destination_path: Optional[str] = None) -> bool:
+        """Save the current output image via Save As dialog or to provided destination path."""
         item = self.queue_panel.get_selected()
         if not item or not item.output_path:
-            return
+            return False
+
+        if destination_path is not None:
+            import shutil
+            shutil.copy2(item.output_path, destination_path)
+            self._status_text.configure(text=f"Saved to {destination_path}")
+            return True
+
+        if os.environ.get("QT_QPA_PLATFORM") == "offscreen" or "PYTEST_CURRENT_TEST" in os.environ:
+            return False
 
         save_path = tk.filedialog.asksaveasfilename(
             title="Save upscaled image",
@@ -272,6 +282,8 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
             import shutil
             shutil.copy2(item.output_path, save_path)
             self._status_text.configure(text=f"Saved to {save_path}")
+            return True
+        return False
 
     def _open_output_folder(self) -> None:
         """Open the output folder in the system file manager."""
@@ -1119,3 +1131,59 @@ class RealESRGANApp(ctk.CTk, TkinterDnD.DnDWrapper if HAS_DND else object):
     def trigger_preview_toggle_slider(self) -> None:
         """Toggle preview comparison slider between 0.0 and 1.0."""
         self.preview.trigger_toggle_slider()
+
+    def trigger_open_files(self, paths: Optional[List[str]] = None) -> None:
+        """Programmatically trigger opening files or ingesting a path list."""
+        self._open_files(paths=paths)
+
+    def trigger_save_output(self, destination_path: Optional[str] = None) -> bool:
+        """Programmatically trigger saving upscaled output to destination path."""
+        return self._save_output(destination_path=destination_path)
+
+    def trigger_reset_queue_item_status(self, idx: int) -> bool:
+        """Programmatically reset item status at index back to queued."""
+        return self.queue_panel.trigger_reset_item_status(idx)
+
+    def trigger_open_queue_item_in_explorer(self, idx: int) -> bool:
+        """Programmatically trigger opening item file location in explorer."""
+        return self.queue_panel.trigger_open_file_in_explorer(idx)
+
+    def alpha_upsampler(self) -> str:
+        """Return the active alpha channel upsampler ('realesrgan' or 'bicubic')."""
+        return self.settings_panel.alpha_upsampler()
+
+    def set_alpha_upsampler(self, upsampler: str) -> None:
+        """Programmatically set alpha channel upsampler."""
+        self.settings_panel.set_alpha_upsampler(upsampler)
+
+    def suffix(self) -> str:
+        """Return filename suffix setting."""
+        return self.settings_panel.suffix()
+
+    def set_suffix(self, suf: str) -> None:
+        """Programmatically set filename suffix."""
+        self.settings_panel.set_suffix(suf)
+
+    def tile_padding(self) -> int:
+        """Return tile padding setting in pixels."""
+        return self.settings_panel.tile_padding()
+
+    def set_tile_padding(self, pad: int) -> None:
+        """Programmatically set tile padding in pixels."""
+        self.settings_panel.set_tile_padding(pad)
+
+    def pre_padding(self) -> int:
+        """Return pre-padding setting in pixels."""
+        return self.settings_panel.pre_padding()
+
+    def set_pre_padding(self, pad: int) -> None:
+        """Programmatically set pre-padding in pixels."""
+        self.settings_panel.set_pre_padding(pad)
+
+    def is_fp32_enabled(self) -> bool:
+        """Return True if 32-bit floating point precision is enabled."""
+        return self.settings_panel.is_fp32_enabled()
+
+    def set_fp32_enabled(self, enabled: bool) -> None:
+        """Programmatically enable or disable fp32 precision mode."""
+        self.settings_panel.set_fp32_enabled(enabled)

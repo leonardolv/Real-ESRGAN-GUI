@@ -810,6 +810,37 @@ class QueuePanel(ctk.CTkFrame):
             return bool(self._items[idx].is_video)
         return False
 
+    def is_item_completed(self, idx: int) -> bool:
+        """Return True if item at index has completed status."""
+        return self.item_status(idx) == ItemStatus.COMPLETED
+
+    def is_item_error(self, idx: int) -> bool:
+        """Return True if item at index has error status."""
+        return self.item_status(idx) == ItemStatus.ERROR
+
+    def is_item_queued(self, idx: int) -> bool:
+        """Return True if item at index is currently queued."""
+        return self.item_status(idx) == ItemStatus.QUEUED
+
+    def is_item_processing(self, idx: int) -> bool:
+        """Return True if item at index is currently processing."""
+        return self.item_status(idx) == ItemStatus.PROCESSING
+
+    def trigger_reset_item_status(self, idx: int) -> bool:
+        """Programmatically reset item status at index back to queued."""
+        if 0 <= idx < len(self._items):
+            self.update_item_status(idx, ItemStatus.QUEUED, 0)
+            return True
+        return False
+
+    def trigger_open_file_in_explorer(self, idx: int) -> bool:
+        """Programmatically trigger opening item file location in explorer."""
+        if 0 <= idx < len(self._items):
+            item = self._items[idx]
+            self._open_file_in_explorer(item.path)
+            return True
+        return False
+
     def trigger_add_files(self) -> None:
         """Programmatically trigger add files file dialog action."""
         self._on_add_click()

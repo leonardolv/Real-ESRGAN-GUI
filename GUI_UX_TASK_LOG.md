@@ -11,6 +11,27 @@
 
 ## Completed
 
+### Task: SettingsPanel alpha upsampler, QueuePanel status queries/triggers, RealESRGANApp file/save triggers and advanced settings helpers
+- **Completed**: 2026-11-18
+- **Changes**:
+  - `tests/conftest.py`:
+    - Hardened Windows C runtime stdio file descriptor limits across runtimes (8192 on `ucrtbase`, 2048 on `msvcrt`) and ensured re-application during config isolation, eliminating intermittent Tcl `fopen` exhaustion.
+  - `gui/widgets/settings_panel.py`:
+    - Exposed `alpha_dropdown` property.
+    - Added `alpha_upsampler() -> str` query and `set_alpha_upsampler(upsampler: str) -> None` setter.
+  - `gui/widgets/queue_panel.py`:
+    - Added item status helper queries: `is_item_completed(idx: int) -> bool`, `is_item_error(idx: int) -> bool`, `is_item_queued(idx: int) -> bool`, `is_item_processing(idx: int) -> bool`.
+    - Added programmatic action triggers: `trigger_reset_item_status(idx: int) -> bool` and `trigger_open_file_in_explorer(idx: int) -> bool`.
+  - `gui/app.py`:
+    - Enhanced `_open_files` and `_save_output` to accept optional paths for headless/programmatic file ingestion and saving.
+    - Added action triggers: `trigger_open_files(paths: Optional[List[str]] = None) -> None` and `trigger_save_output(destination_path: Optional[str] = None) -> bool`.
+    - Added queue triggers: `trigger_reset_queue_item_status(idx: int) -> bool` and `trigger_open_queue_item_in_explorer(idx: int) -> bool`.
+    - Added forwarded settings helpers: `alpha_upsampler() -> str`, `set_alpha_upsampler(upsampler: str) -> None`, `suffix() -> str`, `set_suffix(suf: str) -> None`, `tile_padding() -> int`, `set_tile_padding(pad: int) -> None`, `pre_padding() -> int`, `set_pre_padding(pad: int) -> None`, `is_fp32_enabled() -> bool`, and `set_fp32_enabled(enabled: bool) -> None`.
+  - `tests/test_gui.py`:
+    - Added unit test `test_advanced_settings_queue_status_and_app_file_save_triggers` asserting alpha upsampler settings, queue item status queries/triggers, and app file open/save triggers.
+- **Verification**: Verified headlessly with `python -m pytest tests/test_gui.py -v` (46 passed in 23.29s, 0 errors).
+- **Status**: Completed
+
 ### Task: PreviewCanvas video playback triggers, slider nudge/toggle actions, and RealESRGANApp preview integration
 - **Completed**: 2026-11-17
 - **Changes**:
